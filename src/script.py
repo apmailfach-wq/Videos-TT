@@ -1,5 +1,5 @@
-VOICE = "de-DE-ConradNeural"
-RATE = "+9%"
+VOICE = "de-AT-JonasNeural"
+RATE = "+5%"
 
 SCENES = [
     {"key": "hook", "text": "Du wirst angegriffen, wehrst dich – und bekommst plötzlich selbst eine Anzeige? So ist die Rechtslage in Deutschland!"},

@@ -5,7 +5,7 @@ Automatisch generierte TikTok-Videos (1080×1920, 30 fps) – komplett per Code 
 ## notwehr-video.mp4
 
 **Thema:** Strafe nach einer Schlägerei, wenn man selbst angegriffen wurde (Rechtslage in Deutschland)
-Länge ca. 83 s · Voiceover: edge-tts `de-DE-ConradNeural` (+9 % Tempo)
+Länge ca. 83 s · Voiceover: edge-tts `de-AT-JonasNeural` (+5 % Tempo)
 
 | Abschnitt | Zeit | Inhalt |
 |---|---|---|
