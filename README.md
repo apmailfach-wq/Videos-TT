@@ -5,15 +5,16 @@ Automatisch generierte TikTok-Videos (1080×1920, 30 fps) – komplett per Code 
 ## notwehr-video.mp4
 
 **Thema:** Strafe nach einer Schlägerei, wenn man selbst angegriffen wurde (Rechtslage in Deutschland)
-Länge ca. 83 s · Voiceover: edge-tts `de-AT-JonasNeural` (+5 % Tempo)
+Länge ca. 85 s · Voiceover: edge-tts `de-AT-JonasNeural` (+12 % Tempo)
 
 | Abschnitt | Zeit | Inhalt |
 |---|---|---|
-| Hook | 0–7,6 s | Angegriffen, gewehrt – und selbst angezeigt? |
-| § 32 StGB | 7,6–28 s | Notwehr: gegenwärtiger, rechtswidriger Angriff, mildestes sicheres Mittel, niemand muss weglaufen |
-| § 33 StGB | 28–41 s | Notwehrexzess aus Furcht, Schrecken, Verwirrung |
-| Die Grenze | 41–66 s | Angreifer am Boden/gibt auf → Schluss; § 223 (bis 5 J.), § 224 (6 Mon.–10 J.) |
-| 3 Tipps + CTA | 66–83 s | Schweigen, Attest + Zeugen, Fachanwalt; „Speicher dir das Video!“ |
+| Hook | 0–7 s | Angegriffen, gewehrt – und selbst angezeigt? |
+| § 32 StGB | 7–26 s | Notwehr: gegenwärtiger, rechtswidriger Angriff, mildestes sicheres Mittel, niemand muss weglaufen |
+| § 33 StGB | 26–39 s | Notwehrexzess aus Furcht, Schrecken, Verwirrung |
+| Die Grenze | 39–63 s | Angreifer am Boden/gibt auf → Schluss; § 223 (bis 5 J.), § 224 (6 Mon.–10 J.) |
+| 3 Tipps | 63–75 s | Schweigen, Attest + Zeugen, Fachanwalt |
+| Frage an die Zuschauer | 75–85 s | „Wurdet ihr schon mal angegriffen …? Schreibt eure Erfahrung in die Kommentare und speichert das Video!“ (groß eingeblendet) |
 
 Keine Rechtsberatung.
 

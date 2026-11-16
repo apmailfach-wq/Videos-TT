@@ -529,6 +529,62 @@ def toc_page():
     return with_shadow(supersample(w, h, fn))
 
 
+QUESTION = ("Wurdet ihr schon mal *angegriffen* und musstet euch *wehren* – "
+            "und wie ist es *ausgegangen?*")
+
+
+def question_bubble(w=960):
+    f = font(F_HEAD, 54)
+    words = parse_rich(QUESTION.upper())
+    sp = f.getlength(" ")
+    lines, cur, cw = [], [], 0
+    for wd, hl in words:
+        ww = f.getlength(wd)
+        if cur and cw + sp + ww > w - 110:
+            lines.append(cur)
+            cur, cw = [], 0
+        cur.append((wd, hl, ww))
+        cw += (sp if len(cur) > 1 else 0) + ww
+    lines.append(cur)
+    lh = 74
+    h = lh * len(lines) + 110
+    H2 = h + 60
+
+    def fn(im, d, ss):
+        S = ss
+        d.rounded_rectangle([0, 0, w * S, h * S], radius=44 * S, fill=PAPER)
+        d.polygon([(110 * S, (h - 2) * S), (210 * S, (h - 2) * S), (95 * S, (H2 - 4) * S)], fill=PAPER)
+        fs = font(F_HEAD, 54 * S)
+        y = 55 + lh * 0.78
+        for ln in lines:
+            lw = sum(x[2] for x in ln) + sp * (len(ln) - 1)
+            x = (w - lw) / 2
+            for wd, hl, ww in ln:
+                col = (RED if "ANGEGRIFFEN" in wd else TEAL) if hl else INK
+                d.text((x * S, y * S), wd, font=fs, fill=col, anchor="ls")
+                x += ww + sp
+            y += lh
+    return with_shadow(supersample(w, H2, fn), dy=14, blur=20, alpha=0.2)
+
+
+def cta_pill(emoji, text, bg):
+    f = font(F_HEAD, 36)
+    tw = f.getlength(text)
+    em = Image.new("RGBA", (160, 160), (0, 0, 0, 0))
+    ImageDraw.Draw(em).text((80, 80), emoji, font=ImageFont.truetype(
+        "/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf", 109), embedded_color=True, anchor="mm")
+    em = em.crop(em.getbbox()).resize((62, 62), Image.LANCZOS)
+    w, h = int(tw + 62 + 110), 112
+
+    def fn(im, d, ss):
+        S = ss
+        d.rounded_rectangle([0, 0, w * S, h * S], radius=h / 2 * S, fill=bg)
+        d.text(((62 + 78) * S, h / 2 * S), text, font=font(F_HEAD, 36 * S), fill=PAPER, anchor="lm")
+    im = supersample(w, h, fn)
+    im.alpha_composite(em, (40, (h - 62) // 2))
+    return with_shadow(im, dy=10, blur=14, alpha=0.25)
+
+
 class Prop:
     def __init__(self, img, x, y, t, rot=0.0, enter="up", z=0):
         self.img, self.x, self.y, self.t, self.rot, self.enter, self.z = img, x, y, t, rot, enter, z
@@ -767,7 +823,7 @@ def build_cards():
     # ============================ 4 TIPPS
     B = (4, "3 GOLDENE TIPPS")
     p0, p1, p2, p3, pS = (s0("tipps"), at("tipps", "Eins"), at("tipps", "Zwei"), at("tipps", "Drei", 1),
-                          at("tipps", "Speicher"))
+                          s1("tipps"))
     c = card(p0, p1, B)
     c.text(p0, "ZUM SCHLUSS", "3 GOLDENE *TIPPS*")
     c.prop(tip_card(1, "schweigen"), 230, 1250, p0 + 0.1, rot=-7, enter="left")
@@ -801,10 +857,14 @@ def build_cards():
     c.text(p3, "TIPP 3 · SCHALTE EINEN", "*FACHANWALT* EIN", "FÜR STRAFRECHT")
     c.prop(business_card(), 540, 1230, p3 + 0.2, rot=-3)
     c.prop(check_badge(64), 820, 1050, at("tipps", "Strafrecht"), enter="pop")
-    c = card(pS, s1("tipps"), B)
-    c.text(pS, "SPEICHER DIR DAS VIDEO", "FÜR DEN *ERNSTFALL*")
-    c.prop(bookmark_card(), 540, 1180, pS + 0.1, enter="pop")
-    c.prop(polaroid(photo_figs(("guard", "you", 1, 0.5, 0.7)), "für später"), 540, 1560, pS + 0.5, rot=-4)
+
+    # ============================ CTA: question to the viewers
+    q0 = s0("cta")
+    c = card(q0, s1("cta"))
+    c.text(q0, "UND JETZT SEID IHR DRAN", "EURE *ERFAHRUNG?*")
+    c.prop(question_bubble(), 540, 1110, q0 + 0.05, enter="pop")
+    c.prop(cta_pill("💬", "Schreibt's in die Kommentare!", INK), 540, 1450, at("cta", "Schreibt"), enter="pop")
+    c.prop(cta_pill("📌", "Speichern für den Ernstfall", TEAL), 540, 1580, at("cta", "speichert"), enter="pop")
     return C
 
 
@@ -987,7 +1047,7 @@ def card_at(t):
 F_EMOJI = "/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf"
 F_CAP = "/usr/share/fonts/opentype/inter/Inter-Black.otf"
 CARD_EMOJI = ["🥊", "🚨", "⚖️", "🛡️", "👊", "✅", "🤏", "🙅", "💪", "😰", "😱", "✅", "😵",
-              "🛑", "✋", "🚫", "🚔", "⛓️", "💡", "🤐", "🩺", "💼", "📌"]
+              "🛑", "✋", "🚫", "🚔", "⛓️", "💡", "🤐", "🩺", "💼", "💬"]
 YELLOW = (255, 226, 0)
 
 
@@ -1079,6 +1139,8 @@ def cap_img(ci, active):
 
 
 def draw_caption(frame, t):
+    if t >= s0("cta") - 0.05:   # the question itself is shown big on screen
+        return
     for ci, c in enumerate(CAPS):
         if c["start"] <= t < c["end"]:
             act = max([i for i, w in enumerate(c["words"]) if t >= w["start"]] or [0])
