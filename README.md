@@ -20,7 +20,7 @@ Keine Rechtsberatung.
 ## Neu erzeugen
 
 ```bash
-pip install -r requirements.txt   # ffmpeg + Inter-Schrift werden vorausgesetzt
+pip install -r requirements.txt   # ffmpeg + Inter (für Fließtext) werden vorausgesetzt
 cd src
 python3 tts.py          # Voiceover je Szene + Wort-Timings -> build/
 python3 render.py       # rendert ../notwehr-video.mp4
@@ -29,6 +29,10 @@ python3 render.py preview 5 30 60   # Standbilder zur Kontrolle -> build/stills/
 
 - `src/script.py` – Sprechertext je Szene, Stimme, Tempo
 - `src/tts.py` – edge-tts mit Wortgrenzen (Untertitel-Timing)
-- `src/render.py` – Pillow-Frames (Hintergrund, Icons, Key-Point-Karten, Karaoke-Untertitel) → ffmpeg (H.264/AAC)
+- `src/render.py` – Pillow-Frames im flachen Erklärfilm-Look → ffmpeg (H.264/AAC):
+  hellgrauer Hintergrund, breite Headline (Unbounded) tippt sich oben ein, Kapitel-Badge,
+  animierte Strichmännchen (türkis = du, dunkelblau = Angreifer), Gesetzesseiten, Polaroids
+  mit Handschrift (Caveat), Umschläge, Stempel, dunkle Spotlight-Szenen für „Panik“.
+- `fonts/` – Unbounded + Caveat (SIL Open Font License, via Google Fonts)
 
 Die Szenendauern ergeben sich direkt aus der Länge der Tonspur; Key-Points werden auf das jeweils gesprochene Wort getimt.
