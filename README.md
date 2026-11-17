@@ -47,6 +47,10 @@ Polizei blau), Promille-Kurve, Laborbefund, Stempel, Untertitel, Community-Frage
 Quelle: `src/fuehrerschein2/` (`python3 tts.py && python3 render.py`). Stimme in `script.py` (VOICE);
 Variante mit Conrad-Stimme: `fuehrerschein-video-conrad.mp4` (`VIDEO_OUT=fuehrerschein-video-conrad.mp4 python3 render.py`).
 
+### Version mit eigener Stimme: `fuehrerschein-video-eigene-stimme.mp4`
+Eigene Aufnahme → `align.py` (Text-zu-Pausen-Zuordnung ohne Spracherkennung) → `build_voice.py`
+(entrauschen, Pausen kürzen, Tempo ×1,2) → `VOICE_DIR=… VIDEO_OUT=… python3 render.py`.
+
 ## fuehrerschein-video-neon.mp4 (Neon-Kurzfilm-Version)
 
 **Thema:** „Gestern gewonnen, heute den Führerschein verloren?“ – Restalkohol & Cannabis am Morgen nach der Siegesfeier

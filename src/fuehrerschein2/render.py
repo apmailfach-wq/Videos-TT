@@ -19,7 +19,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 ROOT = Path(__file__).resolve().parents[2]
-BUILD = ROOT / "build" / "fuehrerschein2"
+BUILD = ROOT / "build" / os.environ.get("VOICE_DIR", "fuehrerschein2")
 FONTS = ROOT / "fonts"
 W, H, FPS = 1080, 1920, 30
 TAIL = 0.8
