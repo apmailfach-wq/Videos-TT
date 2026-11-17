@@ -18,7 +18,7 @@ from core import (BLUE, F_INTER, FPS, H, MAGENTA, ROOT, TEAL, W, WHITE, YELLOW, 
                   paste_c, vignette_img, zoom_frame)  # noqa: E402
 
 BUILD = ROOT / "build" / "fuehrerschein"
-OUT = ROOT / "fuehrerschein-video.mp4"
+OUT = ROOT / "fuehrerschein-video-neon.mp4"
 TL = json.loads((BUILD / "timeline.json").read_text())
 LINES = {l["id"]: l for l in TL["lines"]}
 TOTAL = TL["total"]

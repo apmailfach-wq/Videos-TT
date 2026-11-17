@@ -39,7 +39,14 @@ python3 render.py preview 5 30 60   # Standbilder zur Kontrolle -> build/stills/
 Die Szenendauern ergeben sich direkt aus der Länge der Tonspur; Key-Points werden auf das jeweils gesprochene Wort getimt.
 
 
-## fuehrerschein-video.mp4
+## fuehrerschein-video.mp4 (Erklär-Format)
+
+Gleiches Thema im klaren Erklär-Look wie das Notwehr-Video: eine Erzählstimme, getippte Headlines,
+Kapitel 1 Party · 2 Morgen · 3 Kontrolle · 4 Strafen · 5 Fazit, Strichmännchen (Rafael türkis, Klaus orange,
+Polizei blau), Promille-Kurve, Laborbefund, Stempel, Untertitel, Community-Frage. Ca. 81 s.
+Quelle: `src/fuehrerschein2/` (`python3 tts.py && python3 render.py`).
+
+## fuehrerschein-video-neon.mp4 (Neon-Kurzfilm-Version)
 
 **Thema:** „Gestern gewonnen, heute den Führerschein verloren?“ – Restalkohol & Cannabis am Morgen nach der Siegesfeier
 Länge ca. 84 s · 1080×1920 · 30 fps · Neon-Look (Türkis/Magenta/Gelb) mit weichen 3D-Figuren und Bloom
@@ -61,7 +68,7 @@ Mischkonsum Cannabis + Alkohol 1.000 €; Probezeit/unter 21: 0,0 ‰ und Cannab
 ```bash
 cd src/fuehrerschein
 python3 tts.py                 # Stimmen je Figur (script.py: VOICES / LINES) -> build/fuehrerschein/
-python3 render.py              # rendert ../../fuehrerschein-video.mp4
+python3 render.py              # rendert ../../fuehrerschein-video-neon.mp4
 python3 render.py shots        # Schnittliste
 python3 render.py preview 5 30 # Standbilder
 ```
