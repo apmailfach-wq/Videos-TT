@@ -77,3 +77,24 @@ python3 render.py              # rendert ../../fuehrerschein-video-neon.mp4
 python3 render.py shots        # Schnittliste
 python3 render.py preview 5 30 # Standbilder
 ```
+
+## stromausfall-video.mp4 („Was wäre, wenn…?“-Format)
+
+**Thema:** „Was wäre, wenn eine Woche der Strom ausfällt – was kostet dich das?“
+Länge ca. 44 s · 1080×1920 · 30 fps · Stimme edge-tts `de-DE-ConradNeural` (+10 %)
+
+Oben ein großer Zähler **TAG 1 … TAG 7** (mit 7 Fortschrittsbalken), darunter zwei Anzeigen
+**Gespart: Strom** (grün, steigt bis 22 €) und **Ausgegeben** (rot, springt bei jedem Kassen-Sound bis 240 €).
+Feste Szene: Wohnung, die mit jedem Tag dunkler wird – Licht aus, Kühlschrank tropft (Pfütze wächst),
+Kerzen, überquellender Müll, Pizzakartons stapeln sich; Strichmännchen in Türkis. Untertitel Wort für Wort,
+Emoji-Sticker, Whoosh-/Kassen-Sounds, „@alltagklar“ unten, am Ende die Frage groß + „Beispielrechnung, Angaben ohne Gewähr“.
+
+Beispielrechnung: Kerzen/Batterien 25 € · verdorbene Lebensmittel 60 € · Essen bestellen 35 € ·
+Pizza Tag 4–5 50 € · Tiefkühltruhe/Waschsalon/Powerbank 70 € = 240 €; gesparter Strom ≈ 3,15 €/Tag ≈ 22 €.
+
+```bash
+cd src/stromausfall
+python3 tts.py          # Sprechtext aus script.py -> build/stromausfall/ (Pausen zwischen Szenen gekürzt)
+python3 render.py       # rendert ../../stromausfall-video.mp4
+python3 render.py preview 6 12 30   # Standbilder
+```
