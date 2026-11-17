@@ -44,7 +44,8 @@ Die Szenendauern ergeben sich direkt aus der Länge der Tonspur; Key-Points werd
 Gleiches Thema im klaren Erklär-Look wie das Notwehr-Video: eine Erzählstimme, getippte Headlines,
 Kapitel 1 Party · 2 Morgen · 3 Kontrolle · 4 Strafen · 5 Fazit, Strichmännchen (Rafael türkis, Klaus orange,
 Polizei blau), Promille-Kurve, Laborbefund, Stempel, Untertitel, Community-Frage. Ca. 81 s.
-Quelle: `src/fuehrerschein2/` (`python3 tts.py && python3 render.py`).
+Quelle: `src/fuehrerschein2/` (`python3 tts.py && python3 render.py`). Stimme in `script.py` (VOICE);
+Variante mit Conrad-Stimme: `fuehrerschein-video-conrad.mp4` (`VIDEO_OUT=fuehrerschein-video-conrad.mp4 python3 render.py`).
 
 ## fuehrerschein-video-neon.mp4 (Neon-Kurzfilm-Version)
 

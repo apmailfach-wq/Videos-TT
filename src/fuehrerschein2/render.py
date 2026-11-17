@@ -1434,7 +1434,7 @@ def main():
             Image.frombytes("RGB", (W, H), render_frame(int(tt * FPS))).save(
                 BUILD / "stills" / f"t{tt:05.1f}.png")
         return
-    out = ROOT / "fuehrerschein-video.mp4"
+    out = ROOT / os.environ.get("VIDEO_OUT", "fuehrerschein-video.mp4")
     audio = BUILD / "voice.wav"
     lst = BUILD / "concat.txt"
     lst.write_text("".join(f"file '{s['audio']}'\n" for s in TIM))

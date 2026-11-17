@@ -1,4 +1,4 @@
-VOICE = "de-AT-JonasNeural"
+VOICE = "de-DE-ConradNeural"
 RATE = "+6%"
 
 SCENES = [
