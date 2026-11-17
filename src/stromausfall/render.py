@@ -19,7 +19,7 @@ from multiprocessing import Pool
 from pathlib import Path
 
 import numpy as np
-from PIL import Image, ImageDraw, ImageFilter, ImageFont
+from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont
 
 ROOT = Path(__file__).resolve().parents[2]
 BUILD = ROOT / "build" / "stromausfall"
@@ -335,6 +335,11 @@ class Fig:
                 return lerp_pose(POSES[pa], POSES[pb], u), lerp(xa, xb, u), fb if u > 0.5 else fa
         return POSES[ks[-1][1]], ks[-1][2], ks[-1][3]
 
+    def hand(self, t):
+        p, x, facing = self.state(t)
+        q = figure_points(p, facing, self.s)["hf"]
+        return x + q[0], GROUND + q[1]
+
     def draw(self, d, t, ss):
         p, x, facing = self.state(t)
         sw = 70 * self.s
@@ -373,6 +378,113 @@ def build_figure():
     return Fig(k)
 
 
+
+
+# ------------------------------------------------------------------ action timeline (Kamera, Gewitter, Partikel)
+K = 2                 # room is rendered at 2x so camera close-ups stay sharp
+DS = 4                # anti-aliased dynamic layer (reduced 2:1 onto the room)
+
+LIGHTNING = [at("hook", "ausfällt") + 0.05, T_LIGHT_OFF - 0.05, at("tag45", "fünf"), s0("tag67") + 0.15]
+PHONE = [(at("tag3", "bestellen") - 0.2, s0("tag45") + 0.1), (at("tag67", "Powerbank") - 0.2, s0("fazit"))]
+WHIPS = [s0(k) for k in KEYS[1:-1]]
+
+# camera shots: (time, cx, cy, zoom, tilt°, mode) in room coordinates – "cut" = harter Schnitt
+SHOTS = [
+    (0.0, 500, 450, 1.0, 0, "cut"),
+    (at("hook", "Strom") - 0.1, 760, 262, 1.9, -3, "ease"),
+    (at("hook", "kostet"), 560, 520, 1.55, 2, "cut"),
+    (at("hook", "Rechnen"), 500, 450, 1.05, 0, "ease"),
+    (s0("tag1"), 520, 470, 1.25, -2, "cut"),
+    (T_LIGHT_OFF, 500, 235, 1.8, 3, "cut"),
+    (T_LIGHT_OFF + 0.9, 500, 460, 1.08, 0, "cut"),
+    (at("tag1", "Kerzen"), 530, 520, 1.8, -2, "ease"),
+    (at("tag1", "25"), 520, 470, 1.25, 0, "ease"),
+    (s0("tag2"), 200, 440, 1.6, 2, "cut"),
+    (T_DRIP, 210, 640, 1.9, -2, "ease"),
+    (T_TRASH, 320, 600, 1.9, 3, "cut"),
+    (at("tag2", "60"), 420, 470, 1.2, 0, "ease"),
+    (s0("tag3"), 600, 520, 1.45, -2, "cut"),
+    (at("tag3", "bestellen"), 630, 470, 1.95, 2, "ease"),
+    (at("tag3", "35"), 520, 470, 1.15, 0, "ease"),
+    (s0("tag45"), 500, 450, 1.0, 0, "cut"),
+    (at("tag45", "Pizzakartons"), 820, 700, 1.75, -3, "ease"),
+    (at("tag45", "50"), 700, 560, 1.35, 0, "ease"),
+    (s0("tag67"), 230, 600, 1.6, 2, "cut"),
+    (at("tag67", "Waschsalon"), 520, 500, 1.6, -2, "cut"),
+    (at("tag67", "Powerbank"), 540, 460, 1.95, 0, "ease"),
+    (at("tag67", "70"), 500, 450, 1.05, 0, "ease"),
+    (s0("fazit"), 500, 450, 1.0, 0, "cut"),
+    (T_STAMP - 0.1, 520, 470, 1.15, -1, "ease"),
+    (T_Q, 500, 450, 1.0, 0, "ease"),
+]
+
+
+def camera(t):
+    i = max(j for j in range(len(SHOTS)) if SHOTS[j][0] <= t + 1e-6)
+    t0, cx, cy, z, r, mode = SHOTS[i]
+    if mode == "ease" and i > 0:
+        pt, pcx, pcy, pz, pr, _ = SHOTS[i - 1]
+        u = ease_io((t - t0) / 0.45)
+        cx, cy, z, r = lerp(pcx, cx, u), lerp(pcy, cy, u), lerp(pz, z, u), lerp(pr, r, u)
+    life = clamp01((t - t0) / 4)
+    z *= 1 + 0.05 * ease_io(life)                       # slow push-in within every shot
+    cx += 4 * math.sin(t * 1.3) + 2 * math.sin(t * 2.9)  # handheld drift
+    cy += 3 * math.sin(t * 1.7 + 1)
+    r += 0.4 * math.sin(t * 0.9)
+    shake = 0.0
+    if 0 <= t - T_LIGHT_OFF < 0.6:
+        shake = 14 * (1 - (t - T_LIGHT_OFF) / 0.6)
+    for ts, _ in SPENDS:
+        if 0 <= t - ts < 0.3:
+            shake = max(shake, 7 * (1 - (t - ts) / 0.3))
+    for tl in LIGHTNING:
+        if 0 <= t - tl < 0.35:
+            shake = max(shake, 6 * (1 - (t - tl) / 0.35))
+    cx += math.sin(t * 87) * shake
+    cy += math.cos(t * 71) * shake
+    return cx, cy, z, r
+
+
+def whip(t):
+    return max([1 - abs(t - ts) / 0.14 for ts in WHIPS if abs(t - ts) < 0.14] or [0])
+
+
+def flash(t):
+    v = 0.0
+    for tl in LIGHTNING:
+        dt = t - tl
+        if 0 <= dt < 0.7:
+            v += math.exp(-dt / 0.07)
+            if dt > 0.16:
+                v += 0.7 * math.exp(-(dt - 0.16) / 0.08)
+    return min(v, 1.2)
+
+
+def phone_on(t):
+    return any(a <= t < b for a, b in PHONE)
+
+
+def make_particles():
+    rng = np.random.default_rng(5)
+    sparks = []
+    for _ in range(34):
+        ang = rng.uniform(math.radians(200), math.radians(340))
+        sp = rng.uniform(220, 620)
+        sparks.append((math.cos(ang) * sp, -math.sin(ang) * sp * 0.6 - rng.uniform(0, 160),
+                       rng.uniform(0.45, 0.95), rng.uniform(0, 0.12)))
+    rain = [(rng.uniform(648, 872), rng.uniform(0, 1), rng.uniform(0.7, 1.3)) for _ in range(46)]
+    bolts = []
+    for k in range(len(LIGHTNING)):
+        x, y, pts = rng.uniform(700, 830), 127, []
+        while y < 383:
+            pts.append((x, y))
+            x += rng.uniform(-22, 22)
+            y += rng.uniform(18, 36)
+        pts.append((x, 383))
+        bolts.append(pts)
+    return sparks, rain, bolts
+
+
 # ------------------------------------------------------------------ room sprites
 WALL = (232, 220, 200)
 WALL_D = (214, 200, 178)
@@ -383,87 +495,152 @@ FLOOR_L = (176, 136, 96)
 def room_base(lights_on):
     w, h = ROOM_W, ROOM_H
 
-    def fn(im, d, ss):
-        S = ss
-        d.rectangle([0, 0, w * S, 640 * S], fill=WALL)
-        for x in range(0, w, 70):  # subtle wallpaper stripes
-            d.rectangle([x * S, 0, (x + 32) * S, 640 * S], fill=lerp_col(WALL, WALL_D, 0.25))
-        d.rectangle([0, 620 * S, w * S, 648 * S], fill=(245, 240, 230))         # skirting
-        d.rectangle([0, 648 * S, w * S, h * S], fill=FLOOR)
+    def fn(im, d, S):
+        # wall with soft light falloff towards the ceiling
+        for y in range(0, 640, 4):
+            u = y / 640
+            d.rectangle([0, y * S, w * S, (y + 4) * S], fill=lerp_col((206, 192, 170), WALL, ease_out(u * 1.6)))
+        for x in range(0, w, 70):
+            for y in range(0, 640, 8):
+                u = y / 640
+                d.rectangle([x * S, y * S, (x + 32) * S, (y + 8) * S],
+                            fill=lerp_col(lerp_col((206, 192, 170), WALL, ease_out(u * 1.6)), WALL_D, 0.22))
+        d.rectangle([0, 620 * S, w * S, 648 * S], fill=(245, 240, 230))
+        d.rectangle([0, 644 * S, w * S, 650 * S], fill=(205, 196, 182))
+        for y in range(648, h, 3):  # floor gradient (darker far away)
+            u = (y - 648) / (h - 648)
+            d.rectangle([0, y * S, w * S, (y + 3) * S], fill=lerp_col((160, 122, 86), FLOOR, ease_out(u * 1.4)))
         for y in (700, 770, 850):
             d.line([(0, y * S), (w * S, y * S)], fill=FLOOR_L, width=3 * S)
         for i, y in enumerate((648, 700, 770, 850)):
             for x in range(60 + i * 90, w, 260):
                 d.line([(x * S, y * S), (x * S, min(h, y + (52 if y == 648 else 70 if y == 700 else 80)) * S)],
                        fill=FLOOR_L, width=3 * S)
-        # window with night city
+        # rug under the table
+        d.ellipse([300 * S, 715 * S, 760 * S, 830 * S], fill=(70, 120, 128))
+        d.ellipse([322 * S, 726 * S, 738 * S, 819 * S], outline=(214, 196, 150), width=4 * S)
+        # framed picture
+        d.rectangle([300 * S, 250 * S, 430 * S, 360 * S], fill=(92, 70, 52))
+        d.rectangle([310 * S, 260 * S, 420 * S, 350 * S], fill=(236, 232, 220))
+        d.polygon([(318 * S, 340 * S), (355 * S, 290 * S), (380 * S, 322 * S), (395 * S, 305 * S),
+                   (414 * S, 340 * S)], fill=(90, 150, 140))
+        d.ellipse([388 * S, 270 * S, 404 * S, 286 * S], fill=(240, 170, 60))
+        # window with night city + storm sky
         wx0, wy0, wx1, wy1 = 640, 120, 880, 390
         for yy in range(wy0, wy1):
             u = (yy - wy0) / (wy1 - wy0)
-            d.line([(wx0 * S, yy * S), (wx1 * S, yy * S)], fill=lerp_col((26, 34, 68), (70, 74, 120), u), width=S)
-        d.ellipse([(wx0 + 30) * S, (wy0 + 26) * S, (wx0 + 66) * S, (wy0 + 62) * S], fill=(250, 244, 210))
+            d.line([(wx0 * S, yy * S), (wx1 * S, yy * S)], fill=lerp_col((22, 28, 52), (58, 64, 98), u), width=S)
+        for cx, cy, rr in ((680, 150, 40), (740, 140, 50), (810, 160, 45), (860, 135, 38)):
+            d.ellipse([(cx - rr) * S, (cy - rr * 0.5) * S, (cx + rr) * S, (cy + rr * 0.5) * S], fill=(44, 50, 78))
         for bx, bw, bh in ((640, 70, 150), (705, 60, 210), (760, 80, 120), (835, 50, 180)):
-            d.rectangle([bx * S, (wy1 - bh) * S, (bx + bw) * S, wy1 * S], fill=(36, 40, 58))
+            d.rectangle([bx * S, (wy1 - bh) * S, (bx + bw) * S, wy1 * S], fill=(30, 34, 50))
             for r in range(wy1 - bh + 16, wy1 - 12, 26):
                 for c in range(bx + 10, bx + bw - 12, 20):
                     lit = lights_on and ((r * 7 + c * 3) % 5 != 0)
                     d.rectangle([c * S, r * S, (c + 9) * S, (r + 12) * S],
-                                fill=(255, 214, 110) if lit else (52, 58, 78))
+                                fill=(255, 214, 110) if lit else (46, 52, 70))
         d.rectangle([wx0 * S, wy0 * S, wx1 * S, wy1 * S], outline=(250, 250, 248), width=14 * S)
         d.line([((wx0 + wx1) / 2 * S, wy0 * S), ((wx0 + wx1) / 2 * S, wy1 * S)], fill=(250, 250, 248), width=10 * S)
         d.rectangle([(wx0 - 20) * S, wy1 * S, (wx1 + 20) * S, (wy1 + 16) * S], fill=(245, 242, 236))
+        # curtains
+        for x0 in (604, 878):
+            d.rounded_rectangle([x0 * S, 96 * S, (x0 + 40) * S, 430 * S], radius=14 * S, fill=(168, 70, 66))
+            for k in range(3):
+                d.line([((x0 + 8 + k * 12) * S, 100 * S), ((x0 + 8 + k * 12) * S, 426 * S)], fill=(140, 54, 52),
+                       width=3 * S)
+        d.rectangle([590 * S, 88 * S, 930 * S, 98 * S], fill=(110, 90, 70))
+        # contact shadows
+        sh = Image.new("RGBA", im.size, (0, 0, 0, 0))
+        sd = ImageDraw.Draw(sh)
+        for x0, x1, y in ((50, 262, 690), (690, 970, 700), (262, 362, 705), (380, 670, 735)):
+            sd.ellipse([x0 * S, (y - 10) * S, x1 * S, (y + 14) * S], fill=(30, 20, 10, 110))
+        im.alpha_composite(sh.filter(ImageFilter.GaussianBlur(9 * S)))
         # TV sideboard
         d.rounded_rectangle([700 * S, 560 * S, 960 * S, 700 * S], radius=8 * S, fill=(120, 96, 76))
-        d.line([(830 * S, 570 * S), (830 * S, 690 * S)], fill=(96, 76, 60), width=4 * S)
-        d.rounded_rectangle([730 * S, 430 * S, 930 * S, 550 * S], radius=8 * S, fill=(30, 32, 38))
+        d.rectangle([700 * S, 560 * S, 960 * S, 570 * S], fill=(140, 114, 90))
+        d.line([(830 * S, 574 * S), (830 * S, 690 * S)], fill=(96, 76, 60), width=4 * S)
+        for kx in (770, 890):
+            d.ellipse([(kx - 6) * S, 625 * S, (kx + 6) * S, 637 * S], fill=(200, 180, 140))
+        d.rounded_rectangle([730 * S, 430 * S, 930 * S, 550 * S], radius=8 * S, fill=(26, 28, 34))
         d.rectangle([822 * S, 550 * S, 838 * S, 562 * S], fill=(30, 32, 38))
         if lights_on:
             d.rounded_rectangle([742 * S, 442 * S, 918 * S, 538 * S], radius=4 * S, fill=(80, 150, 210))
             d.ellipse([800 * S, 470 * S, 860 * S, 510 * S], fill=(140, 200, 240))
-        # fridge
+        else:
+            d.polygon([(746 * S, 446 * S), (800 * S, 446 * S), (760 * S, 534 * S), (746 * S, 534 * S)],
+                      fill=(44, 48, 58))
+        # fridge with shading
         fx0, fx1, fy0, fy1 = 60, 250, 230, 690
-        d.rounded_rectangle([fx0 * S, fy0 * S, fx1 * S, fy1 * S], radius=18 * S, fill=(238, 242, 245),
-                            outline=(170, 178, 186), width=4 * S)
-        d.line([(fx0 * S, 380 * S), (fx1 * S, 380 * S)], fill=(170, 178, 186), width=4 * S)
-        d.rounded_rectangle([(fx1 - 34) * S, 270 * S, (fx1 - 22) * S, 350 * S], radius=6 * S, fill=(160, 168, 176))
-        d.rounded_rectangle([(fx1 - 34) * S, 410 * S, (fx1 - 22) * S, 520 * S], radius=6 * S, fill=(160, 168, 176))
-        d.rounded_rectangle([90 * S, 300 * S, 120 * S, 334 * S], radius=4 * S, fill=(250, 210, 80))  # magnet
+        d.rounded_rectangle([fx0 * S, fy0 * S, fx1 * S, fy1 * S], radius=18 * S, fill=(232, 236, 240),
+                            outline=(160, 168, 176), width=4 * S)
+        d.rounded_rectangle([(fx0 + 6) * S, (fy0 + 6) * S, (fx0 + 40) * S, (fy1 - 6) * S], radius=12 * S,
+                            fill=(246, 248, 250))
+        d.rectangle([(fx1 - 30) * S, (fy0 + 10) * S, (fx1 - 6) * S, (fy1 - 10) * S], fill=(216, 222, 228))
+        d.line([(fx0 * S, 380 * S), (fx1 * S, 380 * S)], fill=(160, 168, 176), width=4 * S)
+        d.rounded_rectangle([(fx1 - 44) * S, 270 * S, (fx1 - 32) * S, 350 * S], radius=6 * S, fill=(150, 158, 166))
+        d.rounded_rectangle([(fx1 - 44) * S, 410 * S, (fx1 - 32) * S, 520 * S], radius=6 * S, fill=(150, 158, 166))
+        d.rounded_rectangle([90 * S, 300 * S, 120 * S, 334 * S], radius=4 * S, fill=(250, 210, 80))
         d.rounded_rectangle([130 * S, 430 * S, 175 * S, 480 * S], radius=4 * S, fill=(255, 255, 255),
-                            outline=(200, 205, 210), width=2 * S)                                   # note
+                            outline=(200, 205, 210), width=2 * S)
         # trash bin
         d.rounded_rectangle([272 * S, 600 * S, 352 * S, 705 * S], radius=10 * S, fill=(120, 130, 140))
+        d.rectangle([326 * S, 606 * S, 346 * S, 700 * S], fill=(104, 112, 122))
         d.rounded_rectangle([264 * S, 588 * S, 360 * S, 606 * S], radius=6 * S, fill=(96, 104, 114))
         # table
         d.rounded_rectangle([370 * S, TABLE_TOP * S, 680 * S, (TABLE_TOP + 20) * S], radius=6 * S,
                             fill=(150, 104, 70))
+        d.rectangle([374 * S, (TABLE_TOP + 14) * S, 676 * S, (TABLE_TOP + 20) * S], fill=(120, 82, 54))
         for lx in (390, 648):
             d.rectangle([lx * S, (TABLE_TOP + 18) * S, (lx + 14) * S, 735 * S], fill=(128, 88, 58))
         # ceiling lamp cord + shade
         d.line([(500 * S, 0), (500 * S, 120 * S)], fill=(70, 70, 76), width=4 * S)
         d.chord([440 * S, 110 * S, 560 * S, 210 * S], 180, 360, fill=(60, 66, 76))
+        d.chord([446 * S, 116 * S, 500 * S, 204 * S], 180, 270, fill=(84, 90, 100))
         d.ellipse([486 * S, 146 * S, 514 * S, 174 * S], fill=(255, 238, 170) if lights_on else (190, 192, 186))
-    return supersample(w, h, fn)
+    return supersample(w * K, h * K, lambda im, d, ss: fn(im, d, ss * K))
 
 
 def lamp_cone():
-    w, h = ROOM_W, ROOM_H
-    im = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    im = Image.new("RGBA", (ROOM_W * K, ROOM_H * K), (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
-    d.polygon([(450, 160), (550, 160), (760, 760), (240, 760)], fill=(255, 236, 160, 46))
-    return im.filter(ImageFilter.GaussianBlur(18))
+    d.polygon([(450 * K, 160 * K), (550 * K, 160 * K), (780 * K, 780 * K), (220 * K, 780 * K)],
+              fill=(255, 236, 160, 46))
+    d.ellipse([440 * K, 100 * K, 560 * K, 220 * K], fill=(255, 240, 180, 90))
+    return im.filter(ImageFilter.GaussianBlur(18 * K))
 
 
-def pizza_box(k):
+def pizza_box():
     w, h = 210, 40
 
     def fn(im, d, ss):
-        S = ss
+        S = ss * K
         d.rounded_rectangle([0, 0, w * S, h * S], radius=5 * S, fill=(205, 160, 104), outline=(160, 120, 74),
                             width=3 * S)
         d.rectangle([4 * S, 4 * S, (w - 4) * S, 12 * S], fill=(222, 182, 128))
+        d.rectangle([4 * S, (h - 10) * S, (w - 4) * S, (h - 4) * S], fill=(186, 140, 88))
         d.ellipse([(w / 2 - 15) * S, 12 * S, (w / 2 + 15) * S, 36 * S], fill=(214, 64, 52))
         d.text((w / 2 * S, 24 * S), "P", font=font(F_HEAD, 16 * S), fill=PAPER, anchor="mm")
-    return supersample(w, h, fn)
+        d.ellipse([20 * S, 16 * S, 34 * S, 26 * S], fill=(176, 120, 60))   # grease stain
+    return supersample(w * K, h * K, fn)
+
+
+def radial(size, col, peak):
+    yy, xx = np.mgrid[0:size, 0:size].astype(np.float32)
+    r = np.sqrt((xx - size / 2) ** 2 + (yy - size / 2) ** 2) / (size / 2)
+    a = np.clip(1 - r, 0, 1) ** 2.2 * peak
+    arr = np.zeros((size, size, 4), np.uint8)
+    arr[..., :3] = col
+    arr[..., 3] = a.astype(np.uint8)
+    return Image.fromarray(arr, "RGBA")
+
+
+def vignette():
+    yy, xx = np.mgrid[0:ROOM_H, 0:ROOM_W].astype(np.float32)
+    r = np.sqrt(((xx - ROOM_W / 2) / (ROOM_W * 0.62)) ** 2 + ((yy - ROOM_H / 2) / (ROOM_H * 0.62)) ** 2)
+    a = np.clip((r - 0.55) / 0.6, 0, 1) ** 1.5 * 150
+    arr = np.zeros((ROOM_H, ROOM_W, 4), np.uint8)
+    arr[..., 3] = a.astype(np.uint8)
+    return Image.fromarray(arr, "RGBA")
 
 
 # ------------------------------------------------------------------ HUD sprites
@@ -485,9 +662,7 @@ def meter_card(label, col, emoji):
 def question_card():
     w = 940
     f = font(F_HEAD, 58)
-    words = []
-    for tok in QUESTION.split():
-        words.append((tok.strip("*").upper(), tok.startswith("*")))
+    words = [(tok.strip("*").upper(), tok.startswith("*")) for tok in QUESTION.split()]
     sp = f.getlength(" ")
     lines, cur, cw = [], [], 0
     for wd, hl in words:
@@ -513,7 +688,7 @@ def question_card():
                 d.text((x * S, y * S), wd, font=font(F_HEAD, 58 * S), fill=(TEAL if hl else INK), anchor="ls")
                 x += ww + sp
             y += lh
-        d.text((w / 2 * S, (h - 52) * S), "Schreib's in die Kommentare 👇".replace(" 👇", ""),
+        d.text((w / 2 * S, (h - 52) * S), "Schreib's in die Kommentare",
                font=font(F_BODY_B, 34 * S), fill=(90, 96, 104), anchor="mm")
     im = supersample(w, h, fn)
     return with_shadow(im, dy=16, blur=24, alpha=0.35)
@@ -547,7 +722,7 @@ def make_bg(dark):
     if not dark:
         top, bot = np.array([250, 251, 252], np.float32), np.array([214, 221, 226], np.float32)
     else:
-        top, bot = np.array([18, 22, 30], np.float32), np.array([34, 40, 52], np.float32)
+        top, bot = np.array([14, 17, 26], np.float32), np.array([30, 36, 48], np.float32)
     g = top + (bot - top) * y[..., None]
     arr = np.repeat(g, W, axis=1)
     return Image.fromarray(arr.clip(0, 255).astype(np.uint8), "RGB").convert("RGBA")
@@ -563,104 +738,235 @@ def init():
     G["room_on"] = room_base(True)
     G["room_off"] = room_base(False)
     G["cone"] = lamp_cone()
-    G["pizza"] = pizza_box(0)
+    G["pizza"] = pizza_box()
     G["fig"] = build_figure()
     G["m_saved"] = meter_card("GESPART: STROM", GREEN, "⚡")
     G["m_spent"] = meter_card("AUSGEGEBEN", RED, "💸")
     G["question"] = question_card()
     G["stamp"] = stamp_img("BILANZ\n−218 €")
-    G["trash"] = [emoji_img(e, 54, shadow=False) for e in ("🥩", "🥛", "🧀")]
+    G["trash"] = [emoji_img(e, 54 * K, shadow=False) for e in ("🥩", "🥛", "🧀")]
     G["caps"] = build_caps()
-    G["round"] = room_mask()
-
-
-def room_mask():
     m = Image.new("L", (ROOM_W * 2, ROOM_H * 2), 0)
     ImageDraw.Draw(m).rounded_rectangle([0, 0, ROOM_W * 2, ROOM_H * 2], radius=80, fill=255)
-    return m.resize((ROOM_W, ROOM_H), Image.LANCZOS)
+    G["round"] = m.resize((ROOM_W, ROOM_H), Image.LANCZOS)
+    G["vig"] = vignette()
+    G["bloom"] = radial(240 * K, (255, 176, 80), 150)
+    G["bloom_ph"] = radial(160 * K, (150, 190, 255), 120)
+    G["sparks"], G["rain"], G["bolts"] = make_particles()
+    rng = np.random.default_rng(9)
+    G["grain"] = [rng.integers(-3, 4, (H, W, 1), dtype=np.int16) for _ in range(6)]
 
 
 # ------------------------------------------------------------------ room per frame
+def light_sources(t):
+    """(x, y, radius, rgb-tint) in room coords."""
+    src = []
+    fade = clamp01(day_float(t) / 7)
+    for (x, ytop, hgt, f, p) in flames(t):
+        src.append((x, ytop - 20, (210 - 40 * fade) * f * p + 1, (255, 150, 50), 1.0))
+    if phone_on(t):
+        hx, hy = G["fig"].hand(t)
+        src.append((hx, hy, 150, (110, 160, 255), 0.85))
+    return src
+
+
 def draw_room(t):
     dk = darkness(t)
     lights = t < T_LIGHT_OFF + 0.1 or (t < T_LIGHT_OFF + 0.45 and math.sin((t - T_LIGHT_OFF) * 40) > 0)
     room = (G["room_on"] if lights else G["room_off"]).copy()
-    d = ImageDraw.Draw(room)
-    # fridge display
-    if lights:
-        d.rounded_rectangle([100, 250, 170, 282], radius=6, fill=(20, 30, 36))
-        d.text((135, 266), "4°C", font=font(F_HEAD_B, 18), fill=(90, 230, 170), anchor="mm")
-    else:
-        d.rounded_rectangle([100, 250, 170, 282], radius=6, fill=(20, 22, 26))
-    # puddle under fridge
-    if t >= T_DRIP:
-        grow = 40 + 120 * ease_out((t - T_DRIP) / 6) + 110 * ease_out((t - at("tag67", "Tiefkühltruhe")) / 3)
-        pw, ph = grow, grow * 0.16
-        cx, cy = 175, 712
-        d.ellipse([cx - pw, cy - ph, cx + pw, cy + ph], fill=(120, 180, 230))
-        d.ellipse([cx - pw * 0.6, cy - ph * 0.55, cx - pw * 0.1, cy - ph * 0.1], fill=(190, 225, 250))
-    # trash overflow
+    fig = G["fig"]
+    srcs = light_sources(t)
+
+    # trash overflow + pizza boxes (sprites, 2x)
     if t >= T_TRASH:
         for k, (img, (ox, oy, r)) in enumerate(zip(G["trash"], ((292, 578, -15), (322, 570, 12), (308, 548, 4)))):
             p = ease_back((t - T_TRASH - k * 0.12) / 0.35, 2.0)
             if p > 0:
-                paste_center(room, img, ox, oy - (1 - p) * 60, scale=max(0.05, p), rot=r)
-    # pizza boxes on the floor (right), stacking up
-    n = 0
+                paste_center(room, img, ox * K, (oy - (1 - p) * 60) * K, scale=max(0.05, p), rot=r)
     for k, tp in enumerate(PIZZA):
         p = (t - tp) / 0.35
         if p <= 0:
             continue
-        y = 850 - k * 36 - (1 - ease_out(p)) * 260
+        y = 850 - k * 36 - (1 - ease_out(p) if p < 1 else 0) * 300
+        if 1 <= p < 1.6:                       # small bounce on landing
+            y -= math.sin((p - 1) / 0.6 * math.pi) * 8 * (1 - (p - 1) / 0.6)
         x = 845 + (((k * 37) % 17) - 8) * 1.8
-        room.alpha_composite(G["pizza"], (int(x - 105), int(y - 40)))
-        n += 1
+        room.alpha_composite(G["pizza"], (int((x - 105) * K), int((y - 40) * K)))
+
+    # candle-light shadow of the figure on the wall
+    if dk > 0.05 and srcs:
+        lx = sum(s[0] * s[4] for s in srcs) / sum(s[4] for s in srcs)
+        p, x, facing = fig.state(t)
+        shx = x + (x - lx) * 0.9
+        sl = Image.new("L", (ROOM_W, ROOM_H), 0)
+        sdraw = ImageDraw.Draw(sl)
+        pts = figure_points(p, facing, fig.s * 1.55)
+        draw_figure(sdraw, pts, shx, 700, fig.s * 1.55, 255, 255, 1)
+        sl = sl.filter(ImageFilter.GaussianBlur(7)).point(lambda v: int(v * 0.55 * min(1.0, dk * 1.4)))
+        shadow = Image.new("RGBA", (ROOM_W, ROOM_H), (10, 8, 20, 0))
+        shadow.putalpha(sl)
+        room.alpha_composite(shadow.resize((ROOM_W * K, ROOM_H * K), Image.BILINEAR))
     if lights:
         room.alpha_composite(G["cone"])
 
-    # anti-aliased dynamic layer: candles, drips, figure
-    SS = 2
-    fl = Image.new("RGBA", (ROOM_W * SS, ROOM_H * SS), (0, 0, 0, 0))
+    # anti-aliased dynamic layer: display, puddle, drips, candles, rain, lightning, sparks, figure, phone
+    S = DS
+    fl = Image.new("RGBA", (ROOM_W * S, ROOM_H * S), (0, 0, 0, 0))
     fd = ImageDraw.Draw(fl)
-    for (x, ytop, hgt, f, p) in flames(t):
-        cw = 22
-        fd.rounded_rectangle([(x - cw / 2) * SS, ytop * SS, (x + cw / 2) * SS, TABLE_TOP * SS], radius=5 * SS,
-                             fill=(250, 244, 228))
-        fd.rounded_rectangle([(x - 18) * SS, (TABLE_TOP - 6) * SS, (x + 18) * SS, (TABLE_TOP + 2) * SS],
-                             radius=4 * SS, fill=(190, 160, 110))
-        fh = 30 * f * p
-        sway = math.sin(t * 9 + x) * 2.5
-        fd.ellipse([(x - 9 * p + sway) * SS, (ytop - 6 - fh) * SS, (x + 9 * p + sway) * SS, (ytop + 4) * SS],
-                   fill=(255, 170, 40))
-        fd.ellipse([(x - 4.5 * p + sway) * SS, (ytop - 2 - fh * 0.6) * SS, (x + 4.5 * p + sway) * SS,
-                    (ytop + 2) * SS], fill=(255, 245, 190))
+    fd.rounded_rectangle([100 * S, 250 * S, 170 * S, 282 * S], radius=6 * S, fill=(20, 30, 36) if lights else (18, 20, 24))
+    if lights:
+        fd.text((135 * S, 266 * S), "4°C", font=font(F_HEAD_B, 18 * S), fill=(90, 230, 170), anchor="mm")
     if t >= T_DRIP:
+        grow = 40 + 120 * ease_out((t - T_DRIP) / 6) + 110 * ease_out((t - at("tag67", "Tiefkühltruhe")) / 3)
+        pw, ph = grow, grow * 0.16
+        cx, cy = 175, 712
+        fd.ellipse([(cx - pw) * S, (cy - ph) * S, (cx + pw) * S, (cy + ph) * S], fill=(110, 172, 226, 220))
+        fd.ellipse([(cx - pw * 0.6) * S, (cy - ph * 0.55) * S, (cx - pw * 0.1) * S, (cy - ph * 0.1) * S],
+                   fill=(200, 230, 252, 200))
         for k in range(3):
             u = ((t - T_DRIP) * 0.9 + k / 3) % 1.0
             dx, dy = 200 + k * 14, lerp(392, 700, u ** 1.6)
             a = int(255 * (1 - clamp01((u - 0.85) / 0.15)))
-            fd.ellipse([(dx - 7) * SS, (dy - 10) * SS, (dx + 7) * SS, (dy + 8) * SS], fill=(80, 150, 225, a))
-    G["fig"].draw(fd, t, SS)
-    fl = fl.resize((ROOM_W, ROOM_H), Image.LANCZOS)
-    room.alpha_composite(fl)
+            fd.ellipse([(dx - 6) * S, (dy - 10) * S, (dx + 6) * S, (dy + 7) * S], fill=(80, 150, 225, a))
+            fd.ellipse([(dx - 2) * S, (dy - 6) * S, (dx + 1) * S, (dy - 2) * S], fill=(230, 245, 255, a))
+            if u > 0.9:  # splash ring
+                q = (u - 0.9) / 0.1
+                fd.ellipse([(dx - 6 - 22 * q) * S, (712 - 4 - 4 * q) * S, (dx + 6 + 22 * q) * S, (712 + 4 + 4 * q) * S],
+                           outline=(220, 240, 255, int(200 * (1 - q))), width=2 * S)
+    for (x, ytop, hgt, f, p) in flames(t):
+        cw = 22
+        fd.rounded_rectangle([(x - cw / 2) * S, ytop * S, (x + cw / 2) * S, TABLE_TOP * S], radius=5 * S,
+                             fill=(250, 244, 228))
+        fd.rectangle([(x + 3) * S, ytop * S, (x + cw / 2) * S, TABLE_TOP * S], fill=(232, 222, 200))
+        fd.polygon([((x - cw / 2) * S, (ytop + 2) * S), ((x - cw / 2 + 4) * S, (ytop + 2) * S),
+                    ((x - cw / 2 + 3) * S, (ytop + 16) * S)], fill=(255, 252, 240))   # wax drip
+        fd.rounded_rectangle([(x - 18) * S, (TABLE_TOP - 6) * S, (x + 18) * S, (TABLE_TOP + 2) * S],
+                             radius=4 * S, fill=(190, 160, 110))
+        fd.line([(x * S, ytop * S), (x * S, (ytop - 6) * S)], fill=(40, 30, 20), width=2 * S)
+        fh = 30 * f * p
+        sway = math.sin(t * 9 + x) * 2.5
+        fd.ellipse([(x - 9 * p + sway) * S, (ytop - 6 - fh) * S, (x + 9 * p + sway) * S, (ytop + 4) * S],
+                   fill=(255, 160, 30))
+        fd.ellipse([(x - 6 * p + sway) * S, (ytop - 4 - fh * 0.8) * S, (x + 6 * p + sway) * S, (ytop + 3) * S],
+                   fill=(255, 210, 90))
+        fd.ellipse([(x - 3 * p + sway) * S, (ytop - 1 - fh * 0.45) * S, (x + 3 * p + sway) * S, (ytop + 2) * S],
+                   fill=(255, 250, 220))
+    # rain on the window panes
+    for (rx, ry, sp) in G["rain"]:
+        y = 127 + ((ry + t * 1.6 * sp) % 1.0) * 256
+        if abs(rx - 760) < 7:
+            continue
+        fd.line([(rx * S, y * S), ((rx - 4) * S, (y + 18) * S)], fill=(170, 190, 220, 150), width=2 * S)
+    fv = flash(t)
+    if fv > 0.02:
+        fd.rectangle([647 * S, 127 * S, 873 * S, 383 * S], fill=(225, 232, 255, int(min(1, fv) * 170)))
+        if fv > 0.35:
+            k = max(i for i, tl in enumerate(LIGHTNING) if tl <= t)
+            pts = [(px * S, py * S) for px, py in G["bolts"][k]]
+            fd.line(pts, fill=(255, 255, 255, 255), width=5 * S, joint="curve")
+    # sparks from the lamp when the power dies
+    dt = t - T_LIGHT_OFF
+    if 0 <= dt < 1.1:
+        for vx, vy, life, delay in G["sparks"]:
+            u = dt - delay
+            if 0 <= u < life:
+                px, py = 500 + vx * u, 160 + vy * u + 900 * u * u
+                a = int(255 * (1 - u / life))
+                fd.line([(px * S, py * S), ((px - vx * 0.03) * S, (py - (vy + 1800 * u) * 0.03) * S)],
+                        fill=(255, int(lerp(240, 140, u / life)), 90, a), width=3 * S)
+    # dust puffs when a pizza box lands
+    for k, tp in enumerate(PIZZA):
+        u = (t - tp - 0.35) / 0.5
+        if 0 <= u < 1:
+            y = 850 - k * 36
+            for j in range(-2, 3):
+                r = 10 + 26 * ease_out(u)
+                cx = 845 + j * 46 * ease_out(u)
+                fd.ellipse([(cx - r) * S, (y - r * 0.6) * S, (cx + r) * S, (y + r * 0.4) * S],
+                           fill=(200, 190, 175, int(120 * (1 - u))))
+    fig.draw(fd, t, S)
+    if phone_on(t):
+        hx, hy = fig.hand(t)
+        fd.rounded_rectangle([(hx - 9) * S, (hy - 16) * S, (hx + 9) * S, (hy + 16) * S], radius=3 * S, fill=(20, 22, 28))
+        fd.rounded_rectangle([(hx - 7) * S, (hy - 13) * S, (hx + 7) * S, (hy + 12) * S], radius=2 * S,
+                             fill=(170, 210, 255))
+    room.alpha_composite(fl.reduce(DS // K))
 
-    # darkness with candle glow
+    # lighting: darkness with candle / phone light (computed at 1x, applied at 2x via C ops)
     if dk > 0.001:
-        arr = np.asarray(room.convert("RGB"), np.float32)
         glow = np.zeros((ROOM_H, ROOM_W), np.float32)
-        for (x, ytop, hgt, f, p) in flames(t):
-            R = (205 - 35 * clamp01(day_float(t) / 7)) * f * p + 1
-            glow += np.exp(-(((XX - x) ** 2 + ((YY - ytop + 20) * 0.9) ** 2) / (R * R)))
-        glow = np.clip(glow, 0, 1.15)
+        tint = np.zeros((ROOM_H, ROOM_W, 3), np.float32)
+        for (x, y, R, col, w8) in srcs:
+            g = np.exp(-(((XX - x) ** 2 + ((YY - y) * 0.9) ** 2) / (R * R))) * w8
+            glow += g
+            tint += g[..., None] * np.array(col, np.float32)
         a = dk * (1 - np.clip(glow, 0, 0.82))
-        dark = np.array([10, 14, 32], np.float32)
-        arr = arr * (1 - a[..., None]) + dark * a[..., None]
-        arr += np.array([255, 150, 50], np.float32) * (glow * dk * 0.22)[..., None]
-        room = Image.fromarray(arr.clip(0, 255).astype(np.uint8), "RGB").convert("RGBA")
-    room.putalpha(G["round"])
+        mask = Image.fromarray((a * 255).astype(np.uint8), "L").resize((ROOM_W * K, ROOM_H * K), Image.BILINEAR)
+        dark = Image.new("RGBA", room.size, (8, 12, 30, 255))
+        room = Image.composite(dark, room, mask)
+        warm = Image.fromarray(np.clip(tint * dk * 0.22, 0, 255).astype(np.uint8), "RGB").resize(
+            (ROOM_W * K, ROOM_H * K), Image.BILINEAR)
+        room = ImageChops.add(room.convert("RGB"), warm).convert("RGBA")
+        for (x, ytop, hgt, f, p) in flames(t):
+            paste_center(room, G["bloom"], x * K, (ytop - 12) * K, scale=0.6 + 0.4 * f * p, alpha=min(1.0, dk * 1.5))
+        if phone_on(t):
+            hx, hy = fig.hand(t)
+            paste_center(room, G["bloom_ph"], hx * K, hy * K, alpha=min(1.0, dk * 1.5))
+    if fv > 0.02:   # lightning lights up the room
+        room = Image.blend(room, Image.new("RGBA", room.size, (210, 220, 255, 255)), min(0.45, fv * 0.35))
     return room
 
 
+def shoot(room, t, bgdk):
+    """Virtual camera: crop/zoom/tilt the 2x room into the 1000x900 panel, whip blur on day changes."""
+    cx, cy, z, r = camera(t)
+    cw, ch = ROOM_W / z, ROOM_H / z
+    pad = 1 + abs(math.sin(math.radians(r))) * 1.2
+    cw2, ch2 = min(ROOM_W, cw * pad), min(ROOM_H, ch * pad)
+    cx = min(max(cx, cw2 / 2), ROOM_W - cw2 / 2)
+    cy = min(max(cy, ch2 / 2), ROOM_H - ch2 / 2)
+    box = [int((cx - cw2 / 2) * K), int((cy - ch2 / 2) * K), int((cx + cw2 / 2) * K), int((cy + ch2 / 2) * K)]
+    out_w, out_h = int(ROOM_W * cw2 / cw), int(ROOM_H * ch2 / ch)
+    img = room.resize((out_w, out_h), Image.LANCZOS, box=box)
+    if abs(r) > 0.05:
+        img = img.rotate(r, resample=Image.BICUBIC)
+    l, tp = (img.width - ROOM_W) // 2, (img.height - ROOM_H) // 2
+    img = img.crop((l, tp, l + ROOM_W, tp + ROOM_H))
+    wv = whip(t)
+    if wv > 0.02:
+        arr = np.asarray(img, np.float32)
+        acc = np.zeros_like(arr)
+        offs = [int(o * 90 * wv) for o in (-1, -0.5, 0, 0.5, 1)]
+        for o in offs:
+            acc += np.roll(arr, o, axis=1)
+        img = Image.fromarray((acc / len(offs)).astype(np.uint8), "RGBA")
+    img.alpha_composite(G["vig"])
+    img.putalpha(G["round"])
+    out = Image.new("RGBA", (ROOM_W + 16, ROOM_H + 16), (0, 0, 0, 0))
+    ImageDraw.Draw(out).rounded_rectangle([0, 0, ROOM_W + 15, ROOM_H + 15], radius=46,
+                                          fill=lerp_col((255, 255, 255), (64, 72, 92), clamp01(bgdk / 0.6)))
+    out.alpha_composite(img, (8, 8))
+    return out
+
+
+# ------------------------------------------------------------------ flying money / energy into the meters
+def draw_flyers(frame, t):
+    src = (W / 2, ROOM_Y + 380)
+    groups = [(ts, "💶", (800, 455), 6) for ts, _ in SPENDS]
+    groups += [(d, "⚡", (280, 455), 3) for d in DAYS[1:] + [WEEK_END]]
+    for gi, (ts, ch, dst, n) in enumerate(groups):
+        for k in range(n):
+            u = (t - ts - k * 0.06) / 0.6
+            if not 0 <= u < 1:
+                continue
+            e = ease_io(u)
+            sx = src[0] + ((k * 53 + gi * 31) % 160 - 80)
+            sy = src[1] + ((k * 29 + gi * 17) % 80 - 40)
+            mx, my = (sx + dst[0]) / 2, min(sy, dst[1]) - 220
+            x = (1 - e) ** 2 * sx + 2 * (1 - e) * e * mx + e * e * dst[0]
+            y = (1 - e) ** 2 * sy + 2 * (1 - e) * e * my + e * e * dst[1]
+            paste_center(frame, emoji_img(ch, 78), x, y, scale=lerp(1.0, 0.45, e), rot=(u * 360 + k * 40) % 360,
+                         alpha=1 - clamp01((u - 0.85) / 0.15))
 # ------------------------------------------------------------------ HUD per frame
 def fmt_eur(v):
     return f"{int(round(v))} €"
@@ -815,6 +1121,8 @@ def draw_caption(frame, t):
             return
 
 
+
+
 # ------------------------------------------------------------------ frame
 def render_frame(fi):
     t = fi / FPS
@@ -822,57 +1130,40 @@ def render_frame(fi):
     bgdk = min(1.0, dk * 1.3)
     frame = Image.blend(G["bg"][0], G["bg"][1], bgdk) if bgdk > 0.005 else G["bg"][0].copy()
     d = ImageDraw.Draw(frame)
-    # progress bar
     d.rounded_rectangle([40, 26, W - 40, 34], radius=4, fill=(128, 128, 128, 60))
     d.rounded_rectangle([40, 26, 40 + (W - 80) * clamp01(t / TOTAL), 34], radius=4, fill=TEAL)
 
-    # room (with gentle camera push per scene, small shake when money leaves)
-    room = draw_room(t)
-    si = max(i for i in range(len(OFF)) if OFF[i] <= t + 1e-6)
-    life = clamp01((t - OFF[si]) / max(1.0, s1(KEYS[si]) - OFF[si]))
-    zoom = 1.0 + 0.035 * ease_io(life)
-    shake = 0
-    for ts, _ in SPENDS:
-        if 0 <= t - ts < 0.25:
-            shake = math.sin((t - ts) * 90) * 6 * (1 - (t - ts) / 0.25)
-    rs = with_room_frame(room, bgdk)
-    paste_center(frame, rs, ROOM_X + ROOM_W / 2 + shake, ROOM_Y + ROOM_H / 2, scale=zoom)
+    panel = shoot(draw_room(t), t, bgdk)
+    frame.alpha_composite(panel, (ROOM_X - 8, ROOM_Y - 8))
 
-    # fazit stamp
     if t >= T_STAMP:
         q = clamp01((t - T_STAMP) / 0.18)
         paste_center(frame, G["stamp"], W / 2, ROOM_Y + 300, scale=lerp(1.9, 1.0, ease_out(q)), rot=-8,
                      alpha=q * (1 - clamp01((t - T_Q) / 0.3)))
-    # final question
     if t >= T_Q:
         p = (t - T_Q) / 0.5
         ov = Image.new("RGBA", (W, ROOM_H + 40), (8, 10, 20, int(150 * clamp01(p * 2))))
         frame.alpha_composite(ov, (0, ROOM_Y - 20))
-        paste_center(frame, G["question"], W / 2, ROOM_Y + ROOM_H / 2, scale=max(0.05, 0.3 + 0.7 * ease_back(p, 1.6)),
-                     alpha=clamp01(p * 3))
+        paste_center(frame, G["question"], W / 2, ROOM_Y + ROOM_H / 2,
+                     scale=max(0.05, 0.3 + 0.7 * ease_back(p, 1.6)), alpha=clamp01(p * 3))
 
     draw_counter(frame, t, bgdk)
+    draw_flyers(frame, t)
     draw_meters(frame, t)
     draw_stickers(frame, t)
     draw_caption(frame, t)
 
-    # disclaimer + handle
     tcol = lerp_col((110, 118, 126), (170, 178, 190), clamp01(bgdk / 0.6))
     if t >= s0("fazit"):
         a = clamp01((t - s0("fazit")) / 0.4)
         paste_center(frame, text_img("Beispielrechnung, Angaben ohne Gewähr", font(F_BODY_B, 32), tcol),
                      W / 2, 1745, alpha=a)
     paste_center(frame, text_img("@alltagklar", font(F_HEAD_B, 30), tcol), W / 2, 1855, alpha=0.85)
-    return frame.convert("RGB").tobytes()
-
-
-def with_room_frame(room, bgdk):
-    out = Image.new("RGBA", (ROOM_W + 16, ROOM_H + 16), (0, 0, 0, 0))
-    d = ImageDraw.Draw(out)
-    d.rounded_rectangle([0, 0, ROOM_W + 15, ROOM_H + 15], radius=46,
-                        fill=lerp_col((255, 255, 255), (70, 78, 96), clamp01(bgdk / 0.6)))
-    out.alpha_composite(room, (8, 8))
-    return out
+    fv = flash(t)
+    if fv > 0.02:
+        frame = Image.blend(frame, Image.new("RGBA", frame.size, (235, 240, 255, 255)), min(0.25, fv * 0.18))
+    arr = np.asarray(frame.convert("RGB"), np.int16) + G["grain"][(fi // 2) % len(G["grain"])]
+    return np.clip(arr, 0, 255).astype(np.uint8).tobytes()
 
 
 # ------------------------------------------------------------------ sound design (synthesised)
@@ -938,6 +1229,58 @@ def sfx_kaching(rng):
     return out
 
 
+def sfx_thunder(rng, dur=2.2):
+    n = int(dur * SR)
+    nz = rng.standard_normal(n)
+    out = np.zeros(n)
+    y = 0.0
+    for i in range(0, n):
+        y += 0.025 * (nz[i] - y)
+        out[i] = y
+    t = np.arange(n) / SR
+    env = np.minimum(1, t / 0.05) * np.exp(-t / 0.7) * (1 + 0.6 * np.sin(2 * np.pi * 3.1 * t) ** 2)
+    crack = rng.standard_normal(n) * _env(n, 0.001, 0.06) * 0.15
+    return (out * env * 9 + crack) * 0.8
+
+
+def sfx_zap(rng):
+    n = int(0.45 * SR)
+    t = np.arange(n) / SR
+    buzz = np.sign(np.sin(2 * np.pi * 100 * t)) * 0.3 + rng.standard_normal(n) * 0.5
+    buzz *= (np.sin(2 * np.pi * 23 * t) > -0.2)
+    return buzz * _env(n, 0.002, 0.18) * 0.5
+
+
+def sfx_plink():
+    n = int(0.12 * SR)
+    t = np.arange(n) / SR
+    f = 1500 - 700 * t / t[-1]
+    return np.sin(2 * np.pi * np.cumsum(f) / SR) * _env(n, 0.001, 0.03) * 0.35
+
+
+def sfx_thud(rng):
+    n = int(0.25 * SR)
+    t = np.arange(n) / SR
+    body = np.sin(2 * np.pi * (60 + 80 * np.exp(-t * 30)) * t) * _env(n, 0.001, 0.08)
+    click = rng.standard_normal(n) * _env(n, 0.0005, 0.012) * 0.5
+    return (body + click) * 0.7
+
+
+def rain_bed(dur):
+    rng = np.random.default_rng(21)
+    n = int(dur * SR)
+    nz = rng.standard_normal(n)
+    hp = np.diff(np.concatenate([[0], nz]))                 # bright hiss
+    lp = np.convolve(nz, np.ones(6) / 6, mode="same")
+    out = hp * 0.25 + lp * 0.5
+    for _ in range(int(dur * 25)):                           # droplets on the window
+        i = int(rng.uniform(0, dur) * SR)
+        k = int(0.01 * SR)
+        out[i:i + k] += rng.standard_normal(min(k, n - i)) * 0.4 * np.exp(-np.arange(min(k, n - i)) / (0.002 * SR))
+    fade = np.minimum(1, np.minimum(np.arange(n) / SR / 0.6, (n - np.arange(n)) / SR / 1.5))
+    return out * fade * 0.12
+
+
 def beat_bed(dur, bpm=100):
     rng = np.random.default_rng(3)
     n = int(dur * SR)
@@ -994,6 +1337,25 @@ def make_sfx(path):
     for ts, *_ in STICKERS:
         put(sfx_pop() * 0.6, ts + 0.08)
     put(sfx_pop() * 0.9, T_Q + 0.1)
+    for ts, *_ in SHOTS[1:]:
+        if ts not in WHIPS and abs(ts - T_LIGHT_OFF) > 0.01:
+            put(sfx_whoosh(rng, 0.22) * 0.3, ts - 0.08)    # swish on every camera cut
+    for tl in LIGHTNING:
+        put(sfx_click(rng) * 1.5, tl)
+        put(sfx_thunder(rng), tl + 0.18)
+    put(sfx_zap(rng), T_LIGHT_OFF)
+    for k in range(3):                                   # drips land in the puddle
+        m = 1
+        while True:
+            tl = T_DRIP + (m - k / 3) / 0.9
+            if tl > T_Q:
+                break
+            if tl > T_DRIP:
+                put(sfx_plink() * 0.7, tl)
+            m += 1
+    for tp in PIZZA:
+        put(sfx_thud(rng), tp + 0.33)
+    put(rain_bed(TOTAL) * 1.0, 0)
     bed = beat_bed(TOTAL)
     mix = np.zeros(n)
     mix[: len(out)] += out * 0.55
@@ -1027,7 +1389,7 @@ def main():
                     "[1:a]volume=0.6[s];[0:a][s]amix=inputs=2:normalize=0:duration=first,"
                     "loudnorm=I=-14:TP=-1.5:LRA=11", "-ar", "48000", str(audio)], check=True)
     cmd = ["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}",
-           "-r", str(FPS), "-i", "-", "-i", str(audio), "-c:v", "libx264", "-preset", "medium", "-crf", "20",
+           "-r", str(FPS), "-i", "-", "-i", str(audio), "-c:v", "libx264", "-preset", "slow", "-crf", "21",
            "-pix_fmt", "yuv420p", "-profile:v", "high", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart",
            "-t", f"{NFRAMES / FPS:.3f}", "-shortest", str(out)]
     ff = subprocess.Popen(cmd, stdin=subprocess.PIPE)

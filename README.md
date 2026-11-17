@@ -81,13 +81,20 @@ python3 render.py preview 5 30 # Standbilder
 ## stromausfall-video.mp4 („Was wäre, wenn…?“-Format)
 
 **Thema:** „Was wäre, wenn eine Woche der Strom ausfällt – was kostet dich das?“
-Länge ca. 44 s · 1080×1920 · 30 fps · Stimme edge-tts `de-DE-ConradNeural` (+10 %)
+Länge ca. 42 s · 1080×1920 · 30 fps · Stimme edge-tts `de-AT-JonasNeural` (+12 %, wie im Notwehr-Video)
 
 Oben ein großer Zähler **TAG 1 … TAG 7** (mit 7 Fortschrittsbalken), darunter zwei Anzeigen
 **Gespart: Strom** (grün, steigt bis 22 €) und **Ausgegeben** (rot, springt bei jedem Kassen-Sound bis 240 €).
 Feste Szene: Wohnung, die mit jedem Tag dunkler wird – Licht aus, Kühlschrank tropft (Pfütze wächst),
 Kerzen, überquellender Müll, Pizzakartons stapeln sich; Strichmännchen in Türkis. Untertitel Wort für Wort,
 Emoji-Sticker, Whoosh-/Kassen-Sounds, „@alltagklar“ unten, am Ende die Frage groß + „Beispielrechnung, Angaben ohne Gewähr“.
+
+Action-/Realismus-Ebene: virtuelle Kamera (Raum in 2× gerendert) mit harten Schnitten, Close-ups aus verschiedenen
+Perspektiven (Fenster, Lampe, Kühlschrank/Pfütze, Müll, Handy, Pizzastapel), Handkamera-Wackler, Whip-Pan mit
+Bewegungsunschärfe bei jedem neuen Tag; Gewitter mit Regen am Fenster und Blitzen, Funkenflug beim Stromausfall,
+Kerzen- und Handylicht als echte Lichtquellen mit Bloom und Schatten der Figur an der Wand, Tropfen mit Spritzern,
+Staubwolken bei landenden Kartons, 💶/⚡ fliegen in die Anzeigen, Vignette, Filmkorn.
+Sounds zusätzlich: Donner, Elektro-Zischen, Regen, Tropfen, dumpfe Aufschläge, Swish bei Schnitten.
 
 Beispielrechnung: Kerzen/Batterien 25 € · verdorbene Lebensmittel 60 € · Essen bestellen 35 € ·
 Pizza Tag 4–5 50 € · Tiefkühltruhe/Waschsalon/Powerbank 70 € = 240 €; gesparter Strom ≈ 3,15 €/Tag ≈ 22 €.

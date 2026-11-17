@@ -1,5 +1,5 @@
-VOICE = "de-DE-ConradNeural"
-RATE = "+10%"
+VOICE = "de-AT-JonasNeural"
+RATE = "+12%"
 
 # Beispielrechnung: 7 Tage ohne Strom.
 # Gespart (Strom): ca. 3,15 €/Tag  -> ~22 €

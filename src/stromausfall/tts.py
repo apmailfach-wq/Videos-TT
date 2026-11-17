@@ -1,4 +1,4 @@
-"""Voiceover per scene (edge-tts, de-DE-ConradNeural) + word timings -> build/stromausfall/."""
+"""Voiceover per scene (edge-tts, de-AT-JonasNeural) + word timings -> build/stromausfall/."""
 import asyncio, json, subprocess, sys
 from pathlib import Path
 import os, ssl
