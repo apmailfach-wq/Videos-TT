@@ -105,3 +105,17 @@ python3 tts.py          # Sprechtext aus script.py -> build/stromausfall/ (Pause
 python3 render.py       # rendert ../../stromausfall-video.mp4
 python3 render.py preview 6 12 30   # Standbilder
 ```
+
+## urlaub-video.mp4 („Was passiert mit deinem Körper im Urlaub?“)
+
+Länge ca. 39 s · 1080×1920 · 30 fps · Stimme edge-tts `de-AT-JonasNeural` (+12 %)
+Gleiches Format wie das Stromausfall-Video: Zähler **TAG 1 … TAG 14** (Tag 8 = Erholungs-Hoch markiert),
+Anzeigen **Erholung** (grün) / **Stress** (rot), Strand mit Sonne, Wellen, Möwen, Liege, Zeitraffer-Nächten
+zwischen den Tagen, Kamera-Schnitten und Whip-Pans; Tag 2 „Freizeitkrankheit“ (Figur wird grün, Niesen),
+Tag 3–5 Zzz, Tag 8 Sprünge + Funkeln, Tag 14 Koffer → harter Schnitt ins Büro (Mails fliegen rein, Erholung fällt
+auf 12 %). Ende: Kommentar-Frage + animierter „+ FOLGEN“-Button. Vereinfacht nach Studien zum Urlaubseffekt
+(u. a. de Bloom et al.), Angaben ohne Gewähr.
+
+```bash
+cd src/urlaub && python3 tts.py && python3 render.py   # -> ../../urlaub-video.mp4
+```
