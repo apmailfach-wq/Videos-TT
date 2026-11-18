@@ -17,6 +17,7 @@ import numpy as np
 from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 import shots as S
+from core import bloom  # noqa: E402
 from draw import (W, H, FPS, OUT, RED, font, clamp01, lerp, ease_out, ease_in, ease_io, paste_c, zoom_frame,
                   text_img, emoji, glow_dot)
 
@@ -368,7 +369,7 @@ def shake(T):
 def grade(img, T, s):
     arr = np.asarray(img.convert("RGB")).astype(np.int16)
     if s[3]:  # underwater: push into blue-green, crush reds
-        arr = (arr * np.array([0.5, 0.8, 0.86])).astype(np.int16) + np.array([0, 4, 8], np.int16)
+        arr = (arr * np.array([0.36, 0.6, 0.68])).astype(np.int16) + np.array([0, 3, 8], np.int16)
     if 12.5 <= T < 14.0:  # lights out: everything turns blue
         k = clamp01((T - 12.85) / 0.3)
         lum = arr.mean(axis=2, keepdims=True)
@@ -427,6 +428,42 @@ def rewind_fx(T):
     return img
 
 
+BLUR_SHOTS = {0.0, 3.0, 15.0, 23.0, 24.0, 17.0}
+
+
+def caustics(T, strength=1.0):
+    sw, sh = 216, 384
+    yy, xx = np.mgrid[0:sh, 0:sw].astype(np.float32)
+    a = np.sin(xx * 0.11 + np.sin(yy * 0.07 + T * 1.4) * 2.2 + T * 1.1)
+    b = np.sin(yy * 0.09 + np.sin(xx * 0.08 - T * 1.2) * 2.4 - T * 0.9)
+    c = np.clip(1 - np.abs(a + b) * 0.5, 0, 1) ** 7
+    depth = np.clip(1.15 - yy / sh, 0.15, 1)[..., None]
+    col = np.array([90, 255, 230], np.float32)
+    arr = (c[..., None] * depth * col * 0.55 * strength).astype(np.uint8)
+    return Image.fromarray(arr, "RGB").resize((W, H), Image.BILINEAR)
+
+
+def glow(frame, strength=0.8, thresh=212):
+    small = frame.convert("RGB").resize((W // 4, H // 4), Image.BILINEAR)
+    arr = np.asarray(small).astype(np.float32)
+    lum = arr @ np.array([0.3, 0.59, 0.11], np.float32)
+    mask = np.clip((lum - thresh) / (255 - thresh), 0, 1)[..., None]
+    b = Image.fromarray((arr * mask).astype(np.uint8))
+    g = ImageChops.add(b.filter(ImageFilter.GaussianBlur(5)), b.filter(ImageFilter.GaussianBlur(16)))
+    g = Image.fromarray((np.asarray(g).astype(np.float32) * strength).clip(0, 255).astype(np.uint8))
+    return ImageChops.screen(frame.convert("RGB"), g.resize((W, H), Image.BILINEAR)).convert("RGBA")
+
+
+def whip(frame, amt):
+    arr = np.asarray(frame.convert("RGB")).astype(np.uint16)
+    acc = arr.copy()
+    k = 1
+    for o in (-2, -1, 1, 2):
+        acc += np.roll(arr, int(o * amt), axis=1)
+        k += 1
+    return Image.fromarray((acc // k).astype(np.uint8), "RGB").convert("RGBA")
+
+
 def render_frame(fi):
     T = fi / FPS
     s = shot_at(T)
@@ -434,8 +471,16 @@ def render_frame(fi):
         frame = rewind_fx(T)
     else:
         img, s = base_scene(T)
+        if s[0] in BLUR_SHOTS:
+            img2, _ = base_scene(max(s[0], T - 0.5 / FPS))
+            img = Image.blend(img, img2, 0.5)
         frame = grade(img, T, s)
+        if s[3]:
+            frame = ImageChops.add(frame.convert("RGB"), caustics(T, 0.32)).convert("RGBA")
+        frame = glow(frame, 0.8, 222 if s[3] else 210)
         lt = T - s[0]
+        if lt < 0.1 and s[0] > 0:
+            frame = whip(frame, 26 * (1 - lt / 0.1))
         z = 1.0
         if lt < 0.15 and s[0] > 0:
             z = 1 + 0.08 * (1 - ease_out(lt / 0.15))
@@ -450,7 +495,7 @@ def render_frame(fi):
             red_edges(frame, 0.35 + 0.35 * math.sin(T * 9) ** 2)
         if 4.0 <= T < 8.0:
             red_edges(frame, 0.45 * heart_pulse(T))
-        if abs(T - 24.32) < 0.07 or abs(T - 2.04) < 0.06:
+        if abs(T - 24.32) < 0.07 or abs(T - 2.04) < 0.06 or 0.06 <= T < 0.13 or abs(T - 20.3) < 0.05:
             frame.alpha_composite(Image.new("RGBA", (W, H), (255, 255, 255, 150)))
     draw_bar(frame, T)
     draw_timer(frame, T)
@@ -622,112 +667,221 @@ def fx_glass(rng, dur=1.6):
     return out + hp(noise(dur, rng), 3000) * np.exp(-t * 6) * 0.6
 
 
-def bed(total):
-    """Tense drone + pulse."""
+def saw(f, dur, ph=0.0):
+    t = tvec(dur)
+    return 2 * ((np.cumsum(np.broadcast_to(f, t.shape)) / SR + ph) % 1) - 1
+
+
+def fx_braam(rng, dur=2.2):
+    t = tvec(dur)
+    x = np.zeros_like(t)
+    for f in (55, 55.4, 110.3, 82.4, 164.6, 41.2):
+        x += saw(f, dur, rng.random())
+    env = np.minimum(1, t / 0.04) * np.exp(-t * 1.3)
+    from scipy.signal import butter, sosfilt
+    out = np.zeros_like(x)
+    blk = 2048
+    for i in range(0, len(x), blk):
+        fc = 180 + 1700 * np.exp(-(i / SR) * 3.0)
+        sos = butter(2, fc, "low", fs=SR, output="sos")
+        out[i:i + blk] = sosfilt(sos, x[i:i + blk])
+    return np.tanh(out * 0.5) * env * 1.4
+
+
+def fx_riser(rng, dur):
+    t = tvec(dur)
+    u = t / dur
+    n = bp(noise(dur, rng), 500, 9000) * u ** 2.5 * 0.5
+    f = 220 * 2 ** (u * 2.5)
+    tone_ = np.sin(2 * np.pi * np.cumsum(f) / SR) * u ** 2 * 0.25
+    sh = np.sin(2 * np.pi * np.cumsum(f * 1.5) / SR) * u ** 3 * 0.12
+    return n + tone_ + sh
+
+
+def fx_subdrop(dur=1.2):
+    t = tvec(dur)
+    f = 30 + 70 * np.exp(-t * 3)
+    return np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-t * 2.2) * 1.2
+
+
+def fx_tick(hi=True):
+    t = tvec(0.06)
+    f = 3200 if hi else 2400
+    return (np.sin(2 * np.pi * f * t) + 0.5 * np.sin(2 * np.pi * f * 1.47 * t)) * np.exp(-t * 120) * 0.5
+
+
+def pad(freqs, dur, rng):
+    t = tvec(dur)
+    x = np.zeros_like(t)
+    for f in freqs:
+        for det in (-0.6, 0.6):
+            x += saw(f + det, dur, rng.random())
+    return lp(x, 1200) / (len(freqs) * 2)
+
+
+def reverb(x, rng, seconds=1.1, seed_off=0):
+    from scipy.signal import fftconvolve
+    r = np.random.default_rng(11 + seed_off)
+    n = int(seconds * SR)
+    t = np.arange(n) / SR
+    ir = r.standard_normal(n) * np.exp(-t * 5.5)
+    ir = lp(ir, 5000)
+    ir[0] = 0
+    return fftconvolve(x, ir)[: len(x)] * 0.06
+
+
+def bed(total, rng):
     t = tvec(total)
-    lfo = 0.6 + 0.4 * np.sin(2 * np.pi * 0.25 * t)
-    drone = (np.sin(2 * np.pi * 55 * t) + 0.6 * np.sin(2 * np.pi * 58.3 * t) + 0.35 * np.sin(2 * np.pi * 82.4 * t)
-             + 0.2 * np.sin(2 * np.pi * 116.5 * t + np.sin(2 * np.pi * 0.3 * t))) * lfo
-    hi = np.sin(2 * np.pi * 1244 * t) * 0.03 * (0.5 + 0.5 * np.sin(2 * np.pi * 0.17 * t))
-    out = drone * 0.22 + hi
-    rng = np.random.default_rng(3)
-    pulse = np.zeros_like(t)
-    p = 0.0
-    while p < total:
-        k = fx_hit(rng, 0.25)
-        i = int(p * SR)
-        pulse[i:i + len(k)] += k[: len(pulse) - i]
-        tick = hp(noise(0.03, rng), 5000) * np.exp(-tvec(0.03) * 150) * 0.15
-        for q in (0.25, 0.5):
-            j = int((p + q * 0.55) * SR)
-            pulse[j:j + len(tick)] += tick[: max(0, len(pulse) - j)]
-        p += 0.55
-    return out + pulse * 0.5
+    lfo = 0.65 + 0.35 * np.sin(2 * np.pi * 0.21 * t)
+    L = (np.sin(2 * np.pi * 55 * t) + 0.5 * np.sin(2 * np.pi * 58.27 * t) + 0.3 * np.sin(2 * np.pi * 82.4 * t)) * lfo
+    R = (np.sin(2 * np.pi * 55.2 * t) + 0.5 * np.sin(2 * np.pi * 58.0 * t) + 0.3 * np.sin(2 * np.pi * 82.6 * t)) * lfo
+    grit = lp(saw(55, total) + saw(55.3, total), 260) * 0.25 * lfo
+    wind = lp(noise(total, rng), 500) * 0.06
+    hi = np.sin(2 * np.pi * 1244.5 * t) * 0.02 * (0.5 + 0.5 * np.sin(2 * np.pi * 0.13 * t))
+    return np.stack([L * 0.22 + grit + wind + hi, R * 0.22 + grit + wind * 0.9 + hi])
 
 
 def build_audio(path):
     rng = np.random.default_rng(7)
     n = int(TOTAL * SR)
-    amb = bed(TOTAL)
-    sfx = np.zeros(n)
+    t = np.arange(n) / SR
+    amb = bed(TOTAL, rng)
+    sfx = np.zeros((2, n))
+    duck_src = np.zeros(n)
 
-    def put(sig, T, g=1.0):
+    def put(sig, T, g=1.0, pan=0.0, duck=0.0):
         i = int(max(0, T) * SR)
-        seg = sig[: max(0, n - i)]
-        sfx[i:i + len(seg)] += seg * g
+        seg = sig[: max(0, n - i)] * g
+        sfx[0, i:i + len(seg)] += seg * math.sqrt(0.5 * (1 - pan))
+        sfx[1, i:i + len(seg)] += seg * math.sqrt(0.5 * (1 + pan))
+        if duck:
+            duck_src[i:i + len(seg)] += np.abs(seg) * duck
 
-    # impact hit on every cut
-    for c in CUTS:
-        put(fx_hit(rng), c, 0.7)
-        put(fx_whoosh(rng), c - 0.3, 0.35)
-    for x in (0.12, 0.42, 4.05, 8.3, 9.55, 14.05, 15.05, 16.05, 17.05, 18.55, 22.05, 24.0, 26.35, 26.75):
-        put(fx_hit(rng), x, 0.45)
-    put(fx_crash(rng), 0.08, 1.0)
-    put(fx_hit(rng), 0.08, 1.0)
-    put(fx_splash(rng), 2.0, 1.2)
-    put(fx_bubbles(rng, 2.0, 70), 2.05, 0.7)
-    put(fx_hit(rng), 3.0, 0.9)
+    # rhythmic pulse (sub kicks) - urgency in the escape section
+    for a, b, step, g in ((0.0, 4.0, 0.6, 0.35), (8.0, 14.0, 0.5, 0.4), (15.0, 20.2, 0.43, 0.5), (22.0, 25.6, 0.43, 0.5)):
+        p = a
+        while p < b:
+            put(fx_hit(rng, 0.6), p, g)
+            p += step
+    # cut hits + whooshes
+    for k, c in enumerate(CUTS):
+        put(fx_hit(rng), c, 0.75, duck=1.0)
+        put(fx_whoosh(rng), c - 0.3, 0.45, pan=(-0.6 if k % 2 else 0.6))
+    for x in (0.12, 0.42, 4.05, 9.55, 14.05, 15.05, 16.05, 17.05, 18.55, 22.3, 24.0, 26.35, 26.75):
+        put(fx_hit(rng), x, 0.5, duck=0.6)
+    # braams on the big story beats
+    for x, g in ((0.07, 1.0), (8.3, 1.1), (22.05, 0.9)):
+        put(fx_braam(rng), x, g, duck=1.0)
+    # risers into the beats
+    for a, b in ((2.9, 4.0), (6.9, 7.95), (13.0, 14.0), (24.7, 25.7)):
+        put(fx_riser(rng, b - a), a, 0.9)
+    for x in (2.0, 14.0, 15.0):
+        put(fx_subdrop(), x, 1.0, duck=0.8)
+    # hook
+    put(fx_crash(rng), 0.06, 1.0, pan=0.2)
+    put(fx_hit(rng), 0.06, 1.2, duck=1.0)
+    put(fx_glass(rng, 0.8), 0.1, 0.4, pan=-0.3)
+    put(fx_whoosh(rng, 0.9), 1.0, 0.6)
+    put(fx_splash(rng), 2.0, 1.3)
+    put(fx_bubbles(rng, 2.0, 90), 2.05, 0.8, pan=-0.2)
+    put(fx_bubbles(rng, 1.0, 120), 3.0, 0.8, pan=0.3)
+    put(fx_hit(rng), 3.0, 1.0)
+    # choice: heartbeat + clock + countdown beeps
     for b in BEATS:
-        put(fx_heart(), b, 1.3)
+        put(fx_heart(), b, 1.5, duck=0.5)
+    p, hi = 4.0, True
+    while p < 7.9:
+        put(fx_tick(hi), p, 0.5, pan=0.3 if hi else -0.3)
+        p += 0.5
+        hi = not hi
     for ta, _ in TIMER:
-        put(fx_beep(880, 0.16), ta, 0.6)
+        put(fx_beep(880, 0.16), ta, 0.55)
     put(fx_beep(440, 0.4), 7.9, 0.7)
+    # variant A
     for y in (0.15, 0.55, 0.92, 1.28):
-        put(fx_clack(rng), 8.0 + y, 0.9)
-    put(fx_groan(4.5), 9.5, 0.8)
+        put(fx_clack(rng), 8.0 + y, 1.0, pan=-0.2)
+        put(fx_hit(rng, 0.5), 8.0 + y, 0.6)
+    put(fx_groan(4.5), 9.5, 0.55)
     put(fx_bubbles(rng, 3.0, 12), 9.5, 0.5)
-    put(fx_powerdown(), 12.8, 0.8)
+    put(fx_powerdown(), 12.8, 0.9)
     put(fx_rewind(rng), 14.0, 0.9)
+    # variant B
     put(fx_click(), 15.28, 1.0)
     put(fx_click(), 15.33, 0.8)
-    put(fx_whoosh(rng, 0.3), 15.33, 0.6)
-    put(fx_motor(0.75, rng), 16.1, 0.7)
-    put(fx_splash(rng), 16.6, 0.4)
-    put(fx_whoosh(rng, 0.6), 17.1, 0.5)
-    put(fx_bubbles(rng, 3.0, 25), 17.2, 0.6)
-    put(fx_splash(rng), 20.25, 1.0)
-    put(fx_gasp(rng), 20.4, 1.0)
-    put(fx_gasp(rng), 21.1, 0.8)
+    put(fx_whoosh(rng, 0.3), 15.33, 0.7, pan=0.5)
+    put(fx_motor(0.75, rng), 16.1, 0.8, pan=-0.3)
+    put(fx_splash(rng), 16.6, 0.45)
+    put(fx_whoosh(rng, 0.6), 17.1, 0.6)
+    put(fx_bubbles(rng, 3.0, 30), 17.2, 0.7)
+    put(fx_riser(rng, 1.7), 18.6, 0.6)
+    put(fx_splash(rng), 20.25, 1.2)
+    put(fx_hit(rng), 20.25, 0.8, duck=1.0)
+    put(fx_gasp(rng), 20.4, 1.1)
+    put(fx_gasp(rng), 21.1, 0.9)
+    # bonus
     for x in (0.12, 0.38, 0.62, 0.84):
-        put(fx_click(), 22.0 + x, 0.8)
-        put(fx_motor(0.15, rng, stutter=True), 22.0 + x, 0.4)
-    put(fx_whoosh(rng, 0.5), 23.4, 0.8)
-    put(fx_hit(rng), 24.32, 1.1)
+        put(fx_click(), 22.0 + x, 0.9)
+        put(fx_motor(0.15, rng, stutter=True), 22.0 + x, 0.45)
+    put(fx_whoosh(rng, 0.5), 23.4, 0.9, pan=0.4)
+    put(fx_hit(rng), 24.32, 1.3, duck=1.0)
     put(fx_clack(rng), 24.32, 1.0)
-    put(fx_glass(rng, 0.6), 24.33, 0.5)
-    put(fx_glass(rng, 1.6), 25.0, 0.9)
+    put(fx_glass(rng, 0.6), 24.33, 0.6)
+    put(fx_glass(rng, 1.6), 25.0, 1.0, pan=-0.2)
+    put(fx_glass(rng, 1.6), 25.02, 0.8, pan=0.3)
 
-    # muffle everything while underwater
+    # hope pad when surfacing (A major), tense minor elsewhere
+    hope = pad((220.0, 277.2, 329.6, 440.0), 2.2, rng)
+    e = np.minimum(1, tvec(2.2) / 0.4) * np.minimum(1, (2.2 - tvec(2.2)) / 0.5)
+    i = int(20.25 * SR)
+    for ch in (0, 1):
+        sfx[ch, i:i + len(hope)] += hope * e * 0.55
+
+    # sidechain duck of the bed
+    k = int(0.12 * SR)
+    denv = np.convolve(duck_src, np.ones(k) / k, mode="same")
+    duck = 1 - np.clip(denv * 1.6, 0, 0.7)
+    bedg = np.ones(n)
+    bedg[(t >= 14.0) & (t < 15.0)] = 0.3
+    bedg[(t >= 20.25) & (t < 22.0)] = 0.35
+    amb = amb * duck * bedg
+    wet = np.stack([reverb(sfx[0], rng, 1.2, 0), reverb(sfx[1], rng, 1.2, 1)])
+    mix = amb * 0.9 + sfx * 0.75 + wet
+    # underwater: everything muffled
     uw = np.zeros(n)
     for s in SCHED:
         if s[3]:
             uw[int(s[0] * SR):int(s[1] * SR)] = 1
-    k = int(0.03 * SR)
-    uw = np.convolve(uw, np.ones(k) / k, mode="same")
-    mix = amb * 0.8 + sfx * 0.7
-    mix = mix * (1 - uw) + (lp(mix, 450) * 1.6 + lp(noise(TOTAL, rng), 120) * 0.08) * uw
-    # silence before the finale, then a hushed drone
-    t = np.arange(n) / SR
+    kk = int(0.03 * SR)
+    uw = np.convolve(uw, np.ones(kk) / kk, mode="same")
+    rumble = lp(noise(TOTAL, rng), 120) * 0.1
+    for ch in (0, 1):
+        mix[ch] = mix[ch] * (1 - uw) + (lp(mix[ch], 420) * 1.5 + rumble) * uw
+    # silence before the finale
     gate = np.ones(n)
     gate[(t >= 25.7) & (t < 26.3)] = 0
-    ramp = (t >= 25.55) & (t < 25.7)
-    gate[ramp] = 1 - (t[ramp] - 25.55) / 0.15
-    fin = t >= 26.3
-    gate[fin] = 0.55
+    ramp = (t >= 25.62) & (t < 25.7)
+    gate[ramp] = 1 - (t[ramp] - 25.62) / 0.08
+    gate[t >= 26.3] = 0.75
     mix = mix * gate
-    fin_sfx = np.zeros(n)
-    i = int(26.35 * SR)
-    hh = fx_hit(rng, 1.0)
-    fin_sfx[i:i + len(hh)] += hh
-    j = int(26.75 * SR)
-    fin_sfx[j:j + len(hh)] += hh
-    mix += fin_sfx * 0.7
-    mix /= max(1e-6, np.abs(mix).max()) / 0.95
+    fin = np.zeros(n)
+    for x in (26.35, 26.75):
+        h = fx_hit(rng, 1.0)
+        j = int(x * SR)
+        fin[j:j + len(h)] += h[: n - j]
+    for x in (27.3, 28.2, 29.1):
+        h = fx_heart(1.2)
+        j = int(x * SR)
+        fin[j:j + len(h)] += h[: n - j]
+    note = np.sin(2 * np.pi * 880 * tvec(3.6)) * np.exp(-tvec(3.6) * 0.9) * 0.08
+    j = int(26.35 * SR)
+    fin[j:j + len(note)] += note[: n - j]
+    mix = mix + fin * 0.75
+    mix = np.tanh(mix / max(1e-6, np.abs(mix).max()) * 1.6) * 0.95
     with wave.open(str(path), "wb") as w:
-        w.setnchannels(1)
+        w.setnchannels(2)
         w.setsampwidth(2)
         w.setframerate(SR)
-        w.writeframes((mix * 32000).astype(np.int16).tobytes())
+        w.writeframes((mix.T * 32000).astype(np.int16).tobytes())
 
 
 # ---------------------------------------------------------------- main

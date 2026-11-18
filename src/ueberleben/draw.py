@@ -107,6 +107,13 @@ class Pen:
             x, y = x * math.cos(a) - y * math.sin(a), x * math.sin(a) + y * math.cos(a)
         self.poly(np.c_[cx + x, cy + y], fill, ol, w)
 
+    def crescent(self, cx, cy, rx, ry, dx, dy, a0, a1, fill, n=28):
+        """Shadow/rim crescent: ellipse arc minus the same ellipse shifted by (dx, dy)."""
+        th = np.radians(np.linspace(a0, a1, n))
+        outer = np.c_[cx + rx * np.cos(th), cy + ry * np.sin(th)]
+        inner = np.c_[cx + dx + rx * np.cos(th[::-1]), cy + dy + ry * np.sin(th[::-1])]
+        self.poly(np.vstack([outer, inner]), fill, None)
+
     def rect(self, x0, y0, x1, y1, fill=None, ol=OUT, w=0):
         self.poly([(x0, y0), (x1, y0), (x1, y1), (x0, y1)], fill, ol, w)
 
@@ -308,8 +315,12 @@ def head(pen, x, y, r, expr="neutral", look=(0, 0), blink=0.0, brow=0.0, wet=Fal
     # ears
     for sx_ in (-1, 1):
         pen.ell(sx_ * 98, 8, 18, 26, SKIN, OUT, 7)
-    pen.ell(0, 0, 100, 104, SKIN, OUT, 9)
-    pen.ell(0, 46, 82, 44, rgba(SKIN_D, 70), None)
+    pen.ell(0, 0, 100, 104, SKIN, None)
+    pen.crescent(0, 0, 100, 104, -26, -14, -70, 115, rgba(SKIN_D, 200))
+    pen.crescent(0, 0, 100, 104, 12, 6, 140, 230, (120, 235, 225, 150))
+    pen.ell(-44, 30, 20, 12, (255, 140, 130, 45), None)
+    pen.ell(44, 30, 20, 12, (255, 140, 130, 45), None)
+    pen.ell(0, 0, 100, 104, None, OUT, 9)
     # hair
     hair = [(-100, -6), (-96, -46), (-72, -86), (-30, -106), (16, -110), (58, -98), (90, -66), (102, -20), (80, -40),
             (56, -58), (40, -46), (14, -66), (-20, -54), (-50, -64), (-78, -34)]
@@ -379,6 +390,9 @@ def person(pen, x, y, s, ang=0, la=(160, 30), ra=(-160, -30), ll=(10, 0), rl=(-1
         pen.ell(pts[-1][0], pts[-1][1] + 6, 24, 14, (30, 30, 36) if silhouette is None else silhouette, OUT, 5)
     pen.rrect(-56, -70, 56, 76, 34, col_sh, OUT, 8)
     if silhouette is None:
+        pen.poly([(18, -62), (40, -60), (52, -36), (52, 50), (40, 70), (14, 72), (26, 40), (28, -30)], SHIRT_D, None)
+        pen.poly([(-50, -40), (-42, -58), (-36, -40), (-38, 40), (-46, 50)], (255, 236, 150), None)
+        pen.poly([(-22, -70), (22, -70), (0, -40)], SHIRT_D, OUT, 5)
         pen.line([(-40, 30), (40, 30)], SHIRT_D, 6)
     for arm, ox in ((la, -48), (ra, 48)):
         pts = chain((ox, -50), arm[0], arm[1], 62, 58)

@@ -102,7 +102,8 @@ def sparks(pen, t, ox, oy, n=26, seed=12, life=0.5):
 def shot_bridge(t, d):
     # slow-motion after impact
     tt = t if t < 0.14 else 0.14 + (t - 0.14) * 0.32
-    cam = (540, 820 + 120 * ease_io(t), 1.0 + 0.16 * t, lerp(-3, 3, t))
+    pull = ease_out(clamp01(t / 0.7))
+    cam = (lerp(560, 540, pull), lerp(660, 900, pull), lerp(1.75, 1.05, pull), lerp(-7, 3, pull))
     pen = Pen(cam, NIGHT_TOP, (20, 44, 60))
     sky_city(pen, t)
     river(pen, t, 1420)
@@ -113,7 +114,7 @@ def shot_bridge(t, d):
         pen.rect(lx - 6, 520, lx + 6, 700, (60, 66, 80), OUT, 3)
         pen.ell(lx, 515, 16, fill=LAMP, ol=OUT, w=3)
         pen.ell(lx, 515, 60, fill=(255, 210, 120, 40), ol=None)
-    broke = t > 0.1
+    broke = t > 0.06
     cy = 600 + 520 * ease_in(clamp01((tt - 0.12) / 0.3)) + 60 * tt
     cs = lerp(0.42, 0.72, ease_out(clamp01(tt / 0.35)))
     cr = lerp(0, -16, clamp01((tt - 0.1) / 0.3))
@@ -125,8 +126,9 @@ def shot_bridge(t, d):
     if broke:
         car_front(pen, 560, cy, cs, cr, face="panic", sy=lerp(1, 0.86, clamp01(tt / 0.3)))
         debris(pen, tt + 0.02, 560, 650, n=16, speed=1.0)
-        sparks(pen, tt, 380, 640)
-        sparks(pen, tt, 740, 640, seed=13)
+        sparks(pen, tt, 380, 640, n=40)
+        sparks(pen, tt, 740, 640, n=40, seed=13)
+        sparks(pen, tt * 0.8, 560, 690, n=30, seed=14)
     rain(pen, t)
     return pen.finish()
 

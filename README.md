@@ -96,8 +96,14 @@ Kamera wechselt alle 1–1,5 s (24 Einstellungen), jede Einstellung bewegt sich.
 | 22–26 s | Fenster klemmt → Nothammer in die Ecke, Glas zerspringt in Zeitlupe | FENSTER KLEMMT? IN DIE ECKE SCHLAGEN! |
 | 26–30 s | Close-up, Blick in die Kamera, harter Schnitt (Loop) | EHRLICH: A ODER B? 👇 · Folge 3 morgen |
 
-Ton: Drohne + Puls, Impact auf jedem Schnitt, dumpfer Tiefpass unter Wasser, Herzschlag/Timer-Piepen,
-Türgriff-Klacken, Rewind-Spulen, Gurt-Klick, Fensterheber, Glas, Stille direkt vor dem Finale.
+Look: Cel-Shading + Randlicht an der Figur, Glow auf echten Lichtern, animierte Unterwasser-Kaustiken,
+Motion Blur in schnellen Einstellungen, Whip-Blur auf jedem Schnitt, Grading (unter Wasser dunkel blaugrün, Variante A rote Ränder,
+Licht aus → blau), Filmkorn, Vignette.
+
+Ton (Stereo, komplett synthetisiert): Moll-Drohne mit Sidechain-Ducking, Sub-Puls (schneller in der Flucht), Braams auf
+Crash / „FALSCH.“ / „FENSTER KLEMMT?“, Riser in jeden Wendepunkt, Sub-Drops, Impact + Whoosh auf jedem Schnitt, Uhrticken +
+Herzschlag + Countdown-Piepen, Türgriff, Druck-Ächzen, Stromausfall, Rewind, Gurt-Klick, Fensterheber, Luftschnappen,
+Dur-Akkord beim Auftauchen, Glas, Hall; unter Wasser alles dumpf; Stille direkt vor dem Finale, dann leiser Herzschlag.
 
 ```bash
 cd src/ueberleben
