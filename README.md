@@ -77,3 +77,37 @@ python3 render.py              # rendert ../../fuehrerschein-video-neon.mp4
 python3 render.py shots        # Schnittliste
 python3 render.py preview 5 30 # Standbilder
 ```
+
+## bar-karte-handy-video.mp4 (Bezahlschmerz-Erklärfilm)
+
+**Thema:** „BAR vs KARTE vs HANDY – wer gibt im Monat mehr aus?“ · genau 60 s · 1080×1920 · 30 fps
+Flache 2D-Animation auf Dunkelblau, drei Bahnen mit Strichfiguren (BAR gelb, KARTE rot, HANDY türkis),
+dauerhafte Anzeige oben (Uhr „TAG 1–30“ + drei hochzählende „… · AUSGEGEBEN“-Kästchen), Spontankäufe als
+Symbole über der Figur (Kaffee, Snack, Zeitschrift, Online-Bestellung), die in ein „EXTRAS“-Raster fliegen,
+Push-Nachrichten beim Handy, Geldautomat + Kleingeld bei Bar, Wort-für-Wort-Untertitel in Figurenfarben.
+Voiceover: edge-tts `de-DE-ConradNeural`; Musik/Klicks/Ping werden synthetisch erzeugt.
+
+| Zeit | Szene |
+|---|---|
+| 0–3 s | Titel + Frage |
+| 3–8 s | „GLEICHER EINKAUFSZETTEL“, „30 TAGE“, Start |
+| 8–16 s | Tag 1–8 → 142 / 163 / 171 € |
+| 16–22 s | „HANDY = GELDFRESSER?“ → „NOCH NICHT.“ |
+| 22–30 s | Tag 9–15, Push-Nachricht an, Handy bremst |
+| 30–38 s | Tag 16–22, Geldautomat, „Kleingeld fühlt sich wie Spielgeld an“ |
+| 38–44 s | Tag 23–30, Karte ohne Nachricht und ohne Gefühl |
+| 44–50 s | Endstand KARTE 668 € · HANDY 641 € · BAR 629 € |
+| 50–57 s | „Schmerz beim Bezahlen“-Balken + Kernaussage |
+| 57–60 s | Endkarte, Kommentar-Frage, Hinweis „Beispielrechnung“ |
+
+Die Beträge sind eine Beispielrechnung (gleicher Einkaufszettel, Unterschiede nur durch Extras);
+`timeline.py` prüft, dass die Zähler an Tag 8/15/22/30 exakt die Zielwerte treffen.
+
+```bash
+cd src/bezahlen
+python3 tts.py                 # Sprecher je Szene + Wort-Timings (Tempo passt sich dem Zeitfenster an)
+python3 timeline.py            # Kontrollwerte prüfen, Zeitplan anzeigen
+python3 audio.py               # Mischung: Stimme, leise Musik, Klicks, Pings -> build/bezahlen/mix.wav
+python3 render.py              # rendert ../../bar-karte-handy-video.mp4
+python3 render.py still 18 47  # Standbilder -> build/bezahlen/stills/
+```
