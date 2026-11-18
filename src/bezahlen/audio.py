@@ -52,7 +52,8 @@ CLICK = mixs(noise(0.03, 0.004) * 0.6, tone(2600, 0.05, 0.001, 0.012) * 0.5)
 TAP = mixs(tone(1800, 0.06, 0.001, 0.015) * 0.5, noise(0.02, 0.003) * 0.4)
 PING = mixs(tone(1318.5, 0.6, 0.002, 0.18, ((1, 1), (2, 0.25))), 0.7 * np.concatenate(
     [np.zeros(int(0.09 * SR)), tone(1975.5, 0.5, 0.002, 0.16, ((1, 1), (2, 0.2)))]))
-COIN = sum(tone(f, 0.35, 0.001, 0.07) * g for f, g in ((3950, 0.5), (5270, 0.35), (6620, 0.25)))
+COIN = sum(tone(f, 0.3, 0.002, 0.06) * g for f, g in ((2093, 0.5), (2637, 0.3), (3136, 0.15)))  # weich, nicht schrill
+POP = tone(520, 0.12, 0.002, 0.03, ((1, 1), (2, 0.2)))  # weicher Klick für Knöpfe
 RUSTLE = noise(0.22, 0.08) * 0.35
 WHOOSH_N = int(0.35 * SR)
 _w = rng.standard_normal(WHOOSH_N)
@@ -109,35 +110,32 @@ def main():
         if ev["skip"]:
             continue
         if ev["pay"] == "card":
-            add(fx, CLICK, ev["t"], 0.32)
+            add(fx, CLICK, ev["t"], 0.25)
         elif ev["pay"] == "phone":
             add(fx, TAP, ev["t"], 0.32)
         elif ev["pay"] == "bills":
             add(fx, RUSTLE, ev["t"], 0.5)
             add(fx, CLICK, ev["t"] + 0.6, 0.25)
         elif ev["pay"] == "coin":
-            add(fx, COIN, ev["t"], 0.22)
+            add(fx, COIN, ev["t"], 0.12)
         if ev["push"]:
-            add(fx, PING, ev["t"] + 0.05, 0.22)
+            add(fx, PING, ev["t"] + 0.05, 0.13)
     # Geldautomat
     for k in range(4):
         add(fx, RUSTLE, ATM_T[0] + 0.35 + k * 0.12, 0.5)
     # Akzente
-    for tt in (3.0, 5.5, 8.0, at("falsch", "Ist") - 0.1, 22.0, 30.0, 38.0, 43.9, 49.9, 55.9):
+    for tt in (3.0, 5.5, 8.0, at("falsch", "Ist") - 0.1, 22.0, 30.0, 38.0, 43.9, 49.9):
         add(fx, WHOOSH, tt, 0.18)
     add(fx, THUD, 0.0, 0.5)                                   # Hook-Einschlag
     add(fx, THUD, at("falsch", "Noch") - 0.05, 0.6)
     t_first = at("endstand", "Mit") - 0.1
     for i in range(3):
-        add(fx, DING, t_first + i * 0.45, 0.18 * (1 + 0.3 * (i == 0)))
+        add(fx, POP, t_first + i * 0.45, 0.35)
     add(fx, THUD, at("endstand", "meisten") - 0.15, 0.55)
-    for k in range(10):                                       # Zähler 39 -> 468 €
-        add(fx, COIN, at("endstand", "Aufs") + 0.4 + k * 0.09, 0.12)
-    add(fx, DING * 0.8, 43.6, 0.25)
-    add(fx, DING, at("schmerz", "Tipp") - 0.1, 0.16)
+    add(fx, DING, 43.6, 0.12)
+    add(fx, POP, at("schmerz", "Tipp") - 0.1, 0.3)
     t_click = at("ende", "abonnier") + 0.1
-    add(fx, CLICK, t_click, 0.6)
-    add(fx, PING, t_click + 0.08, 0.25)
+    add(fx, POP, t_click, 0.4)
 
     mix = voice * 1.0 + mus + fx
     mix = np.tanh(mix * 1.1) / 1.1   # weicher Limiter

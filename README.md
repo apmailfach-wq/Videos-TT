@@ -80,7 +80,7 @@ python3 render.py preview 5 30 # Standbilder
 
 ## bar-karte-handy-video.mp4 (Bezahlschmerz-Erklärfilm)
 
-**Thema:** „Gleicher Einkauf – einer zahlt 39 € mehr. Wer?“ (BAR vs KARTE vs HANDY) · genau 60 s · 1080×1920 · 30 fps
+**Thema:** „Deine Bezahlart kostet dich fast 470 € im Jahr. Welche?“ (BAR vs KARTE vs HANDY) · genau 60 s · 1080×1920 · 30 fps
 Flache 2D-Animation auf Dunkelblau mit wandernden Lichtern und Glow, drei Bahnen mit Strichfiguren mit Gesichtern
 (BAR gelb, KARTE rot, HANDY türkis), dauerhafte Anzeige oben (Uhr „TAG 1–30“ + drei hochzählende Zähler mit
 „▲ MEISTE AUSGABEN“-Marke), Kapitel-Banner, Spontankäufe fliegen in ein Raster, Push-Nachrichten („autsch!“),
@@ -89,7 +89,7 @@ Voiceover: edge-tts `de-DE-ConradNeural`; Musik/Klicks/Ping werden synthetisch e
 
 | Zeit | Szene |
 |---|---|
-| 0–3 s | Hook: „GLEICHER EINKAUF – EINER ZAHLT +39 € – WER ZAHLT MEHR?“ |
+| 0–4 s | Hook: „DEINE BEZAHLART KOSTET DICH BIS ZU 468 € IM JAHR – WOMIT GIBST DU MEHR AUS?“ (ab Frame 0 voll im Bild) |
 | 3–8 s | Wer zahlt wie · gleicher Einkaufszettel · 30 Tage · gleiches Budget |
 | 8–16 s | Woche 1: Tag 1–8 → 142 / 163 / 171 € |
 | 16–22 s | Falsche Auflösung: „HANDY = GRÖSSTE GELDFALLE?“ → „NOCH NICHT.“ |

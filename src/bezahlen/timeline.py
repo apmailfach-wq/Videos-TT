@@ -29,7 +29,14 @@ for _i, (_s, _t) in enumerate(zip(SCENES, TIM)):
 
 
 def _tokens(text):
-    return [tok for tok in text.split() if any(ch.isalnum() for ch in tok)]
+    """Wörter mit Satzzeichen; ein freistehender Gedankenstrich hängt am Wort davor (Untertitel-Umbruch)."""
+    out = []
+    for tok in text.split():
+        if any(ch.isalnum() for ch in tok):
+            out.append(tok)
+        elif out:
+            out[-1] += " " + tok
+    return out
 
 
 def _norm(s):
@@ -49,9 +56,10 @@ for _i, (_s, _t) in enumerate(zip(SCENES, TIM)):
             j += 1
         if j >= len(toks):
             j = min(k, len(toks) - 1)
-        WORDS.append({"scene": _s["key"], "show": toks[j], "word": w["text"],
+        n = max(1, len(w["text"].split()))   # z. B. "470 Euro" kommt als eine Wortgrenze
+        WORDS.append({"scene": _s["key"], "show": " ".join(toks[j:j + n]), "word": w["text"],
                       "start": AUDIO_START[_i] + w["start"], "end": AUDIO_START[_i] + w["end"]})
-        k = j + 1
+        k = j + n
 
 
 def at(scene, prefix, occ=0):

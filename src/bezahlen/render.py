@@ -47,6 +47,7 @@ STAGE_TOP, STAGE_BOT = LANE_Y0, LANE_Y0 + 3 * LANE_H + 2 * LANE_GAP
 T_END0 = scene_t("endstand")[0]
 T_PAIN0 = scene_t("schmerz")[0]
 T_OUTRO0 = scene_t("ende")[0]
+HOOK_END = at("titel", "Welche") + 0.45
 
 
 def lane_y(f):
@@ -140,13 +141,13 @@ def hud(c, t):
             text(c, euro(vals[f]), 0, 34, 78, WHITE, maxw=BOX_W - 30, glow=COL[f] if pulse > 0 else None)
         if f == leader and t > 8.6 and vals[f] - others >= 1:
             with Saved(c, 1.0, x + BOX_W / 2, BOX_Y + BOX_H + 2, 1.0 + 0.06 * math.sin(t * 6)):
-                fill_rrect(c, -122, -17, 244, 34, 17, WHITE)
-                text(c, "▲ MEISTE AUSGABEN", 0, 0, 19, RED)
+                fill_rrect(c, -140, -19, 280, 38, 19, WHITE)
+                text(c, "▲ MEISTE AUSGABEN", 0, 0, 22, RED)
 
 
 # ------------------------------------------------------------------ Kapitel
 CHAPTERS = [
-    (3.1, 8.0, "DIE REGELN", WHITE),
+    (HOOK_END, 8.0, "DIE REGELN", WHITE),
     (8.0, 16.0, "WOCHE 1 · ALLE KAUFEN EIN", WHITE),
     (16.0, 22.0, "ZWISCHENSTAND", TEAL),
     (22.0, 30.0, "WOCHE 2 · HANDY MELDET JEDE ZAHLUNG", TEAL),
@@ -161,14 +162,14 @@ def chapter(c, t):
         if a <= 0:
             continue
         k = eback((t - t0) / 0.35)
-        tw = text_w(c, txt, 24) + 60
-        with Saved(c, a, W / 2, STAGE_TOP - 4, 0.6 + 0.4 * k):
-            fill_rrect(c, -tw / 2, -21, tw, 42, 21, INK)
-            glow_rrect(c, -tw / 2, -21, tw, 42, 21, col, 0.9, 3)
-            c.arc(-tw / 2 + 24, 0, 6, 0, 2 * math.pi); rgba(c, col); c.fill()
-            text(c, txt, 12, 0, 24, WHITE)
+        tw = text_w(c, txt, 30) + 70
+        with Saved(c, a, W / 2, STAGE_TOP - 2, 0.6 + 0.4 * k):
+            fill_rrect(c, -tw / 2, -26, tw, 52, 26, INK)
+            glow_rrect(c, -tw / 2, -26, tw, 52, 26, col, 0.9, 3)
+            c.arc(-tw / 2 + 28, 0, 7, 0, 2 * math.pi); rgba(c, col); c.fill()
+            text(c, txt, 14, 0, 30, WHITE)
         d = t - t0
-        if 0 <= d < 0.45 and t0 > 3.5:
+        if 0 <= d < 0.45 and t0 > 5:
             xx = -500 + d / 0.45 * 2100
             c.save()
             rrect(c, LANE_X0, STAGE_TOP, LANE_X1 - LANE_X0, STAGE_BOT - STAGE_TOP, 30)
@@ -204,16 +205,17 @@ def lane_label(c, f, t, txt, t0, t1, icon_kind=None, col=None):
         return
     col = col or COL[f]
     y = lane_y(f)
-    tw = text_w(c, txt, 26) + (46 if icon_kind else 0)
-    x = (GRID_X0 + LANE_X1) / 2 - 20 - tw / 2
+    tw = text_w(c, txt, 30) + (50 if icon_kind else 0)
+    x = min((GRID_X0 + LANE_X1) / 2 - 20 - tw / 2, LANE_X1 - 30 - tw - 36)
     with Saved(c, a, 0, (1 - eback((t - t0) / 0.35)) * -14):
-        fill_rrect(c, x, y + 14, tw + 36, 48, 24, col)
+        shadow_rrect(c, x, y + 12, tw + 36, 56, 28, 0.3)
+        fill_rrect(c, x, y + 12, tw + 36, 56, 28, col)
         tx = x + 18
         if icon_kind:
-            with Saved(c, 1.0, tx + 16, y + 38):
-                icon(c, icon_kind, 30, col=INK)
-            tx += 46
-        text(c, txt, tx, y + 38, 26, INK, align="l")
+            with Saved(c, 1.0, tx + 18, y + 40):
+                icon(c, icon_kind, 34, col=INK)
+            tx += 50
+        text(c, txt, tx, y + 40, 30, INK, align="l")
 
 
 def slot_pos(f, slot):
@@ -272,7 +274,7 @@ def draw_lane(c, f, t):
         with Saved(c, 1.0, px, py):
             icon(c, e["kind"], 36)
     s = sum(e["amount"] for e in done)
-    text(c, f"SPONTANKÄUFE: {len(done)}  ·  {euro(s, True)}", LANE_X1 - 34, y + LANE_H - 18, 22, colr, 0.95,
+    text(c, f"SPONTANKÄUFE: {len(done)}  ·  {euro(s, True)}", LANE_X1 - 34, y + LANE_H - 20, 26, colr, 1.0,
          face=XB_F, align="r")
 
 
@@ -375,12 +377,10 @@ def draw_figure_lane(c, f, t):
                 with Saved(c, 1.0, px, py, lerp(1.2, 0.82, k)):
                     icon(c, e["kind"], 44)
         else:
-            a = win(d, 0, 1.1, 0.1, 0.35)
-            with Saved(c, a, hx, hy - 10 * d, eback(d / 0.2)):
+            a = 0.75 * win(d, 0, 0.9, 0.1, 0.3)
+            with Saved(c, a, hx, hy - 10 * d, 0.85 * eback(d / 0.2)):
                 icon(c, "einkauf", 46)
-            text(c, "+" + euro(e["amount"], True), hx + 34, hy - 10 * d, 26, WHITE, a, face=XB_F, align="l",
-                 outline=7)
-            text(c, "WOCHENEINKAUF", hx + 34, hy - 10 * d + 28, 16, MUTED, a, face=XB_F, align="l")
+            text(c, "Einkauf", hx + 30, hy - 10 * d, 22, MUTED, a, face=XB_F, align="l", outline=6)
 
 
 def push_banners(c, t):
@@ -408,9 +408,9 @@ def stage(c, t):
             draw_lane(c, f, t)
             draw_figure_lane(c, f, t)
     push_banners(c, t)
-    lane_label(c, "karte", t, "SPONTANKÄUFE LANDEN HIER  ↓", 9.0, 14.8, col=WHITE)
+    lane_label(c, "karte", t, "HIER: SPONTANKÄUFE  ↓", 9.0, 14.8, col=WHITE)
     lane_label(c, "handy", t, "HANDY MELDET JEDE ZAHLUNG", PUSH_FROM + 0.1, 30.0, "bell")
-    lane_label(c, "bar", t, "KLEINGELD FÜHLT SICH WIE SPIELGELD AN", 31.0, 38.0)
+    lane_label(c, "bar", t, "KLEINGELD = SPIELGELD", 31.0, 38.0)
     lane_label(c, "karte", t, "KEINE NACHRICHT · KEIN GEFÜHL", 38.4, 43.9)
 
 
@@ -421,34 +421,53 @@ def dim_stage(c, a):
 
 
 def hook(c, t):
-    """0–3 s: 'GLEICHER EINKAUF – EINER ZAHLT +39 € – WER ZAHLT MEHR?'"""
-    a = win(t, -1, 3.35, 0, 0.3)
+    """0–4 s: 'DEINE BEZAHLART KOSTET DICH BIS ZU 468 € IM JAHR – WELCHE?' – ab Frame 0 voll sichtbar."""
+    a = win(t, -1, HOOK_END + 0.3, 0, 0.3)
     if a <= 0:
         return
-    dim_stage(c, 0.82 * a)
-    out = ease((t - 3.0) / 0.35)
+    dim_stage(c, 0.9 * a)
+    out = ease((t - HOOK_END) / 0.3)
     with Saved(c, a, W / 2, 970, 1.0 + 0.18 * out):
-        shadow_rrect(c, -490, -420, 980, 840, 46)
-        fill_rrect(c, -490, -420, 980, 840, 46, PANEL)
-        glow_rrect(c, -490, -420, 980, 840, 46, WHITE, 0.25, 3)
-        text(c, "GLEICHER EINKAUF", 0, -350, 62, WHITE)
+        shadow_rrect(c, -500, -440, 1000, 880, 46)
+        g = cairo.LinearGradient(0, -440, 0, 440)
+        g.add_color_stop_rgb(0, *mix(PANEL2, RED, 0.18))
+        g.add_color_stop_rgb(1, *PANEL)
+        rrect(c, -500, -440, 1000, 880, 46)
+        c.set_source(g)
+        c.fill()
+        glow_rrect(c, -500, -440, 1000, 880, 46, RED, 0.55 + 0.25 * math.sin(t * 8), 4)
+        text(c, "DEINE BEZAHLART", 0, -360, 84, WHITE, maxw=940)
+        text(c, "KOSTET DICH BIS ZU", 0, -272, 52, MUTED, face=XB_F)
+        # Zahl knallt rein (ab Frame 0 sichtbar)
+        k = cl(t / 0.16)
+        sc = lerp(1.35, 1.0, eout(k)) * (1 + 0.035 * math.sin(t * 10))
+        with Saved(c, 1.0, 0, -110, sc, -0.03):
+            text(c, "468 €", 0, 0, 230, RED, glow=RED)
+        text(c, "IM JAHR*", 0, 50, 70, WHITE)
+        # Welche? – die drei Bezahlarten blinken nacheinander auf
+        active = int(t / 0.45) % 3
         for i, f in enumerate(FIGS):
-            x = -300 + i * 300
-            k = eback((t - 0.05 - i * 0.12) / 0.3)
-            with Saved(c, cl(k * 2), x, -40, 1.05 * (0.7 + 0.3 * k)):
-                figure(c, 0, 0, COL[f], walk=t * 3, face="neutral")
-                bob = math.sin(t * 6 + i) * 6
-                text(c, "?", 50, -230 + bob, 64, WHITE, 1.0, glow=COL[f])
-                fill_rrect(c, -80, 22, 160, 50, 25, COL[f])
-                text(c, NAME[f], 0, 47, 28, INK)
-        p = 1 + 0.04 * math.sin(t * 9)
-        k = eback(t / 0.25, 2.2)
-        with Saved(c, 1.0, 0, 150, p * (0.6 + 0.4 * k)):
-            text(c, "EINER ZAHLT", 0, -70, 40, MUTED, face=XB_F)
-            text(c, "+39 €", 0, 30, 150, RED, glow=RED)
-        with Saved(c, 1.0, 0, 330, 1.0):
-            fill_rrect(c, -260, -54, 520, 108, 54, WHITE)
-            text(c, "WER ZAHLT MEHR?", 0, 0, 52, INK)
+            x = -320 + i * 320
+            on = i == active
+            with Saved(c, 1.0, x, 205, 1.12 if on else 1.0):
+                fill_rrect(c, -140, -55, 280, 110, 55, COL[f] if on else mix(PANEL, COL[f], 0.35))
+                if on:
+                    glow_rrect(c, -140, -55, 280, 110, 55, COL[f], 1.0, 3)
+                with Saved(c, 1.0, -82, 0, 1.15):
+                    icon(c, PAYICON[f], 44)
+                text(c, NAME[f], 22, 0, 44, INK if on else WHITE, maxw=150)
+        with Saved(c, 1.0, 0, 345, 1 + 0.03 * math.sin(t * 7)):
+            w1 = text_w(c, "WOMIT GIBST DU ", 48)
+            w2 = text_w(c, "MEHR AUS?", 48)
+            pw = w1 + w2 + 70
+            fill_rrect(c, -pw / 2, -50, pw, 100, 50, WHITE)
+            text(c, "WOMIT GIBST DU ", -(w1 + w2) / 2, 0, 48, INK, align="l")
+            text(c, "MEHR AUS?", -(w1 + w2) / 2 + w1, 0, 48, RED, align="l")
+        text(c, "*Beispielrechnung", 430, 415, 18, MUTED, face=XB_F, align="r")
+    # roter Blitz im ersten Moment
+    if t < 0.3:
+        rgba(c, RED, 0.35 * (1 - t / 0.3))
+        c.paint()
 
 
 def sign(c, t, t0, t1, cy, kind, txt1, txt2=None):
@@ -467,26 +486,27 @@ def sign(c, t, t0, t1, cy, kind, txt1, txt2=None):
 
 
 def lane_intro(c, t):
-    """3–8 s: wer zahlt wie, dann die gleichen Regeln."""
+    """Nach dem Hook: gleiche Regeln, dann wer wie zahlt."""
+    t_s = HOOK_END + 0.05
+    sign(c, t, t_s, at("start", "Nur") + 0.1, lane_y("bar") + 140, "list", "GLEICHER", "EINKAUFSZETTEL")
+    sign(c, t, t_s + 0.2, at("start", "Nur") + 0.1, lane_y("karte") + 140, "calendar", "30 TAGE")
+    sign(c, t, t_s + 0.4, at("start", "Nur") + 0.1, lane_y("handy") + 140, "coin", "GLEICHES", "BUDGET")
     texts = {"bar": ("zahlt alles ", "BAR"), "karte": ("zahlt alles mit ", "KARTE"),
              "handy": ("zahlt alles mit ", "HANDY")}
     for i, f in enumerate(FIGS):
-        t0 = 3.35 + i * 0.3
-        a = win(t, t0, 5.6, 0.25, 0.25)
+        t0 = at("start", "Nur") + 0.25 + i * 0.2
+        a = win(t, t0, 8.0, 0.25, 0.2)
         if a <= 0:
             continue
         k = eback((t - t0) / 0.35)
         y = lane_y(f) + 140
         pre, key = texts[f]
-        w1 = text_w(c, pre, 40, XB_F)
-        w2 = text_w(c, key, 58)
+        w1 = text_w(c, pre, 42, XB_F)
+        w2 = text_w(c, key, 64)
         x = 750 - (w1 + w2) / 2 + (1 - k) * 200
         with Saved(c, a):
-            text(c, pre, x, y, 40, WHITE, face=XB_F, align="l")
-            text(c, key, x + w1, y, 58, COL[f], align="l", glow=COL[f])
-    sign(c, t, 5.5, 7.85, lane_y("bar") + 140, "list", "GLEICHER", "EINKAUFSZETTEL")
-    sign(c, t, 5.75, 7.85, lane_y("karte") + 140, "calendar", "30 TAGE")
-    sign(c, t, 6.0, 7.85, lane_y("handy") + 140, "coin", "GLEICHES", "BUDGET")
+            text(c, pre, x, y, 42, WHITE, face=XB_F, align="l", outline=8)
+            text(c, key, x + w1, y, 64, COL[f], align="l", glow=COL[f])
 
 
 def falsch(c, t):
@@ -698,7 +718,7 @@ def outro(c, t):
 
 
 # ------------------------------------------------------------------ Untertitel
-HL = {"bar": YEL, "bargeld": YEL, "kleingeld": YEL, "karte": RED, "handy": TEAL, "39": RED, "470": RED,
+HL = {"bar": YEL, "bargeld": YEL, "kleingeld": YEL, "karte": RED, "handy": TEAL, "39": RED, "470": RED, "470euro": RED, "bezahlart": ORANGE, "welche": ORANGE,
       "ergebnis": ORANGE, "tipp": GREEN, "kommentare": ORANGE, "abonnier": RED, "geldfalle": TEAL}
 
 

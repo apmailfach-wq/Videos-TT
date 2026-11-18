@@ -69,7 +69,7 @@ async def main():
     for i, s in enumerate(SCENES):
         window = s["end"] - s["start"]
         # Titel darf etwas in Szene 2 hineinlaufen (deren Satz ist kurz)
-        budget = {0: window + 0.6, len(SCENES) - 1: window - 0.15}.get(i, window - 0.35)
+        budget = {0: window + 1.0, len(SCENES) - 1: window - 0.15}.get(i, window - 0.35)
         rate = 0
         while True:
             audio, words = await synth(i, s["text"], rate)
