@@ -315,7 +315,7 @@ def draw_figure_lane(c, f, t):
     head, hand = figure(c, FIG_X, gy, COL[f], walk, moving, pay, lean, held, n, nod, face)
 
     if face == "wince":
-        text(c, "autsch!", head[0] - 50, head[1] - 48, 30, ORANGE, 1.0, outline=8)
+        text(c, "autsch!", head[0] + 30, head[1] - 46, 30, ORANGE, 1.0, align="l", outline=8)
     if ev is not None and ev["pay"] == "bills" and ev["paydur"] > 0.5:
         k = cl((t - ev["t"]) / 0.6)
         dots = "." * (1 + int(k * 2.9))
@@ -788,15 +788,51 @@ def subtitles(c, t):
         break
 
 
+# ------------------------------------------------------------------ Kamera & Vignette
+FOCUS_WIN = [(16.3, 30.0, "handy"), (30.0, 38.0, "bar"), (38.0, 43.8, "karte")]
+
+
+def camera(t):
+    """Leichter Zoom auf die Bahn, um die es gerade geht; sanftes Hineinfahren in Woche 1."""
+    for t0, t1, f in FOCUS_WIN:
+        if t0 <= t < t1:
+            k = min(ease((t - t0) / 0.6), ease((t1 - t) / 0.4))
+            return W / 2, lane_y(f) + LANE_H / 2, 1 + 0.04 * k
+    if 8.0 <= t < 16.3:
+        k = min(ease((t - 8.0) / 3.0), ease((16.3 - t) / 0.4))
+        return W / 2, (STAGE_TOP + STAGE_BOT) / 2, 1 + 0.02 * k
+    return W / 2, H / 2, 1.0
+
+
+_VIG = None
+
+
+def vignette(c):
+    global _VIG
+    if _VIG is None:
+        _VIG = cairo.RadialGradient(W / 2, H * 0.48, 600, W / 2, H * 0.48, 1250)
+        _VIG.add_color_stop_rgba(0, 0, 0, 0, 0.0)
+        _VIG.add_color_stop_rgba(1, 0, 0, 0.02, 0.5)
+    c.set_source(_VIG)
+    c.paint()
+
+
 # ------------------------------------------------------------------ Frame
 def frame(t):
     surf = cairo.ImageSurface(cairo.FORMAT_ARGB32, W, H)
     c = cairo.Context(surf)
     background(c, t)
     dx, dy = shake(t)
+    vignette(c)
     c.save()
     c.translate(dx, dy)
+    c.save()
+    zx, zy, z = camera(t)
+    c.translate(zx, zy)
+    c.scale(z, z)
+    c.translate(-zx, -zy)
     stage(c, t)
+    c.restore()
     chapter(c, t)
     hook(c, t)
     lane_intro(c, t)
