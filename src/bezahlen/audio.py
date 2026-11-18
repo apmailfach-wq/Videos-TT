@@ -1,4 +1,4 @@
-"""Tonspur: Sprecher + leise Hintergrundmusik + weicher Marimba-Ton je Zahlung, Doppelton je Push-Nachricht,
+"""Tonspur (Stereo): Sprecher + leise Musik + Effekte aus der earshot-Soundbank (UI-Pops je Zahlung,\nHolz-Ding je Push-Nachricht, Swishes, Hits, Riser),
 Münz-/Schein-Geräusche für BAR, kleine Akzente für Einblendungen -> build/bezahlen/mix.wav"""
 import math
 import wave
@@ -137,13 +137,47 @@ def music():
     return y
 
 
+# ---------------- Earshot-Soundbank (github.com/Leonxlnx/earshot): Effekte als Code, Stereo, 48 kHz
+from functools import lru_cache
+
+try:
+    from earshot.forge import bank as _bank
+except ImportError:  # ohne earshot: eigene Ersatzklänge
+    _bank = None
+
+
+@lru_cache(maxsize=None)
+def es(sound_id, pitch=None, seed=None, dur=None):
+    """Ein Take aus der earshot-Bank als (n, 2)-Array plus Einsatz-Zeitpunkt (onset) in Sekunden."""
+    y, meta = _bank.render(sound_id, seed=seed, pitch=pitch, dur=dur, peak_db=-1.0, checks=False)
+    y = np.asarray(y, dtype=np.float64)
+    if y.ndim == 1:
+        y = np.stack([y, y], axis=1)
+    return y, float(meta.get("onset_s") or 0.0)
+
+
+def place(buf, sound, cue, gain, lead=0.0):
+    """Setzt einen earshot-Take so, dass sein Einsatz auf `cue` (+lead) fällt."""
+    y, onset = sound
+    i = int((cue + lead - onset) * SR)
+    if i < 0:
+        y, i = y[-i:], 0
+    if i >= len(buf):
+        return
+    j = min(len(buf), i + len(y))
+    buf[i:j] += y[:j - i] * gain
+
+
+def stereo(mono):
+    return np.stack([mono, mono], axis=1)
+
+
 def main():
     voice = np.zeros(N)
     for st, tim in zip(AUDIO_START, TIM):
         add(voice, np.load(tim["audio"]), st, 1.0)
 
     mus = music()
-    # Ducking unter der Stimme
     e = np.abs(voice)
     k = int(0.15 * SR)
     e = np.convolve(e, np.ones(k) / k, "same")
@@ -151,49 +185,55 @@ def main():
     fade = np.minimum(1, np.arange(N) / (1.0 * SR)) * np.minimum(1, (N - np.arange(N)) / (1.5 * SR))
     mus = mus * duck * fade * 0.5
 
-    fx = np.zeros(N)
+    fx = np.zeros((N, 2))
+    card_p, phone_p = ("C5", "D5", "E5"), ("E5", "G5", "A5")
     for i, ev in enumerate(EVENTS):
-        ev["i"] = i
         if ev["skip"]:
             continue
-        if ev["pay"] == "card":
-            add(fx, mallet(CARD_NOTES[ev["i"] % 3]), ev["t"], 0.16)
-        elif ev["pay"] == "phone":
-            add(fx, mallet(PHONE_NOTES[ev["i"] % 3]), ev["t"], 0.15)
-        elif ev["pay"] == "bills":
-            add(fx, RUSTLE, ev["t"], 0.45)
-            add(fx, mallet(NOTE(67), 0.3, 0.1), ev["t"] + 0.6, 0.14)
-        elif ev["pay"] == "coin":
-            add(fx, COIN_SND, ev["t"], 0.1)
-        if ev["push"]:
-            add(fx, PUSH_SND, ev["t"] + 0.06, 0.14)
-    # Geldautomat
-    for k in range(4):
-        add(fx, RUSTLE, ATM_T[0] + 0.35 + k * 0.12, 0.5)
-    # Akzente
-    for tt in (3.0, 5.5, 8.0, at("falsch", "Ist") - 0.1, 22.0, 30.0, 38.0, 43.9, 49.9):
-        add(fx, WHOOSH, tt, 0.18)
-    add(fx, THUD, 0.0, 0.5)                                   # Hook-Einschlag
-    add(fx, THUD, at("falsch", "Noch") - 0.05, 0.6)
+        t = ev["t"]
+        if ev["pay"] == "card":                         # Karte: weicher runder UI-Pop
+            place(fx, es("ui_pop/soft", card_p[i % 3]), t, 0.2, -0.01)
+        elif ev["pay"] == "phone":                      # Handy: etwas hellerer "Boop"
+            place(fx, es("ui_pop/boop", phone_p[i % 3]), t, 0.18, -0.01)
+        elif ev["pay"] == "bills":                      # Scheine: Rascheln + Holz-Knock beim Übergeben
+            add(fx[:, 0], RUSTLE, t, 0.35)
+            add(fx[:, 1], RUSTLE, t + 0.01, 0.35)
+            place(fx, es("knock/wood"), t + 0.6, 0.22, -0.04)
+        elif ev["pay"] == "coin":                       # Münzen: kleiner Wasser-Plink statt Klingeln
+            place(fx, es("drip/plink"), t, 0.13)
+        if ev["push"]:                                  # Push-Nachricht: runder Holz-Ding
+            place(fx, es("notify/mid_wood"), t + 0.06, 0.2)
+    for k in range(4):                                  # Geldautomat
+        add(fx[:, k % 2], RUSTLE, ATM_T[0] + 0.35 + k * 0.12, 0.45)
+    place(fx, es("knock/double"), ATM_T[0] + 0.1, 0.25, -0.04)
+    # Übergänge
+    for tt in (3.95, 8.0, at("falsch", "Ist") - 0.1, 22.0, 30.0, 38.0, 49.9, 55.9):
+        place(fx, es("swish/soft"), tt, 0.3)
+    # Treffer
+    place(fx, es("cut_hit/kick"), 0.0, 0.75)                          # Hook-Einschlag ab Frame 0
+    place(fx, es("cut_hit/sub"), 0.02, 0.5)
+    place(fx, es("cut_hit/kick"), at("falsch", "Noch") - 0.05, 0.6)   # "NOCH NICHT."
+    place(fx, es("riser/dark"), 43.95 - 0.7, 0.35)                    # Spannung vor dem Ergebnis
+    place(fx, es("knock/double"), 43.6, 0.25)                         # Tag 30: alle bleiben stehen
     t_first = at("endstand", "Mit") - 0.1
     for i in range(3):
-        add(fx, POP, t_first + i * 0.45, 0.35)
-    add(fx, THUD, at("endstand", "meisten") - 0.15, 0.55)
-    add(fx, POP, at("schmerz", "Tipp") - 0.1, 0.3)
+        place(fx, es("ui_pop/step", ("G4", "A4", "C5")[i]), t_first + i * 0.45, 0.3)
+    place(fx, es("cut_hit/punch"), at("endstand", "meisten") - 0.15, 0.55)
+    place(fx, es("ui_pop/soft", "G5"), at("schmerz", "Tipp") - 0.1, 0.3)
     t_click = at("ende", "abonnier") + 0.1
-    add(fx, POP, t_click, 0.4)
+    place(fx, es("ui_pop/step", "C5"), t_click, 0.4)
 
-    mix = voice * 1.0 + mus + fx
+    mix = stereo(voice) + stereo(mus) + fx
     mix = np.tanh(mix * 1.1) / 1.1   # weicher Limiter
     peak = np.max(np.abs(mix))
     mix = mix / max(peak, 1e-6) * 0.89
     pcm = (np.clip(mix, -1, 1) * 32767).astype(np.int16)
     with wave.open(str(BUILD / "mix.wav"), "wb") as w:
-        w.setnchannels(1)
+        w.setnchannels(2)
         w.setsampwidth(2)
         w.setframerate(SR)
         w.writeframes(pcm.tobytes())
-    print("mix.wav", round(N / SR, 2), "s, peak", round(float(peak), 3))
+    print("mix.wav", round(N / SR, 2), "s stereo, peak", round(float(peak), 3))
 
 
 if __name__ == "__main__":

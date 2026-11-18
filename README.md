@@ -85,7 +85,7 @@ Flache 2D-Animation auf Dunkelblau mit wandernden Lichtern und Glow, drei Bahnen
 (BAR gelb, KARTE rot, HANDY türkis), dauerhafte Anzeige oben (Uhr „TAG 1–30“ + drei hochzählende Zähler mit
 „▲ MEISTE AUSGABEN“-Marke), Kapitel-Banner, Spontankäufe fliegen in ein Raster, Push-Nachrichten („autsch!“),
 Geldautomat + Kleingeld, Kamera-Wackler, Konfetti, Wort-für-Wort-Untertitel in Figurenfarben.
-Voiceover: edge-tts `de-DE-ConradNeural`; Musik (Pad, E-Piano, Bass, weicher Beat), weiche Marimba-Töne je Zahlung und ein Doppelton je Push-Nachricht werden synthetisch erzeugt – keine hohen Pieptöne. Leichte Kamera-Zooms auf die aktive Bahn, Vignette.
+Voiceover: edge-tts `de-DE-ConradNeural`. Soundeffekte (Stereo) aus der Soundbank von [earshot](https://github.com/Leonxlnx/earshot): runde UI-Pops je Zahlung, Holz-Ding je Push-Nachricht, Wasser-Plink für Münzen, Swishes, Cut-Hits, Riser. Musik (Pad, E-Piano, Bass, weicher Beat) wird synthetisch erzeugt. Leichte Kamera-Zooms auf die aktive Bahn, Vignette.
 
 | Zeit | Szene |
 |---|---|
