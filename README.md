@@ -85,7 +85,7 @@ Flache 2D-Animation auf Dunkelblau mit wandernden Lichtern und Glow, drei Bahnen
 (BAR gelb, KARTE rot, HANDY türkis), dauerhafte Anzeige oben (Uhr „TAG 1–30“ + drei hochzählende Zähler mit
 „▲ MEISTE AUSGABEN“-Marke), Kapitel-Banner, Spontankäufe fliegen in ein Raster, Push-Nachrichten („autsch!“),
 Geldautomat + Kleingeld, Kamera-Wackler, Konfetti, Wort-für-Wort-Untertitel in Figurenfarben.
-Voiceover: edge-tts `de-DE-ConradNeural`, nachbearbeitet (Wärme, weichere Zischlaute, Kompression, kleiner Raum). Bezahl-Töne: kurzer Klick-Piep (leise), Ping bei Push-Nachrichten. Übrige Effekte (Swishes, Hits, Riser, Pops) aus der Soundbank von [earshot](https://github.com/Leonxlnx/earshot); Musik synthetisch.
+Voiceover: **eigene Sprachaufnahme** (Text mit Pausen/Betonungen: `docs/sprechertext-bezahlen.md`), verarbeitet mit `own_voice.py` (leichte Entrauschung + EQ/Kompression, Szenen-Erkennung und Wort-Zeiten per Vosk-Spracherkennung, Pausen gestrafft, wo nötig tonhöhengleich bis ×1,18 beschleunigt). Ersatz ohne Aufnahme: edge-tts `de-DE-ConradNeural` (`VOICE_DIR=bezahlen`). Bezahl-Töne: kurzer Klick-Piep (leise), Ping bei Push-Nachrichten. Übrige Effekte (Swishes, Hits, Riser, Pops) aus der Soundbank von [earshot](https://github.com/Leonxlnx/earshot); Musik synthetisch.
 
 | Zeit | Szene |
 |---|---|
@@ -105,7 +105,8 @@ Die Beträge sind eine Beispielrechnung (gleicher Einkaufszettel, Unterschiede n
 
 ```bash
 cd src/bezahlen
-python3 tts.py                 # Sprecher je Szene + Wort-Timings (Tempo passt sich dem Zeitfenster an)
+python3 own_voice.py AUFNAHME.m4a   # eigene Stimme -> build/bezahlen_eigen (Vosk-Modell vosk-model-small-de-0.15 in build/models)
+python3 tts.py                 # alternativ: TTS-Stimme -> build/bezahlen (mit VOICE_DIR=bezahlen nutzen)
 python3 timeline.py            # Kontrollwerte prüfen, Zeitplan anzeigen
 python3 audio.py               # Mischung: Stimme, leise Musik, Klicks, Pings -> build/bezahlen/mix.wav
 python3 render.py              # rendert ../../bar-karte-handy-video.mp4

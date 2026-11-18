@@ -202,7 +202,8 @@ def main():
     voice = np.zeros(N)
     for st, tim in zip(AUDIO_START, TIM):
         add(voice, np.load(tim["audio"]), st, 1.0)
-    voice = humanize_voice(voice)
+    if not TIM[0].get("own"):   # nur die TTS-Stimme nachbearbeiten; die eigene Aufnahme ist schon aufbereitet
+        voice = humanize_voice(voice)
 
     mus = music()
     e = np.abs(voice)

@@ -9,11 +9,15 @@ Kontrollpunkte (kumuliert):
   Tag 30: BAR 629 · KARTE 668 · HANDY 641   (Karte läuft am schnellsten)
 """
 import json
+import os
 from pathlib import Path
 
 from script import SCENES
 
-BUILD = Path(__file__).resolve().parents[2] / "build" / "bezahlen"
+# Stimme: build/bezahlen (edge-tts, tts.py) oder build/bezahlen_eigen (eigene Aufnahme, own_voice.py).
+# Standard ist die eigene Aufnahme, sobald es sie gibt; VOICE_DIR=bezahlen erzwingt die TTS-Stimme.
+_B = Path(__file__).resolve().parents[2] / "build"
+BUILD = _B / os.environ.get("VOICE_DIR", "bezahlen_eigen" if (_B / "bezahlen_eigen" / "timings.json").exists() else "bezahlen")
 DURATION = 60.0
 
 # ------------------------------------------------------------------ Sprecher

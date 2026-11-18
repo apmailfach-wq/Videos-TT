@@ -4,3 +4,4 @@ numpy>=1.26
 pycairo>=1.25
 # Soundeffekte: earshot (github.com/Leonxlnx/earshot), nur die Soundbank wird genutzt – ohne torch:
 #   pip install soundfile soxr librosa pyloudnorm scipy && pip install --no-deps "earshot @ git+https://github.com/Leonxlnx/earshot"
+vosk>=0.3.45   # Wort-Zeiten der eigenen Aufnahme (braucht srt.py; Modell: alphacephei.com/vosk/models)
