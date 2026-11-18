@@ -1,6 +1,7 @@
 """Eigene Sprachaufnahme -> Szenen-Clips + Wort-Timings (gleiches Format wie tts.py).
 
-  python3 own_voice.py AUFNAHME.m4a        # schreibt build/bezahlen_eigen/{sceneN.npy, timings.json}
+  python3 own_voice.py AUFNAHME.m4a                 # schreibt build/bezahlen_eigen/{sceneN.npy, timings.json}
+  python3 own_voice.py --replace bar NEU.m4a        # ersetzt nur eine Szene (Schlüssel aus script.py)
 
 Ablauf:
 1. leichte Aufbereitung der ganzen Aufnahme (Trittschall-Filter, sanftes Entrauschen, Wärme, Kompression)
@@ -157,6 +158,62 @@ def tempo(y, factor):
     return np.frombuffer(raw, np.int16).astype(np.float64) / 32768
 
 
+def process_scene(si, full, ws, prev_end_abs, gain=1.0):
+    sc = SCENES[si]
+    toks = script_tokens(sc["text"])
+    times = align_tokens(toks, ws)
+    t0, t1 = times[0][0] - LEAD, times[-1][1] + TAIL
+    seg = full[int(max(0, t0) * SR):int(t1 * SR)].copy() * gain
+    y, rel = squeeze(seg, t0, [(tok, s, e) for tok, (s, e) in zip(toks, times)])
+    # Zeitfenster wie in tts.py: Titel darf 1 s in Szene 2 laufen, Schluss muss vor 60 s enden
+    start_abs = max(sc["start"] + (0.05 if si == 0 else 0.15), prev_end_abs + 0.2)
+    limit = {0: sc["end"] + 1.0, len(SCENES) - 1: 59.9}.get(si, sc["end"] - 0.2)
+    need = rel[-1][2]
+    avail = limit - start_abs
+    f = 1.0 if need <= avail else min(MAX_TEMPO, need / avail)
+    y = tempo(y, f)
+    rel = [(t, s / f, e / f) for t, s, e in rel]
+    fade = int(0.015 * SR)
+    y[:fade] *= np.linspace(0, 1, fade)
+    y[-fade:] *= np.linspace(1, 0, fade)
+    np.save(OUT / f"scene{si}.npy", y.astype(np.float32))
+    entry = {"audio": str(OUT / f"scene{si}.npy"), "duration": len(y) / SR, "own": True, "tempo": round(f, 3),
+             "words": [{"text": t.strip(".,:!?–"), "start": max(0.0, s), "end": e} for t, s, e in rel]}
+    end_abs = start_abs + rel[-1][2]
+    print(f"{si} {sc['key']:9s} {len(ws):2d} Wörter  Sprechzeit {need:4.2f}s  Tempo x{f:.2f}  "
+          f"-> {start_abs:5.2f}–{end_abs:5.2f}s (Fenster {sc['start']}–{sc['end']})")
+    return entry, end_abs
+
+
+def speech_rms(y):
+    frames = y[:len(y) // 960 * 960].reshape(-1, 960)
+    r = np.sqrt((frames ** 2).mean(axis=1))
+    loud = r[r > np.percentile(r, 60)]
+    return float(np.sqrt((loud ** 2).mean())) if len(loud) else 1e-6
+
+
+def replace(key, src):
+    """Ersetzt eine einzelne Szene durch eine neue Aufnahme, Lautstärke an die alte Szene angeglichen."""
+    si = [s["key"] for s in SCENES].index(key)
+    res = json.loads((OUT / "timings.json").read_text())
+    old = np.load(res[si]["audio"])
+    full = load(src, CHAIN)
+    words = asr(load(src, sr=16000))
+    if not words:
+        raise SystemExit("In der neuen Aufnahme wurde keine Sprache erkannt.")
+    # Ende der vorherigen Szene (absolut) wie in timeline.py nachrechnen
+    prev_end_abs = 0.0
+    for k in range(si):
+        st = max(SCENES[k]["start"] + (0.05 if k == 0 else 0.15), prev_end_abs + 0.2)
+        prev_end_abs = st + res[k]["words"][-1]["end"]
+    probe, _ = process_scene(si, full, words, prev_end_abs)
+    gain = speech_rms(old) / speech_rms(np.load(probe["audio"]))
+    entry, _ = process_scene(si, full, words, prev_end_abs, gain=gain)
+    print(f"   Lautstärke angeglichen: x{gain:.2f}")
+    res[si] = entry
+    (OUT / "timings.json").write_text(json.dumps(res, ensure_ascii=False, indent=1))
+
+
 def main(src):
     OUT.mkdir(parents=True, exist_ok=True)
     full = load(src, CHAIN)
@@ -166,33 +223,13 @@ def main(src):
     res = []
     prev_end_abs = 0.0
     for si, sc in enumerate(SCENES):
-        ws = words[bounds[si]:bounds[si + 1]]
-        toks = script_tokens(sc["text"])
-        times = align_tokens(toks, ws)
-        t0, t1 = times[0][0] - LEAD, times[-1][1] + TAIL
-        seg = full[int(t0 * SR):int(t1 * SR)].copy()
-        y, rel = squeeze(seg, t0, [(tok, s, e) for tok, (s, e) in zip(toks, times)])
-        # Zeitfenster wie in tts.py: Titel darf 1 s in Szene 2 laufen, Schluss muss vor 60 s enden
-        window = sc["end"] - sc["start"]
-        start_abs = max(sc["start"] + (0.05 if si == 0 else 0.15), prev_end_abs + 0.2)
-        limit = {0: sc["end"] + 1.0, len(SCENES) - 1: 59.9}.get(si, sc["end"] - 0.2)
-        need = rel[-1][2]
-        avail = limit - start_abs
-        f = 1.0 if need <= avail else min(MAX_TEMPO, need / avail)
-        y = tempo(y, f)
-        rel = [(t, s / f, e / f) for t, s, e in rel]
-        fade = int(0.015 * SR)
-        y[:fade] *= np.linspace(0, 1, fade)
-        y[-fade:] *= np.linspace(1, 0, fade)
-        np.save(OUT / f"scene{si}.npy", y.astype(np.float32))
-        res.append({"audio": str(OUT / f"scene{si}.npy"), "duration": len(y) / SR, "own": True,
-                    "tempo": round(f, 3),
-                    "words": [{"text": t.strip(".,:!?–"), "start": max(0.0, s), "end": e} for t, s, e in rel]})
-        prev_end_abs = start_abs + rel[-1][2]
-        print(f"{si} {sc['key']:9s} {len(ws):2d} Wörter  Sprechzeit {need:4.2f}s  Tempo x{f:.2f}  "
-              f"-> {start_abs:5.2f}–{prev_end_abs:5.2f}s (Fenster {sc['start']}–{sc['end']})")
+        entry, prev_end_abs = process_scene(si, full, words[bounds[si]:bounds[si + 1]], prev_end_abs)
+        res.append(entry)
     (OUT / "timings.json").write_text(json.dumps(res, ensure_ascii=False, indent=1))
 
 
 if __name__ == "__main__":
-    main(sys.argv[1])
+    if len(sys.argv) == 4 and sys.argv[1] == "--replace":
+        replace(sys.argv[2], sys.argv[3])      # z. B. --replace bar NEUE_AUFNAHME.m4a
+    else:
+        main(sys.argv[1])
