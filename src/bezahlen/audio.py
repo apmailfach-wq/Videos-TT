@@ -194,6 +194,21 @@ def humanize_voice(v):
     return y * (np.max(np.abs(v)) / max(np.max(np.abs(y)), 1e-9))
 
 
+def smooth_duck(voice, depth=0.45, hold=0.9, smooth=0.35):
+    """Musik unter der Stimme absenken, ohne zu pumpen: Sprechaktivität in 50-ms-Blöcken, über kurze
+    Pausen gehalten (hold), dann weich geglättet. depth 0.45 = etwa -5 dB."""
+    blk = int(0.05 * SR)
+    nb = len(voice) // blk + 1
+    padded = np.pad(np.abs(voice), (0, nb * blk - len(voice)))
+    act = (padded.reshape(nb, blk).mean(axis=1) > 0.004).astype(float)
+    h = int(hold / 0.05)
+    held = np.array([act[max(0, i - h):i + h + 1].max() for i in range(nb)])
+    k = max(1, int(smooth / 0.05))
+    sm = np.convolve(held, np.ones(k) / k, "same")
+    env = np.repeat(sm, blk)[:len(voice)]
+    return 1 - depth * env
+
+
 def stereo(mono):
     return np.stack([mono, mono], axis=1)
 
@@ -206,10 +221,7 @@ def main():
         voice = humanize_voice(voice)
 
     mus = music()
-    e = np.abs(voice)
-    k = int(0.15 * SR)
-    e = np.convolve(e, np.ones(k) / k, "same")
-    duck = 1 - 0.55 * np.clip(e / 0.05, 0, 1)
+    duck = smooth_duck(voice)
     fade = np.minimum(1, np.arange(N) / (1.0 * SR)) * np.minimum(1, (N - np.arange(N)) / (1.5 * SR))
     mus = mus * duck * fade * 0.5
 
@@ -232,8 +244,8 @@ def main():
         if ev["push"]:                                  # Push-Nachricht: Ping (leise)
             add(fx[:, 0], PING, t + 0.05, 0.08); add(fx[:, 1], PING, t + 0.05, 0.08)
     for k in range(4):                                  # Geldautomat
-        add(fx[:, k % 2], RUSTLE, ATM_T[0] + 0.35 + k * 0.12, 0.45)
-    place(fx, es("knock/double"), ATM_T[0] + 0.1, 0.25, -0.04)
+        add(fx[:, k % 2], RUSTLE, ATM_T[0] + 0.35 + k * 0.12, 0.16)   # leise, sonst wirkt danach alles leiser
+    place(fx, es("knock/double"), ATM_T[0] + 0.1, 0.12, -0.04)
     # Übergänge
     for tt in (3.95, 8.0, at("falsch", "Ist") - 0.1, 22.0, 30.0, 38.0, 49.9, 55.9):
         place(fx, es("swish/soft"), tt, 0.3)
