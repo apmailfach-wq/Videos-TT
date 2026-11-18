@@ -125,28 +125,41 @@ def align_tokens(tokens, words):
     return times
 
 
-def squeeze(seg, t0, toks):
-    """Pausen > MAX_GAP straffen; toks: [(text, start, end)] in Sekunden relativ zur Aufnahme."""
-    pieces, out, cursor, shift = [], [], t0, 0.0
+def squeeze(seg, t0, toks, max_gap=MAX_GAP):
+    """Pausen > max_gap kürzen. Herausgeschnitten wird das leiseste Stück der Pause (nicht der Anfang eines
+    Worts oder das Ausklingen davor), mit 30-ms-Überblendung – so ruckelt nichts.
+    toks: [(text, start, end)] in Sekunden relativ zur Aufnahme."""
+    cuts, out, shift = [], [], 0.0
+    win = int(0.01 * SR)
     for i, (txt, s, e) in enumerate(toks):
         if i:
-            gap = s - toks[i - 1][2]
-            if gap > MAX_GAP:
-                c0, c1 = toks[i - 1][2] + MAX_GAP / 2, s - MAX_GAP / 2
-                pieces.append(seg[int((cursor - t0) * SR):int((c0 - t0) * SR)])
-                cursor = c1
-                shift += c1 - c0
+            g0, g1 = toks[i - 1][2] + 0.06, s - 0.06      # Wortgrenzen nicht anfassen
+            cut = (s - toks[i - 1][2]) - max_gap
+            if cut > 0.02 and g1 - g0 > cut:
+                a0, a1 = int((g0 - t0) * SR), int((g1 - t0) * SR)
+                L = int(cut * SR)
+                en = np.convolve(seg[a0:a1] ** 2, np.ones(win), "same")
+                csum = np.concatenate([[0], np.cumsum(en)])
+                k = int(np.argmin(csum[L:] - csum[:-L])) if len(en) > L else 0
+                c0 = t0 + (a0 + k) / SR
+                cuts.append((c0, c0 + cut))
+                shift += cut + 0.03          # + Überblendung
         out.append((txt, s - shift, e - shift))
-    pieces.append(seg[int((cursor - t0) * SR):])
-    xf = int(0.01 * SR)   # kurze Überblendung an den Schnitten
-    y = pieces[0]
-    for p in pieces[1:]:
-        if len(y) > xf and len(p) > xf:
-            ramp = np.linspace(0, 1, xf)
-            y = np.concatenate([y[:-xf], y[-xf:] * (1 - ramp) + p[:xf] * ramp, p[xf:]])
+    xf = int(0.03 * SR)
+    y, cursor = None, t0
+    for c0, c1 in cuts + [(None, None)]:
+        piece = seg[int((cursor - t0) * SR):(int((c0 - t0) * SR) if c0 is not None else None)]
+        if y is None:
+            y = piece
+        elif len(y) > xf and len(piece) > xf:
+            ph = np.linspace(0, np.pi / 2, xf)
+            y = np.concatenate([y[:-xf], y[-xf:] * np.cos(ph) + piece[:xf] * np.sin(ph), piece[xf:]])
         else:
-            y = np.concatenate([y, p])
-    return y, [(t, s - t0, e - t0) for t, s, e in out]
+            y = np.concatenate([y, piece])
+        if c1 is not None:
+            cursor = c1
+    # Wortzeiten: Schnitte liegen in Pausen, die Überblendung verkürzt je Schnitt um xf
+    return y, [(t, s_ - t0, e_ - t0) for t, s_, e_ in out]
 
 
 def tempo(y, factor):
@@ -164,10 +177,14 @@ def process_scene(si, full, ws, prev_end_abs, gain=1.0):
     times = align_tokens(toks, ws)
     t0, t1 = times[0][0] - LEAD, times[-1][1] + TAIL
     seg = full[int(max(0, t0) * SR):int(t1 * SR)].copy() * gain
-    y, rel = squeeze(seg, t0, [(tok, s, e) for tok, (s, e) in zip(toks, times)])
     # Zeitfenster wie in tts.py: Titel darf 1 s in Szene 2 laufen, Schluss muss vor 60 s enden
     start_abs = max(sc["start"] + (0.05 if si == 0 else 0.15), prev_end_abs + 0.2)
     limit = {0: sc["end"] + 1.0, len(SCENES) - 1: 59.9}.get(si, sc["end"] - 0.2)
+    # natürliche Pausen behalten, so weit die Zeit reicht; nur wenn nötig enger schneiden
+    for mg in (0.7, 0.55, 0.45, 0.38, MAX_GAP):
+        y, rel = squeeze(seg, t0, [(tok, s, e) for tok, (s, e) in zip(toks, times)], mg)
+        if rel[-1][2] <= limit - start_abs:
+            break
     need = rel[-1][2]
     avail = limit - start_abs
     f = 1.0 if need <= avail else min(MAX_TEMPO, need / avail)
@@ -180,7 +197,7 @@ def process_scene(si, full, ws, prev_end_abs, gain=1.0):
     entry = {"audio": str(OUT / f"scene{si}.npy"), "duration": len(y) / SR, "own": True, "tempo": round(f, 3),
              "words": [{"text": t.strip(".,:!?–"), "start": max(0.0, s), "end": e} for t, s, e in rel]}
     end_abs = start_abs + rel[-1][2]
-    print(f"{si} {sc['key']:9s} {len(ws):2d} Wörter  Sprechzeit {need:4.2f}s  Tempo x{f:.2f}  "
+    print(f"{si} {sc['key']:9s} {len(ws):2d} Wörter  Pausen max {mg:.2f}s  Sprechzeit {need:4.2f}s  Tempo x{f:.2f}  "
           f"-> {start_abs:5.2f}–{end_abs:5.2f}s (Fenster {sc['start']}–{sc['end']})")
     return entry, end_abs
 
