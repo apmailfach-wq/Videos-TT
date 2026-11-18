@@ -5,9 +5,18 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { TIMELINE, HUD_LINES, BATTERY, TEXTS, TITLE } from './timeline.js';
+import { HUD_LINES, BATTERY, BATTERY_EMPTY_AT, TEXTS, TITLE, END, DURATION } from './timeline.js';
+const TL = await (await fetch('/src/waswaere/timeline.json')).json();
+// output time u -> story time t (piecewise linear)
+function warp(u) {
+  const k = TL.warp;
+  if (u <= k[0][0]) return k[0][1];
+  for (let i = 1; i < k.length; i++) if (u <= k[i][0]) { const [u0, t0] = k[i - 1], [u1, t1] = k[i]; return t0 + (t1 - t0) * (u - u0) / (u1 - u0); }
+  return k[k.length - 1][1];
+}
 
 const W = 1080, H = 1920;
+let RT = 0; // real (output) time: drives oscillations, while t (story time) drives events
 
 // ------------------------------------------------------------------ helpers
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
@@ -276,7 +285,7 @@ for (const sx of [-1, 1]) for (let i = 0; i < 9; i++) {
   const headMat = new THREE.MeshBasicMaterial({ color: 0xffc27a });
   const head = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.4, 0.22, 6), headMat); head.position.set(-sx * 1.4, 7.35, 0); g.add(head);
   const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xffb36b, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
-  glow.scale.set(3.2, 3.2, 1); glow.position.copy(head.position); g.add(glow);
+  glow.scale.set(2.2, 2.2, 1); glow.material.opacity = 0.75; glow.position.copy(head.position); g.add(glow);
   const pool = new THREE.Mesh(new THREE.PlaneGeometry(12, 12), new THREE.MeshBasicMaterial({ map: poolTex, transparent: true, opacity: 0.38, blending: THREE.AdditiveBlending, depthWrite: false }));
   pool.rotation.x = -Math.PI / 2; pool.position.set(-sx * 2.5, 0.03, 0); g.add(pool);
   lamps.push({ g, headMat, glow, pool, z, side: sx, seed: R() * 100 });
@@ -321,8 +330,10 @@ for (const [x, z, ry] of [[-6, -48, 0.3], [5.5, -72, -0.5], [-3, -105, 0.1]]) {
   cars.push({ ...c, x, z, ry, seed: R() * 100, spin: Math.PI });
 }
 
+const hw0 = (c, i, len) => (i <= len ? 0.05 : 0);
 // cracks in the road (revealed during the quake)
 const crackMat = new THREE.MeshBasicMaterial({ color: 0x020203, side: THREE.DoubleSide });
+const rimMat = new THREE.MeshBasicMaterial({ color: 0x3a2c24, side: THREE.DoubleSide });
 const cracks = [];
 for (let c = 0; c < 7; c++) {
   const pts = []; let x = (R() - 0.5) * 18, z = -90 + R() * 30;
@@ -337,6 +348,16 @@ for (let c = 0; c < 7; c++) {
   cracks.push({ m, pts, pos, delay: R() * 0.8, w0: 0.16 + R() * 0.16, seed: R() * 10 });
 }
 
+{ // the crack that runs right up to your feet
+  const pts = []; let x = -3, z = -30; const r = mulberry(2222);
+  while (z < -0.9) { pts.push([x, z]); z += 0.9 + r() * 1.1; x += (r() - 0.5) * 1.4 + (0.3 - x) * 0.12; }
+  pts.push([0.3, -0.9]);
+  const n = pts.length; const pos = new Float32Array(n * 2 * 3);
+  const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const idx = []; for (let i = 0; i < n - 1; i++) { const a = i * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); } geo.setIndex(idx);
+  const m = new THREE.Mesh(geo, crackMat); m.frustumCulled = false; world.add(m);
+  cracks.push({ m, pts, pos, delay: 1.0, w0: 0.2, seed: 7, dur: 1.3 });
+}
 // ------------------------------------------------------------------ people (stylised, no faces)
 const auroraScreenTex = canvasTex(64, 128, (g, w, h) => { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#5a2a9a'); gr.addColorStop(0.35, '#ff4fa0'); gr.addColorStop(0.7, '#3cffa0'); gr.addColorStop(1, '#0a2a30'); g.fillStyle = gr; g.fillRect(0, 0, w, h); });
 const crowdScreenMat = new THREE.MeshBasicMaterial({ map: auroraScreenTex, color: 0xffffff });
@@ -420,6 +441,7 @@ const trailMat = new THREE.ShaderMaterial({
 });
 const trail = new THREE.Mesh(trailGeo, trailMat); trail.frustumCulled = false; trail.renderOrder = 4; scene.add(trail);
 const IMPACT_DIR = new THREE.Vector3(-0.12, 0, -1).normalize();
+const frags = [0, 1, 2].map(() => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xffd8a0, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false })); sp.renderOrder = 5; scene.add(sp); return sp; });
 function meteorDir(tt) {
   const k = clamp((tt - 10.6) / 5.4);
   const kk = k * k * 0.25 + k * 0.75;
@@ -505,6 +527,24 @@ const fires = [];
   for (let i = 0; i < 18; i++) { const b = buildings[2 + Math.floor(r() * (buildings.length - 4))]; spots.push([b.side * 19.8, 3 + r() * (b.h - 5), b.z + (r() - 0.5) * b.w * 0.7, 2 + r() * 3]); }
   for (const c of cars.slice(0, 6)) spots.push([c.x * 0.8, 0.8, c.z + 6, 2.5]);
   for (const [x, y, z, s] of spots) { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })); sp.position.set(x, y, z); scene.add(sp); fires.push({ sp, s, seed: r() * 50, t0: 28 + r() * 3 }); } }
+
+// facade chunks falling during the quake
+const CH = 150;
+const chunks = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), flat(0x8a8078), CH); chunks.frustumCulled = false; scene.add(chunks);
+const chunkData = [];
+{ const r = mulberry(313); const near = buildings.filter(b => b.z > -110 && b.z < 10);
+  for (let i = 0; i < CH; i++) { const b = near[Math.floor(r() * near.length)]; chunkData.push({ t0: 20.5 + r() * 3.2, x: b.side * 20, y0: b.h * (0.55 + r() * 0.45), z: b.z + (r() - 0.5) * b.w * 0.8, vx: -b.side * (1 + r() * 3.5), vz: (r() - 0.5) * 2, sc: 0.3 + r() * 1.1, sp: 2 + r() * 6, rx: r() * 6 }); } }
+// debris driven ahead of the pressure wave
+const WD = 420;
+const wdebris = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.22, 0), flat(0x4a3c30), WD); wdebris.frustumCulled = false; scene.add(wdebris);
+const wdData = []; { const r = mulberry(717); for (let i = 0; i < WD; i++) wdData.push({ dz: 2 + r() * 45, x: (r() - 0.5) * 44, y: 0.3 + Math.pow(r(), 1.6) * 30, sc: 0.4 + r() * 2.2, sp: 3 + r() * 9, ph: r() * 6 }); }
+// exploding car in the aftermath
+const EXPLO_T = 31.2;
+const exploSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, color: 0xffb060, transparent: true, depthWrite: false, fog: false }));
+exploSprite.renderOrder = 20; scene.add(exploSprite);
+const EF = 40;
+const efrags = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.25, 0), new THREE.MeshBasicMaterial({ color: 0xffb050 }), EF); efrags.frustumCulled = false; scene.add(efrags);
+const efData = []; { const r = mulberry(919); for (let i = 0; i < EF; i++) { const a = r() * Math.PI * 2; efData.push({ vx: Math.cos(a) * (3 + r() * 8), vz: Math.sin(a) * (3 + r() * 8), vy: 6 + r() * 14, sc: 0.4 + r() * 1.2 }); } }
 
 // ------------------------------------------------------------------ your phone + hand (child of camera)
 const PHONE_W = 0.074, PHONE_H = 0.156;
@@ -646,7 +686,7 @@ function drawPhoneUI(t, mode, battery, replayT) {
   else { for (let i = 0; i < 4; i++) { g.fillStyle = '#fff'; g.fillRect(170 + i * 8, 30 - i * 5, 5, 6 + i * 5); } g.fillText('5G', 228, 23); }
   if (mode === 'live') {
     // recording UI
-    const blink = Math.floor(t * 2) % 2 === 0;
+    const blink = Math.floor(RT * 2) % 2 === 0;
     g.fillStyle = 'rgba(0,0,0,.35)'; rr(g, 120, 58, 120, 34, 17); g.fill();
     g.fillStyle = blink ? '#ff3b30' : 'rgba(255,59,48,.35)'; g.beginPath(); g.arc(140, 75, 7, 0, 7); g.fill();
     const rec = Math.floor(t + 7);
@@ -702,29 +742,33 @@ const tmpM = new THREE.Matrix4(), tmpQ = new THREE.Quaternion(), tmpE = new THRE
 
 function camPose(t) {
   // returns {x,y,z,yaw,pitch,roll}
-  const sway = (s, f) => noise1(t * f, s) ;
+  const sway = (s, f) => noise1(RT * f, s) ;
   let p = { x: 0, y: 1.68, z: 0, yaw: -0.03, pitch: 0.17, roll: 0 };
   // 0–2.9 s: looking up into the aurora, then tilt down to the street
   const tilt = easeIO(clamp((t - 1.55) / 1.45));
-  p.pitch = lerp(0.66, 0.17, tilt); p.yaw = lerp(-0.16, -0.03, tilt);
+  p.pitch = lerp(0.66, 0.17, tilt); p.yaw = lerp(0.3, -0.03, tilt);
   // handheld
   p.yaw += sway(1, 0.35) * 0.012; p.pitch += sway(2, 0.4) * 0.01; p.roll += sway(3, 0.3) * 0.012;
   if (t > 16 && t < 20) { const k = sstep(16, 16.4, t) * (1 - sstep(18, 20, t)); p.z += 0.25 * sstep(16, 17, t); p.pitch -= 0.02 * k; }
   if (t >= 17) p.z += 0.25;
   // quake
   const q = sstep(19.9, 20.4, t) * (1 - sstep(23.6, 24.0, t));
-  if (q > 0) { p.x += noise1(t * 11, 4) * 0.09 * q; p.y += noise1(t * 13, 5) * 0.08 * q; p.pitch += noise1(t * 9, 6) * 0.035 * q; p.roll += noise1(t * 10, 7) * 0.05 * q; p.yaw += noise1(t * 7, 8) * 0.03 * q; }
+  if (q > 0) { p.x += noise1(RT * 11, 4) * 0.09 * q; p.y += noise1(RT * 13, 5) * 0.08 * q; p.pitch += noise1(RT * 9, 6) * 0.035 * q; p.roll += noise1(RT * 10, 7) * 0.05 * q; p.yaw += noise1(RT * 7, 8) * 0.03 * q; }
+  // look down at the crack opening in front of your feet
+  p.pitch -= 0.62 * sstep(21.75, 22.25, t) * (1 - sstep(23.0, 23.6, t));
+  // car explosion shake
+  if (t > 31.2 && t < 32.5) { const e = Math.exp(-(t - 31.2) * 4); p.pitch += noise1(RT * 31, 16) * 0.05 * e; p.roll += noise1(RT * 29, 17) * 0.06 * e; }
   // 24–25 silence: still. wave approaching -> trembling, then hit
   const tr = sstep(25.6, T_HIT_CAM, t) * (t < T_HIT_CAM ? 1 : 0);
-  p.pitch += noise1(t * 25, 9) * 0.012 * tr; p.roll += noise1(t * 22, 10) * 0.015 * tr;
+  p.pitch += noise1(RT * 25, 9) * 0.012 * tr; p.roll += noise1(RT * 22, 10) * 0.015 * tr;
   if (t >= T_HIT_CAM) {
     const k = easeIO(clamp((t - T_HIT_CAM) / 0.75));
     const shake = Math.exp(-(t - T_HIT_CAM) * 2.5);
     p.x = lerp(p.x, 0.9, k); p.y = lerp(p.y, 0.42, k); p.z = lerp(p.z, 7.5, k);
     p.pitch = lerp(p.pitch, 0.42, k); p.roll = lerp(p.roll, 0.16, k); p.yaw = lerp(p.yaw, 0.06, k);
-    p.pitch += noise1(t * 30, 11) * 0.12 * shake; p.roll += noise1(t * 27, 12) * 0.2 * shake; p.yaw += noise1(t * 24, 13) * 0.08 * shake;
+    p.pitch += noise1(RT * 30, 11) * 0.12 * shake; p.roll += noise1(RT * 27, 12) * 0.2 * shake; p.yaw += noise1(RT * 24, 13) * 0.08 * shake;
     p.pitch += 0.04 * sstep(29, 34, t); p.z -= 0.3 * sstep(29, 34, t);
-    p.pitch += noise1(t * 0.5, 14) * 0.01; p.roll += noise1(t * 0.4, 15) * 0.012;
+    p.pitch += noise1(RT * 0.5, 14) * 0.01; p.roll += noise1(RT * 0.4, 15) * 0.012;
   }
   return p;
 }
@@ -735,24 +779,26 @@ function setPerson(P, t) {
   let fallDir = 0, fall = 0;
   let armR = -0.15, armL = 0.15, armRz = 0, armLz = 0, headX = -0.35, legSwing = 0, lean = 0;
   const ph = P.ph;
-  if (kind === 'film') { armR = -2.45 + Math.sin(t * 0.8 + ph) * 0.05; armRz = 0.25; armL = R2(P) ? -2.3 : -0.1; armLz = R2(P) ? -0.35 : 0.1; headX = -0.25; }
-  if (kind === 'point') { armL = -2.6 + Math.sin(t * 0.6 + ph) * 0.15; armLz = -0.2; armR = -0.1; headX = -0.45; }
-  if (kind === 'watch') { armR = -0.05 + Math.sin(t + ph) * 0.03; armL = 0.05; headX = -0.5; }
+  if (kind === 'film') { armR = -2.45 + Math.sin(RT * 0.8 + ph) * 0.05; armRz = 0.25; armL = R2(P) ? -2.3 : -0.1; armLz = R2(P) ? -0.35 : 0.1; headX = -0.25; }
+  if (kind === 'point') { armL = -2.6 + Math.sin(RT * 0.6 + ph) * 0.15; armLz = -0.2; armR = -0.1; headX = -0.45; }
+  if (kind === 'watch') { armR = -0.05 + Math.sin(RT + ph) * 0.03; armL = 0.05; headX = -0.5; }
   // idle sway
-  lean = Math.sin(t * 0.7 + ph) * 0.03;
+  lean = Math.sin(RT * 0.7 + ph) * 0.03;
   // meteor: cheering
   if (t > 11.6 && t < 16.2 && P.cheer) {
     const k = sstep(11.6, 12.2, t) * (1 - sstep(15.9, 16.2, t));
-    const pump = Math.sin((t + ph) * 7.5);
+    const pump = Math.sin((RT + ph) * 7.5);
     if (kind === 'film') { armL = lerp(armL, -2.75 + pump * 0.35, k); armLz = lerp(armLz, -0.3, k); }
     else { armR = lerp(armR, -2.8 + pump * 0.3, k); armRz = lerp(armRz, 0.3, k); armL = lerp(armL, -2.7 - pump * 0.3, k); }
-    if (P.jump) y += Math.max(0, Math.sin((t + ph) * 7.5)) * 0.12 * k;
+    if (P.jump) y += Math.max(0, Math.sin((RT + ph) * 7.5)) * 0.12 * k;
     headX = lerp(headX, -0.55, k);
   }
   // flash: recoil, arms sink; some run away
   if (t > 16.1) {
     const k = sstep(16.1, 16.9, t);
     z += 0.6 * k; headX = lerp(headX, -0.1, k);
+    const sh = sstep(16.03, 16.25, t) * (1 - sstep(17.2, 18.0, t));
+    if (sh > 0) { armR = lerp(armR, -2.1, sh); armL = lerp(armL, -2.1, sh); armRz = lerp(armRz, -0.55, sh); armLz = lerp(armLz, 0.55, sh); }
     const sink = sstep(17.0, 19.5, t);
     armR = lerp(armR, kind === 'film' ? -1.4 : -0.3, sink); armL = lerp(armL, -0.2, sink);
     if (t > P.runAt) {
@@ -764,14 +810,14 @@ function setPerson(P, t) {
       x += Math.sin(dir) * sp * k2; z += Math.cos(dir) * sp * k2;
       // stop before reaching the camera
       if (z > -1.2) { z = -1.2; }
-      legSwing = Math.sin((t + ph) * 11) * 0.7 * k2; armR = lerp(armR, -Math.sin((t + ph) * 11) * 0.8, k2); armL = lerp(armL, Math.sin((t + ph) * 11) * 0.8, k2);
+      legSwing = Math.sin((RT + ph) * 11) * 0.7 * k2; armR = lerp(armR, -Math.sin((RT + ph) * 11) * 0.8, k2); armL = lerp(armL, Math.sin((RT + ph) * 11) * 0.8, k2);
       armRz = armLz = 0;
     }
   }
   // quake: stumble / fall
   if (t > 20.1) {
     const q = sstep(20.1, 20.5, t) * (1 - sstep(23.6, 24, t));
-    lean += noise1(t * 6 + ph, 3) * 0.12 * q; y += Math.abs(noise1(t * 14 + ph, 2)) * 0.05 * q;
+    lean += noise1(RT * 6 + ph, 3) * 0.12 * q; y += Math.abs(noise1(RT * 14 + ph, 2)) * 0.05 * q;
     if (t > P.quakeFall) { fallDir = P.quakeDir; fall = sstep(P.quakeFall, P.quakeFall + 0.55, t) * 1.45; legSwing = 0; }
   }
   // shock wave: thrown towards the camera
@@ -806,7 +852,7 @@ function updatePeople(t) {
         P.root.visible = true;
         const dir = i % 2 ? 1 : -1; const x = -dir * 22 + dir * (t - 28.4 + i * 0.7) * 3.6, z = -26 - i * 3;
         P.root.position.set(x, 0, z); P.fallYaw.rotation.y = 0; P.tilt.rotation.x = 0; P.body.rotation.set(0, dir * Math.PI / 2, 0);
-        const s = Math.sin((t + i) * 10); P.legs[0].rotation.x = s * 0.7; P.legs[1].rotation.x = -s * 0.7; P.arms[0].rotation.set(-s * 0.8, 0, 0); P.arms[1].rotation.set(s * 0.8, 0, 0);
+        const s = Math.sin((RT + i) * 10); P.legs[0].rotation.x = s * 0.7; P.legs[1].rotation.x = -s * 0.7; P.arms[0].rotation.set(-s * 0.8, 0, 0); P.arms[1].rotation.set(s * 0.8, 0, 0);
         P.phone.visible = false; P.neck.rotation.x = 0.2;
       }
       continue;
@@ -815,7 +861,7 @@ function updatePeople(t) {
     const hasPhone = P.kind === 'film';
     const dropped = hasPhone && t > P.dropAt;
     P.phone.visible = hasPhone && !dropped;
-    P.glow.material.opacity = t > 7.35 && t < 7.9 ? (Math.floor(t * 20) % 2 ? 0.05 : 0.4) : 0.35;
+    P.glow.material.opacity = t > 7.35 && t < 7.9 ? (Math.floor(RT * 20) % 2 ? 0.05 : 0.4) : 0.35;
     if (dropped) {
       if (!P.dropCache) {
         setPerson(P, P.dropAt); P.root.updateMatrixWorld(true);
@@ -840,7 +886,7 @@ function updatePeople(t) {
 
 function updateWorld(t) {
   // sky / aurora
-  skyU.uTime.value = t;
+  skyU.uTime.value = RT;
   const aur = 1.0 + 0.55 * sstep(7.6, 10.5, t) + 0.15 * sstep(11, 15, t);
   skyU.uAurora.value = aur * (1 - 0.35 * sstep(16, 17, t) * (1 - sstep(17, 19, t)));
   skyU.uRed.value = sstep(8, 12, t) * 0.7;
@@ -867,7 +913,7 @@ function updateWorld(t) {
   blastLight.intensity = flash * 2.2 + glow * 0.9 * (1 - dust * 0.6);
   blastLight.color.setHex(t < 16.4 ? 0xfff2e0 : 0xff8040);
   const fireOn = sstep(28, 29.5, t);
-  fireLight.intensity = fireOn * (14 + noise1(t * 8, 21) * 5); fireLight2.intensity = fireOn * (10 + noise1(t * 9, 22) * 4);
+  fireLight.intensity = fireOn * (14 + noise1(RT * 8, 21) * 5); fireLight2.intensity = fireOn * (10 + noise1(RT * 9, 22) * 4);
 
   // lamps: flicker and go out from far to near
   let li = 0;
@@ -875,26 +921,28 @@ function updateWorld(t) {
   for (const L of lamps) {
     const off = 7.25 + (-L.z / 170) * -1 + 1.1 + (L.side > 0 ? 0.08 : 0);
     const tOff = 8.35 - (-L.z / 170) * 1.05 + (L.side > 0 ? 0.06 : 0);
-    let on = t < tOff - 0.3 ? 1 : t < tOff ? (hash1(Math.floor(t * 24) + L.seed) > 0.5 ? 1 : 0.15) : 0;
+    let on = t < tOff - 0.3 ? 1 : t < tOff ? (hash1(Math.floor(RT * 24) + L.seed) > 0.5 ? 1 : 0.15) : 0;
     L.headMat.color.setRGB(on ? 1 : 0.08, on ? 0.76 : 0.07, on ? 0.48 : 0.06);
     L.glow.visible = on > 0.5; L.pool.material.opacity = 0.38 * on;
     L.on = on; void off;
     // tilt during quake / blast
     const q = sstep(20.2, 20.6, t) * (1 - sstep(23.6, 24, t));
-    L.g.rotation.z = noise1(t * 5 + L.seed, 31) * 0.05 * q + (t > waveHit(L.z) ? -0.0 : 0);
+    const tf = 20.7 + hash1(L.seed + 9) * 2.2;
+    const topple = L.z > -60 && hash1(L.seed + 4) < 0.6 ? sstep(tf, tf + 0.6, t) : 0;
+    L.g.rotation.z = noise1(RT * 5 + L.seed, 31) * 0.05 * q + L.side * 1.42 * topple * topple;
     L.g.rotation.x = t > waveHit(L.z) ? sstep(waveHit(L.z), waveHit(L.z) + 0.3, t) * (0.5 + hash1(L.seed) * 0.6) : 0;
   }
   for (let i = 0; i < lampLights.length; i++) { const L = near[i]; const l = lampLights[i]; l.position.set(L.side * 11.2, 7.1, L.z); l.intensity = 9 * L.on; }
 
   // windows: blackout block by block
   const winBase = 1 - 0;
-  for (const m of windowMats) { if (m.userData.tOff === undefined) m.userData.tOff = 7.45 + hash1(windowMats.indexOf(m)) * 1.3; m.emissiveIntensity = t < m.userData.tOff ? 1.25 * winBase : t < m.userData.tOff + 0.15 ? (Math.floor(t * 30) % 2 ? 0.8 : 0.1) : 0; }
+  for (const m of windowMats) { if (m.userData.tOff === undefined) m.userData.tOff = 7.45 + hash1(windowMats.indexOf(m)) * 1.3; m.emissiveIntensity = t < m.userData.tOff ? 1.25 * winBase : t < m.userData.tOff + 0.15 ? (Math.floor(RT * 30) % 2 ? 0.8 : 0.1) : 0; }
   for (const o of towers) if (o.userData.blink !== undefined) o.visible = t < 7.6 && Math.floor(t * 1.2 + o.userData.blink * 2) % 2 === 0;
 
   // trees sway in quake and blast
   for (const T of trees) {
     const q = sstep(20.2, 20.6, t) * (1 - sstep(23.6, 24, t));
-    T.g.rotation.z = noise1(t * 4 + T.seed, 41) * 0.06 * q;
+    T.g.rotation.z = noise1(RT * 4 + T.seed, 41) * 0.06 * q;
     const th = waveHit(T.z); const b = t > th ? sstep(th, th + 0.25, t) : 0;
     T.g.rotation.x = b * (1.1 + hash1(T.seed) * 0.4);
     T.crown.visible = !(t > th + 0.15 && hash1(T.seed + 3) < 0.5);
@@ -904,7 +952,7 @@ function updateWorld(t) {
   for (const C of cars) {
     let x = C.x, y = 0, z = C.z, rx = 0, rz = 0, ry = C.ry;
     const q = sstep(20.2, 20.5, t) * (1 - sstep(23.6, 24, t));
-    y += Math.abs(noise1(t * 9 + C.seed, 51)) * 0.35 * q; rx += noise1(t * 7 + C.seed, 52) * 0.06 * q; rz += noise1(t * 8 + C.seed, 53) * 0.07 * q;
+    y += Math.abs(noise1(RT * 9 + C.seed, 51)) * 0.35 * q; rx += noise1(RT * 7 + C.seed, 52) * 0.06 * q; rz += noise1(RT * 8 + C.seed, 53) * 0.07 * q;
     const th = waveHit(C.z);
     if (t > th) {
       const dt = t - th; const k = 1 - Math.exp(-dt * 1.7);
@@ -913,20 +961,24 @@ function updateWorld(t) {
       y += Math.abs(Math.sin(rx)) * 1.3 + Math.max(0, Math.sin(Math.min(dt * 3, Math.PI))) * 2.2;
     }
     C.g.position.set(x, y, z); C.g.rotation.set(0, ry, 0); C.body.rotation.set(rx, 0, rz);
-    const haz = t > 20.6 && Math.floor((t + C.seed) * 1.6) % 2 === 0;
+    const haz = t > 20.6 && Math.floor((RT + C.seed) * 1.6) % 2 === 0;
     C.hazMat.color.setHex(haz ? 0xffa020 : 0x2a1600);
   }
 
   // cracks
   for (const c of cracks) {
-    const prog = clamp((t - 20.3 - c.delay) / 1.6);
+    const prog = clamp((t - 20.3 - c.delay) / (c.dur || 1.6));
     const n = c.pts.length; const len = prog * (n - 1);
     const widen = c.w0 * (1 + 2.5 * sstep(20.5, 23.5, t)) + 0.15 * sstep(T_HIT_CAM, T_HIT_CAM + 1, t);
     for (let i = 0; i < n; i++) {
       const [px, pz] = c.pts[i]; const w = i <= len ? widen * (0.5 + 0.5 * hash1(i + c.seed)) * Math.min(1, len - i + 1) : 0;
-      c.pos.set([px - w, 0.015, pz, px + w, 0.015, pz + w * 0.3], i * 6);
+      c.pos.set([px - w, 0.03, pz, px + w, 0.03, pz + w * 0.3], i * 6);
     }
     c.m.geometry.attributes.position.needsUpdate = true; c.m.visible = t > 20.3;
+    if (!c.rim) { const g = new THREE.BufferGeometry(); c.rimPos = new Float32Array(c.pos.length); g.setAttribute('position', new THREE.BufferAttribute(c.rimPos, 3)); g.setIndex(c.m.geometry.index); c.rim = new THREE.Mesh(g, rimMat); c.rim.frustumCulled = false; world.add(c.rim); }
+    for (let i = 0; i < n; i++) { const cx = (c.pos[i * 6] + c.pos[i * 6 + 3]) / 2, cz = c.pos[i * 6 + 2]; const hw = (c.pos[i * 6 + 3] - c.pos[i * 6]) / 2 * 1.25 + (hw0(c, i, len)); c.rimPos.set([cx - hw, 0.027, cz, cx + hw, 0.027, cz + hw * 0.3], i * 6); }
+    c.rim.geometry.attributes.position.needsUpdate = true; c.rim.visible = c.m.visible;
+    
   }
 
   // meteor
@@ -955,6 +1007,16 @@ function updateWorld(t) {
     pos.needsUpdate = a.needsUpdate = true;
     trailMat.uniforms.uI.value = mI * lerp(0.9, 2.2, sstep(11, 16, t));
   }
+  // the streak breaks apart shortly before impact
+  const fk = clamp((t - 14.5) / 1.5);
+  frags.forEach((sp, i) => {
+    sp.visible = fk > 0 && t < 16;
+    if (!sp.visible) return;
+    const d = meteorDir(t - 0.06 * (i + 1)); const side = new THREE.Vector3(-d.z, 0, d.x).normalize();
+    d.addScaledVector(side, (i - 1) * 0.03 * fk).addScaledVector(up, (i === 1 ? -1 : 1) * 0.012 * fk).normalize();
+    sp.position.copy(camera.position).addScaledVector(d, 9000);
+    sp.scale.setScalar(lerp(120, 260, fk) * (0.8 + 0.3 * Math.sin(RT * 30 + i)));
+  });
 
   // fireball / mushroom cloud
   const fT = t - 16;
@@ -1012,6 +1074,44 @@ function updateWorld(t) {
   debris.instanceMatrix.needsUpdate = debTrails.instanceMatrix.needsUpdate = true;
   debris.visible = debTrails.visible = t > 27.8;
 
+  // facade chunks
+  for (let i = 0; i < CH; i++) {
+    const c = chunkData[i]; const dt = t - c.t0;
+    if (dt < 0 || t > 28.2) { tmpM.makeScale(0, 0, 0); chunks.setMatrixAt(i, tmpM); continue; }
+    const tl = Math.sqrt(2 * c.y0 / 9.81); const k = Math.min(dt, tl);
+    let x = c.x + c.vx * k, y = Math.max(c.sc * 0.4, c.y0 - 4.9 * k * k), z = c.z + c.vz * k;
+    const th = waveHit(z); if (t > th) { const d2 = t - th; z += 18 * (1 - Math.exp(-d2 * 1.8)); }
+    tmpE.set(c.rx + k * c.sp, k * c.sp * 0.5, 0); tmpQ.setFromEuler(tmpE);
+    tmpM.compose(tmpV.set(x, y, z), tmpQ, tmpS.set(c.sc, c.sc * 0.6, c.sc * 0.8)); chunks.setMatrixAt(i, tmpM);
+  }
+  chunks.instanceMatrix.needsUpdate = true;
+  // debris riding in front of the wave
+  const zwf = waveZ(t);
+  for (let i = 0; i < WD; i++) {
+    const d = wdData[i]; const z = zwf + d.dz;
+    if (t < WAVE_T0 || z > 6 || z < -260) { tmpM.makeScale(0, 0, 0); wdebris.setMatrixAt(i, tmpM); continue; }
+    tmpE.set(RT * d.sp + d.ph, RT * d.sp * 0.7, d.ph); tmpQ.setFromEuler(tmpE);
+    tmpM.compose(tmpV.set(d.x + Math.sin(RT * 3 + d.ph) * 0.8, d.y + Math.sin(RT * 4 + d.ph) * 0.6, z), tmpQ, tmpS.setScalar(d.sc)); wdebris.setMatrixAt(i, tmpM);
+  }
+  wdebris.instanceMatrix.needsUpdate = true;
+  // car explosion
+  const ex = t - EXPLO_T; const ec = cars[14];
+  exploSprite.visible = ex > 0 && ex < 2.5;
+  if (exploSprite.visible) {
+    const base = ec.g.position;
+    exploSprite.position.set(base.x, base.y + 4 + ex * 4, base.z);
+    { const sc = 6 + 26 * (1 - Math.exp(-ex * 5)); exploSprite.scale.set(sc, sc * 1.5, 1); }
+    exploSprite.material.opacity = Math.min(1, 1.6 * Math.exp(-ex * 1.1)); exploSprite.material.color.setRGB(2.2, 1.0 + 0.8 * Math.exp(-ex * 4), 0.35);
+    fireLight2.position.set(base.x, base.y + 2, base.z); fireLight2.intensity += 120 * Math.exp(-ex * 3);
+  }
+  for (let i = 0; i < EF; i++) {
+    const f = efData[i];
+    if (ex < 0 || ex > 3) { tmpM.makeScale(0, 0, 0); efrags.setMatrixAt(i, tmpM); continue; }
+    const b = ec.g.position; const y = Math.max(0.2, b.y + 1 + f.vy * ex - 4.9 * ex * ex);
+    tmpM.compose(tmpV.set(b.x + f.vx * ex, y, b.z + f.vz * ex), tmpQ.identity(), tmpS.setScalar(f.sc * Math.max(0.2, 1 - ex / 3))); efrags.setMatrixAt(i, tmpM);
+  }
+  efrags.instanceMatrix.needsUpdate = true;
+
   // dust billows
   for (const D of dusts) {
     const dt = t - D.t0; D.sp.visible = dt > 0;
@@ -1024,8 +1124,8 @@ function updateWorld(t) {
   // fires
   for (const F of fires) {
     const on = sstep(F.t0, F.t0 + 0.8, t); F.sp.visible = on > 0;
-    const fl = 1 + noise1(t * 9 + F.seed, 61) * 0.25;
-    F.sp.scale.set(F.s * fl * on, F.s * 2 * fl * on, 1); F.sp.material.opacity = on * (0.8 + 0.2 * noise1(t * 13 + F.seed, 62));
+    const fl = 1 + noise1(RT * 9 + F.seed, 61) * 0.25;
+    F.sp.scale.set(F.s * fl * on, F.s * 2 * fl * on, 1); F.sp.material.opacity = on * (0.8 + 0.2 * noise1(RT * 13 + F.seed, 62));
   }
 
   updatePeople(t);
@@ -1033,17 +1133,21 @@ function updateWorld(t) {
   // camera
   const P = camPose(t);
   camera.position.set(P.x, P.y, P.z); camera.rotation.set(P.pitch, P.yaw, P.roll);
+  // you zoom in on the streak, the flash snaps the view back
+  const zoom = sstep(12.3, 15.3, t) * (1 - sstep(16.0, 16.25, t));
+  camera.fov = 68 - 17 * zoom; camera.updateProjectionMatrix();
+  phoneCam.fov = 66 - 30 * zoom; phoneCam.updateProjectionMatrix();
   camera.updateMatrixWorld(true);
 
   // your phone in hand
   let hx = 0.068, hy = -0.07, hz = -0.42, hrx = 0.03, hry = -0.12, hrz = 0.04;
-  hx += noise1(t * 0.9, 71) * 0.003; hy += noise1(t * 0.8, 72) * 0.003;
+  hx += noise1(RT * 0.9, 71) * 0.003; hy += noise1(RT * 0.8, 72) * 0.003;
   // look-up at the start: phone already pointing up
-  if (t > 11.5 && t < 16) { hy += 0.004 * Math.sin(t * 7); }
+  if (t > 11.5 && t < 16) { hy += 0.004 * Math.sin(RT * 7); }
   const lower = sstep(16.4, 17.6, t);
   hy -= 0.07 * lower; hrx -= 0.35 * lower; hrz += 0.1 * lower;
   const q = sstep(20.0, 20.4, t);
-  hx += noise1(t * 12, 73) * 0.012 * q; hy += noise1(t * 14, 74) * 0.012 * q;
+  hx += noise1(RT * 12, 73) * 0.012 * q; hy += noise1(RT * 14, 74) * 0.012 * q;
   const drop = clamp((t - 21.25) / 0.7);
   if (drop > 0) { hy -= drop * drop * 0.6; hrx += drop * 2.5; hrz -= drop * 1.4; hx += drop * 0.08; }
   handRig.visible = t < 22.2;
@@ -1055,12 +1159,12 @@ function updateWorld(t) {
 function updateClose(t) {
   const k = clamp((t - 34) / 8);
   const camH = lerp(0.29, 0.205, easeIO(k)), camZ = lerp(0.2, 0.135, easeIO(k));
-  closeCam.position.set(0.012 + noise1(t * 0.3, 81) * 0.003, camH, camZ);
+  closeCam.position.set(0.012 + noise1(RT * 0.3, 81) * 0.003, camH, camZ);
   closeCam.lookAt(0.004, 0, 0.004);
   const pos = ashGeo.attributes.position;
   for (let i = 0; i < ASH; i++) {
     const a = ashData[i]; let y = (a.y0 - (t - 34) * a.sp) % 0.5; if (y < 0) y += 0.5;
-    pos.setXYZ(i, a.x + Math.sin(t * 0.8 + a.ph) * 0.01 + (t - 34) * 0.004, y, a.z + Math.cos(t * 0.6 + a.ph) * 0.008);
+    pos.setXYZ(i, a.x + Math.sin(RT * 0.8 + a.ph) * 0.01 + (t - 34) * 0.004, y, a.z + Math.cos(t * 0.6 + a.ph) * 0.008);
   }
   pos.needsUpdate = true;
   const on = t < 40.72 ? 1 : t < 41.0 ? (Math.floor(t * 28) % 2 ? 0.25 : 0.85) : 0;
@@ -1069,7 +1173,7 @@ function updateClose(t) {
   closeScreenMat.uniforms.uAsh.value = 1;
   closeScreenMat.uniforms.uGain.value = 2.8;
   screenGlow.intensity = 0.0025 * on;
-  closeKey.intensity = 0.55 + noise1(t * 6, 82) * 0.15;
+  closeKey.intensity = 0.55 + noise1(RT * 6, 82) * 0.15;
   drawAsh(t);
 }
 
@@ -1096,13 +1200,13 @@ function drawHUD(t) {
   ctx.font = '400 30px "Playfair SC"'; ctx.letterSpacing = '5px'; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
   ctx.fillText('Dein Akku', x, 196);
   // continuous drain bar
-  const frac = lerp(0.34, 0, clamp(t / 41)) / 0.34;
+  const frac = 1 - clamp(t / BATTERY_EMPTY_AT);
   ctx.shadowBlur = 0;
   ctx.fillStyle = 'rgba(255,255,255,.22)'; ctx.fillRect(x + 2, 212, 196, 3);
   ctx.fillStyle = lowCol; ctx.fillRect(x + 2, 212, 196 * frac, 3);
   ctx.shadowBlur = 18;
   // big number
-  const pulse = bat <= 6 && bat > 0 ? 0.55 + 0.45 * Math.abs(Math.sin(t * 4)) : 1;
+  const pulse = bat <= 6 && bat > 0 ? 0.55 + 0.45 * Math.abs(Math.sin(RT * 4)) : 1;
   ctx.globalAlpha = pulse;
   ctx.fillStyle = lowCol; ctx.letterSpacing = '0px';
   ctx.font = '500 132px "Playfair"';
@@ -1158,20 +1262,20 @@ function drawTitle(t) {
 }
 
 function drawEndCard(t) {
-  const a = sstep(42.0, 42.6, t);
+  const a = sstep(END.a, END.a + 0.6, t);
   if (a <= 0) return;
   ctx.save();
   ctx.globalAlpha = a; ctx.fillStyle = '#060607'; ctx.fillRect(0, 0, W, H);
   // drifting ash
   const r = mulberry(5);
-  for (let i = 0; i < 90; i++) { const x = (r() * W + t * 8 * (r() - 0.3)) % W, y = (r() * H + (t - 42) * (20 + r() * 30)) % H, s = 1 + r() * 2.5; ctx.fillStyle = `rgba(160,155,150,${0.15 + r() * 0.25})`; ctx.beginPath(); ctx.arc(x, y, s, 0, 7); ctx.fill(); }
-  const b = sstep(42.3, 43.0, t);
+  for (let i = 0; i < 90; i++) { const x = (r() * W + t * 8 * (r() - 0.3)) % W, y = (r() * H + (t - END.a) * (20 + r() * 30)) % H, s = 1 + r() * 2.5; ctx.fillStyle = `rgba(160,155,150,${0.15 + r() * 0.25})`; ctx.beginPath(); ctx.arc(x, y, s, 0, 7); ctx.fill(); }
+  const b = sstep(END.text, END.text + 0.7, t);
   ctx.globalAlpha = a * b; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = '#f4efe6';
   ctx.font = '500 104px "Playfair"'; ctx.fillText('Was wäre, wenn …', W / 2, 880);
   ctx.font = 'italic 400 76px "Playfair Italic"'; ctx.fillStyle = '#d9cfbf'; ctx.fillText('Teil 1', W / 2, 990);
   ctx.globalAlpha = a * b * 0.5; ctx.fillStyle = '#d9cfbf'; ctx.fillRect(W / 2 - 60, 1060, 120, 2);
-  const c = sstep(42.8, 43.4, t);
+  const c = sstep(END.sub, END.sub + 0.6, t);
   ctx.globalAlpha = a * c; ctx.fillStyle = '#e8e0d2'; ctx.font = '400 34px "Playfair SC"'; ctx.letterSpacing = '5px';
   ctx.fillText('Teil 2: Die Sonne verschwindet', W / 2, 1150);
   ctx.fillStyle = '#b8ad9c'; ctx.font = '400 30px "Playfair SC"';
@@ -1179,7 +1283,7 @@ function drawEndCard(t) {
   ctx.restore();
 }
 
-function composite(t, mode) {
+function composite(t, u, mode) {
   ctx.globalAlpha = 1; ctx.filter = 'none';
   if (mode === 'dark') { ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H); }
   else ctx.drawImage(glCanvas, 0, 0);
@@ -1197,18 +1301,20 @@ function composite(t, mode) {
   ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
   // grain
   ctx.globalAlpha = 0.05; ctx.globalCompositeOperation = 'overlay';
-  ctx.drawImage(grain[Math.floor(t * 30) % grain.length], 0, 0, W, H);
+  ctx.drawImage(grain[Math.floor(RT * 30) % grain.length], 0, 0, W, H);
   ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
-  drawTitle(t);
-  drawCaption(t);
-  drawEndCard(t);
-  drawHUD(t);
+  drawTitle(u);
+  drawCaption(u);
+  drawEndCard(u);
+  drawHUD(u);
 }
 
 // ------------------------------------------------------------------ frame entry point
 let replayT = 0;
-function renderFrame(t) {
-  const bat = batteryAt(t);
+function renderFrame(u) {
+  const t = warp(u);
+  RT = u;
+  const bat = batteryAt(u);
   if (t < 34) {
     updateWorld(t);
     drawPhoneUI(t, 'live', bat, 0);
@@ -1224,11 +1330,13 @@ function renderFrame(t) {
     bloom.strength = 0.85 + 0.6 * sstep(15, 16, t) * (t < 18 ? 1 : 0);
     renderPass.scene = scene; renderPass.camera = camera;
     composer.render();
-    composite(t, 'live');
+    composite(t, u, 'live');
   } else if (t < 42) {
     // replay of the aurora footage on the cracked phone
     replayT = 0.4 + (t - 34) * 0.85;
+    RT = 6 + replayT * 1.1;
     updateWorld(2.6 + replayT * 0.62);
+    RT = u;
     handRig.visible = true; myPhone.g.visible = false;
     camera.updateMatrixWorld(true); phoneCam.updateMatrixWorld(true);
     drawPhoneUI(t, 'replay', bat, replayT);
@@ -1237,9 +1345,9 @@ function renderFrame(t) {
     bloom.strength = 0.7;
     renderPass.scene = closeScene; renderPass.camera = closeCam;
     composer.render();
-    composite(t, 'close');
+    composite(t, u, 'close');
   } else {
-    composite(t, 'dark');
+    composite(t, u, 'dark');
   }
 }
 

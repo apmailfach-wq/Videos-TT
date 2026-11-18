@@ -78,35 +78,37 @@ python3 render.py shots        # Schnittliste
 python3 render.py preview 5 30 # Standbilder
 ```
 
-## was-waere-wenn-teil1.mp4 (Low-Poly-3D-Kurzfilm)
+## was-waere-wenn-teil1.mp4 (Low-Poly-3D-Kurzfilm mit Erzähler)
 
-**„Was wäre, wenn der schönste Himmel deines Lebens der letzte wäre?“** – 45 s · 1080×1920 · 30 fps ·
-Ich-Perspektive auf einer Frankfurter Straße bei Nacht, ruhiger „Simulations“-Look, ohne Sprecher (alles über Text verständlich).
-Oben links immer „DEIN AKKU“ (34 % → 0 %) mit szenenabhängiger Zeile, Untertitel kursiv im unteren Drittel.
+**„Was wäre, wenn der schönste Himmel deines Lebens der letzte wäre?“** – 68 s · 1080×1920 · 30 fps ·
+Ich-Perspektive auf einer Frankfurter Straße bei Nacht, ruhiger „Simulations“-Look, tiefe Erzählerstimme
+(edge-tts `de-DE-ConradNeural`, verlangsamt und tiefer gepitcht). Oben links immer „DEIN AKKU“ (34 % → 0 %)
+mit szenenabhängiger Zeile, Untertitel kursiv im unteren Drittel – auch ohne Ton verständlich.
 
 | Zeit | Szene | Akku · Zeile |
 |---|---|---|
-| 0–2 s | Polarlichter + Titelfrage, Blick nach oben | 34 % |
-| 2–7 s | Skyline, Menge filmt, du filmst mit | 34 % · Stärkster Sturm seit 1859 |
-| 7–11 s | Laternen und Fenster gehen aus, „Kein Netz“, Polarlichter heller/röter | 31 % · Kein Netz |
-| 11–16 s | Heller Streifen, Menge jubelt | 28 % · Zeit bis zum Einschlag 5…1 s |
-| 16–20 s | Weißer Blitz, Feuerball hinter der Skyline | 24 % · Mehr Energie als alle Atomwaffen der Welt |
-| 20–24 s | Erdbeben, Risse, Autos springen, Handys fallen | 19 % · Bodenwelle · 20 s nach dem Einschlag |
-| 24–29 s | 1 s Stille, dann Luftwand: Scheiben bersten, Autos überschlagen sich | 13 % · 5 Minuten nach dem Einschlag |
-| 29–34 s | Am Boden: brennende Trümmer, Staub verschluckt den Himmel | 6 % · Staub verdunkelt den Himmel |
-| 34–42 s | Wendung: gesprungenes Handy spielt die Polarlicht-Aufnahme ab, Ascheregen, Akku leer | 1 % → 0 % |
-| 42–45 s | Endkarte „Was wäre, wenn … Teil 1“ / Teil 2: Die Sonne verschwindet | 0 % |
+| 0–5 s | Hook: Polarlichter + Titelfrage (vom Sprecher gelesen) | 34 % |
+| 5–13,5 s | Skyline, Menge filmt, du filmst mit | 34 % · Stärkster Sturm seit 1859 |
+| 13,5–18 s | Laternen und Fenster gehen aus, „Kein Netz“, Polarlichter heller/röter | 31 % · Kein Netz |
+| 18–26,5 s | Heller Streifen, du zoomst heran, er zerbricht, Menge jubelt | 28 % · Countdown bis zum Einschlag |
+| 26,5–34,5 s | Weißer Blitz, Menschen schirmen die Augen ab, Feuerball hinter der Skyline | 24 % · Mehr Energie als alle Atomwaffen der Welt |
+| 34,5–40,5 s | Erdbeben: Fassadenteile und Laternen stürzen, Riss bis vor deine Füße, Handys fallen | 19 % · Bodenwelle |
+| 40,5–46,5 s | 1 s Stille, dann Luftwand mit Trümmerfront: Scheiben bersten, Autos überschlagen sich | 13 % · 5 Minuten nach dem Einschlag |
+| 46,5–53 s | Am Boden: brennende Trümmer, ein Auto explodiert, Staub verschluckt den Himmel | 6 % · Staub verdunkelt den Himmel |
+| 53–62 s | Wendung: gesprungenes Handy spielt die Polarlicht-Aufnahme ab, Ascheregen, Akku leer | 1 % → 0 % |
+| 62–68 s | Endkarte „Was wäre, wenn … Teil 1“ / Teil 2: Die Sonne verschwindet (Sprecher) | 0 % |
 
 ```bash
 cd src/waswaere
 npm install                 # three.js 0.170
-python3 audio.py            # Sounddesign (numpy) -> build/waswaere/audio.wav
-./render_all.sh             # 1350 Frames, 3 parallele Headless-Chromium-Prozesse (~1 h, SwiftShader)
-node render.mjs stills /tmp/st 0.5 14 27.3 36    # einzelne Standbilder
+python3 voice.py            # Erzählerstimme je Satz -> build/waswaere/voice/ (eigene Aufnahmen: line00..10.wav + --keep)
+./render_all.sh             # 2040 Frames in 3 Headless-Chromium-Prozessen (~1,5 h), Ton (audio.py) + Mux
+node render.mjs stills /tmp/st 2 25 38 57   # einzelne Standbilder (Ausgabezeit in s)
 ```
 
 - `film.js` – komplette Szene (three.js): ray-marched Polarlichter im Himmels-Shader, Straße, Menge, Autos,
   Meteor, Feuerball, Druckwelle, Glassplitter, Trümmer, Staub, Handy-Nahaufnahme; HUD/Untertitel als 2D-Overlay.
-  Jeder Zustand ist eine reine Funktion der Zeit → jeder Frame ist einzeln renderbar.
-- `timeline.js` – Texte, Akkustände, HUD-Zeilen und Zeiten.
+  Die 3D-Welt läuft in „Story-Zeit“; `timeline.json` bildet die Ausgabezeit darauf ab (`warp`) und setzt die Sprechertexte (`voice_at`).
+- `timeline.js` – Texte, Akkustände, HUD-Zeilen, Endkarte (in Ausgabezeit).
+- `voice.py` – Sprechertext, `audio.py` – Sounddesign (numpy) + Erzähler mit Ducking, Stille vor der Druckwelle und nach dem Akku-Tod.
 - `fonts/PlayfairDisplay*` – Playfair Display / SC (SIL Open Font License).
