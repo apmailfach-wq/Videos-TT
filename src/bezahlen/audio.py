@@ -1,4 +1,4 @@
-"""Tonspur: Sprecher + leise Hintergrundmusik + Klick je Zahlung, Ping je Push-Nachricht,
+"""Tonspur: Sprecher + leise Hintergrundmusik + leises Tippen je Zahlung, Vibration je Push-Nachricht,
 Münz-/Schein-Geräusche für BAR, kleine Akzente für Einblendungen -> build/bezahlen/mix.wav"""
 import math
 import wave
@@ -47,24 +47,33 @@ def add(buf, sig, t, gain):
     buf[i:j] += sig[:j - i] * gain
 
 
-# ---------------- Effekte
-CLICK = mixs(noise(0.03, 0.004) * 0.6, tone(2600, 0.05, 0.001, 0.012) * 0.5)
-TAP = mixs(tone(1800, 0.06, 0.001, 0.015) * 0.5, noise(0.02, 0.003) * 0.4)
-PING = mixs(tone(1318.5, 0.6, 0.002, 0.18, ((1, 1), (2, 0.25))), 0.7 * np.concatenate(
-    [np.zeros(int(0.09 * SR)), tone(1975.5, 0.5, 0.002, 0.16, ((1, 1), (2, 0.2)))]))
-COIN = sum(tone(f, 0.3, 0.002, 0.06) * g for f, g in ((2093, 0.5), (2637, 0.3), (3136, 0.15)))  # weich, nicht schrill
-POP = tone(520, 0.12, 0.002, 0.03, ((1, 1), (2, 0.2)))  # weicher Klick für Knöpfe
-RUSTLE = noise(0.22, 0.08) * 0.35
+# ---------------- Effekte (bewusst ohne hohe Pieptöne)
+def lowpass(y, k):
+    """Einfacher Tiefpass (gleitender Mittelwert) – macht Geräusche dumpf und weich."""
+    return np.convolve(y, np.ones(k) / k, "same")
+
+
+def soft_tick(dur=0.035, k=10, r=0.008):
+    return lowpass(noise(dur, r, hp=False), k) * 3.0
+
+
+TICK = soft_tick()                                   # Karte: leises, dumpfes Tippen
+TAP = soft_tick(0.03, 14, 0.006)                     # Handy: noch weicher
+CHINK = soft_tick(0.05, 10, 0.012) * 0.9             # Münzen: kurzes Klimpern ohne Ton
+_bz = np.arange(int(0.09 * SR)) / SR
+_buzz = np.sign(np.sin(2 * np.pi * 165 * _bz)) * np.minimum(1, _bz / 0.005) * np.minimum(1, (0.09 - _bz) / 0.01)
+BUZZ = lowpass(np.concatenate([_buzz, np.zeros(int(0.05 * SR)), _buzz]), 20) * 0.6   # Handy vibriert statt Ping
+POP = tone(240, 0.12, 0.003, 0.035, ((1, 1), (2, 0.15)))   # tiefer, weicher Plopp für Knöpfe
+RUSTLE = lowpass(noise(0.22, 0.08, hp=False), 8) * 0.9
 WHOOSH_N = int(0.35 * SR)
 _w = rng.standard_normal(WHOOSH_N)
 _w = np.convolve(_w, np.ones(30) / 30, "same")
 WHOOSH = _w * np.sin(np.linspace(0, np.pi, WHOOSH_N)) ** 2 * 2.5
-THUD = mixs(tone(90, 0.4, 0.002, 0.12, ((1, 1), (2, 0.4))) * 1.2, noise(0.05, 0.01) * 0.3)
-DING = tone(880, 0.6, 0.002, 0.25, ((1, 1), (2, 0.3), (3, 0.1)))
+THUD = mixs(tone(90, 0.4, 0.002, 0.12, ((1, 1), (2, 0.4))) * 1.2, lowpass(noise(0.05, 0.01), 8) * 0.6)
 
 
 def music():
-    """Ruhiger Pad + weiche Zupf-Arpeggios, 96 BPM, Am – F – C – G."""
+    """Ruhiger, warmer Pad + Bass, Am – F – C – G (ohne Zupf-Töne, damit nichts piept)."""
     t = np.arange(N) / SR
     beat = 60 / 96
     bar = beat * 4
@@ -83,11 +92,6 @@ def music():
             f = midi(m - 12)
             y[i0:i1] += 0.10 * e * (np.sin(2 * np.pi * f * tt) + 0.3 * np.sin(2 * np.pi * f * 2.003 * tt))
         y[i0:i1] += 0.12 * e * np.sin(2 * np.pi * midi(ch[0] - 24) * tt)
-        for k in range(8):  # Achtel-Arpeggio
-            m = ch[[0, 1, 2, 1][k % 4]] + (12 if k % 4 == 2 else 0)
-            add(y, tone(midi(m), 0.5, 0.004, 0.16, ((1, 1), (2, 0.15))) * 0.07, b * bar + k * beat / 2, 1)
-        for k in range(4):  # leiser Hi-Hat-Hauch
-            add(y, noise(0.05, 0.01) * 0.04, b * bar + k * beat + beat / 2, 1)
     return y
 
 
@@ -110,16 +114,15 @@ def main():
         if ev["skip"]:
             continue
         if ev["pay"] == "card":
-            add(fx, CLICK, ev["t"], 0.25)
+            add(fx, TICK, ev["t"], 0.22)
         elif ev["pay"] == "phone":
-            add(fx, TAP, ev["t"], 0.32)
+            add(fx, TAP, ev["t"], 0.2)
         elif ev["pay"] == "bills":
             add(fx, RUSTLE, ev["t"], 0.5)
-            add(fx, CLICK, ev["t"] + 0.6, 0.25)
         elif ev["pay"] == "coin":
-            add(fx, COIN, ev["t"], 0.12)
+            add(fx, CHINK, ev["t"], 0.18)
         if ev["push"]:
-            add(fx, PING, ev["t"] + 0.05, 0.13)
+            add(fx, BUZZ, ev["t"] + 0.05, 0.16)
     # Geldautomat
     for k in range(4):
         add(fx, RUSTLE, ATM_T[0] + 0.35 + k * 0.12, 0.5)
@@ -132,7 +135,6 @@ def main():
     for i in range(3):
         add(fx, POP, t_first + i * 0.45, 0.35)
     add(fx, THUD, at("endstand", "meisten") - 0.15, 0.55)
-    add(fx, DING, 43.6, 0.12)
     add(fx, POP, at("schmerz", "Tipp") - 0.1, 0.3)
     t_click = at("ende", "abonnier") + 0.1
     add(fx, POP, t_click, 0.4)

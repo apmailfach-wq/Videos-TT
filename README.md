@@ -85,7 +85,7 @@ Flache 2D-Animation auf Dunkelblau mit wandernden Lichtern und Glow, drei Bahnen
 (BAR gelb, KARTE rot, HANDY türkis), dauerhafte Anzeige oben (Uhr „TAG 1–30“ + drei hochzählende Zähler mit
 „▲ MEISTE AUSGABEN“-Marke), Kapitel-Banner, Spontankäufe fliegen in ein Raster, Push-Nachrichten („autsch!“),
 Geldautomat + Kleingeld, Kamera-Wackler, Konfetti, Wort-für-Wort-Untertitel in Figurenfarben.
-Voiceover: edge-tts `de-DE-ConradNeural`; Musik/Klicks/Ping werden synthetisch erzeugt.
+Voiceover: edge-tts `de-DE-ConradNeural`; Musik (warmer Pad ohne Zupf-Töne), leises dumpfes Tippen je Zahlung und Handy-Vibration statt Ping werden synthetisch erzeugt – bewusst ohne hohe Pieptöne.
 
 | Zeit | Szene |
 |---|---|
