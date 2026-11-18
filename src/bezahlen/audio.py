@@ -123,13 +123,21 @@ def main():
     for k in range(4):
         add(fx, RUSTLE, ATM_T[0] + 0.35 + k * 0.12, 0.5)
     # Akzente
-    for tt in (3.4, 4.5, at("falsch", "Also") - 0.1, 43.9, 49.9, 56.9):
+    for tt in (3.0, 5.5, 8.0, at("falsch", "Ist") - 0.1, 22.0, 30.0, 38.0, 43.9, 49.9, 55.9):
         add(fx, WHOOSH, tt, 0.18)
+    add(fx, THUD, 0.0, 0.5)                                   # Hook-Einschlag
     add(fx, THUD, at("falsch", "Noch") - 0.05, 0.6)
-    t_first = at("endstand", "Karte") - 0.1
+    t_first = at("endstand", "Mit") - 0.1
     for i in range(3):
-        add(fx, DING, t_first + i * 0.55, 0.18 * (1 + 0.3 * (i == 0)))
+        add(fx, DING, t_first + i * 0.45, 0.18 * (1 + 0.3 * (i == 0)))
+    add(fx, THUD, at("endstand", "meisten") - 0.15, 0.55)
+    for k in range(10):                                       # Zähler 39 -> 468 €
+        add(fx, COIN, at("endstand", "Aufs") + 0.4 + k * 0.09, 0.12)
     add(fx, DING * 0.8, 43.6, 0.25)
+    add(fx, DING, at("schmerz", "Tipp") - 0.1, 0.16)
+    t_click = at("ende", "abonnier") + 0.1
+    add(fx, CLICK, t_click, 0.6)
+    add(fx, PING, t_click + 0.08, 0.25)
 
     mix = voice * 1.0 + mus + fx
     mix = np.tanh(mix * 1.1) / 1.1   # weicher Limiter

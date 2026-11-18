@@ -80,25 +80,25 @@ python3 render.py preview 5 30 # Standbilder
 
 ## bar-karte-handy-video.mp4 (Bezahlschmerz-Erklärfilm)
 
-**Thema:** „BAR vs KARTE vs HANDY – wer gibt im Monat mehr aus?“ · genau 60 s · 1080×1920 · 30 fps
-Flache 2D-Animation auf Dunkelblau, drei Bahnen mit Strichfiguren (BAR gelb, KARTE rot, HANDY türkis),
-dauerhafte Anzeige oben (Uhr „TAG 1–30“ + drei hochzählende „… · AUSGEGEBEN“-Kästchen), Spontankäufe als
-Symbole über der Figur (Kaffee, Snack, Zeitschrift, Online-Bestellung), die in ein „EXTRAS“-Raster fliegen,
-Push-Nachrichten beim Handy, Geldautomat + Kleingeld bei Bar, Wort-für-Wort-Untertitel in Figurenfarben.
+**Thema:** „Gleicher Einkauf – einer zahlt 39 € mehr. Wer?“ (BAR vs KARTE vs HANDY) · genau 60 s · 1080×1920 · 30 fps
+Flache 2D-Animation auf Dunkelblau mit wandernden Lichtern und Glow, drei Bahnen mit Strichfiguren mit Gesichtern
+(BAR gelb, KARTE rot, HANDY türkis), dauerhafte Anzeige oben (Uhr „TAG 1–30“ + drei hochzählende Zähler mit
+„▲ MEISTE AUSGABEN“-Marke), Kapitel-Banner, Spontankäufe fliegen in ein Raster, Push-Nachrichten („autsch!“),
+Geldautomat + Kleingeld, Kamera-Wackler, Konfetti, Wort-für-Wort-Untertitel in Figurenfarben.
 Voiceover: edge-tts `de-DE-ConradNeural`; Musik/Klicks/Ping werden synthetisch erzeugt.
 
 | Zeit | Szene |
 |---|---|
-| 0–3 s | Titel + Frage |
-| 3–8 s | „GLEICHER EINKAUFSZETTEL“, „30 TAGE“, Start |
-| 8–16 s | Tag 1–8 → 142 / 163 / 171 € |
-| 16–22 s | „HANDY = GELDFRESSER?“ → „NOCH NICHT.“ |
-| 22–30 s | Tag 9–15, Push-Nachricht an, Handy bremst |
-| 30–38 s | Tag 16–22, Geldautomat, „Kleingeld fühlt sich wie Spielgeld an“ |
-| 38–44 s | Tag 23–30, Karte ohne Nachricht und ohne Gefühl |
-| 44–50 s | Endstand KARTE 668 € · HANDY 641 € · BAR 629 € |
-| 50–57 s | „Schmerz beim Bezahlen“-Balken + Kernaussage |
-| 57–60 s | Endkarte, Kommentar-Frage, Hinweis „Beispielrechnung“ |
+| 0–3 s | Hook: „GLEICHER EINKAUF – EINER ZAHLT +39 € – WER ZAHLT MEHR?“ |
+| 3–8 s | Wer zahlt wie · gleicher Einkaufszettel · 30 Tage · gleiches Budget |
+| 8–16 s | Woche 1: Tag 1–8 → 142 / 163 / 171 € |
+| 16–22 s | Falsche Auflösung: „HANDY = GRÖSSTE GELDFALLE?“ → „NOCH NICHT.“ |
+| 22–30 s | Woche 2: Handy meldet jede Zahlung, kauft weniger |
+| 30–38 s | Woche 3: Geldautomat, „Kleingeld fühlt sich wie Spielgeld an“ |
+| 38–44 s | Woche 4: Karte – keine Nachricht, kein Gefühl |
+| 44–50 s | Ergebnis: KARTE 668 € (meiste Ausgaben) · HANDY 641 € · BAR 629 € (am sparsamsten), +39 €/Monat → +468 €/Jahr |
+| 50–56 s | „Wie sehr spürst du die Zahlung?“ + Tipp: Push-Nachricht für die Karte an |
+| 56–60 s | „Wie zahlst du?“ → Kommentare, Abonnieren-Button mit Klick, „Teil 2 folgt“, Hinweis „Beispielrechnung“ |
 
 Die Beträge sind eine Beispielrechnung (gleicher Einkaufszettel, Unterschiede nur durch Extras);
 `timeline.py` prüft, dass die Zähler an Tag 8/15/22/30 exakt die Zielwerte treffen.
