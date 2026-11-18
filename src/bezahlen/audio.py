@@ -57,6 +57,12 @@ def soft_tick(dur=0.035, k=10, r=0.008):
     return lowpass(noise(dur, r, hp=False), k) * 3.0
 
 
+# Bezahl-Töne wie in Version 3 (kurzer Klick mit hellem Piep), im Mix ca. 6 dB leiser als damals
+CLICK = mixs(noise(0.03, 0.004) * 0.6, tone(2600, 0.05, 0.001, 0.012) * 0.5)
+TAP3 = mixs(tone(1800, 0.06, 0.001, 0.015) * 0.5, noise(0.02, 0.003) * 0.4)
+PING = mixs(tone(1318.5, 0.6, 0.002, 0.18, ((1, 1), (2, 0.25))), 0.7 * np.concatenate(
+    [np.zeros(int(0.09 * SR)), tone(1975.5, 0.5, 0.002, 0.16, ((1, 1), (2, 0.2)))]))
+COIN3 = sum(tone(f, 0.3, 0.002, 0.06) * g for f, g in ((2093, 0.5), (2637, 0.3), (3136, 0.15)))
 TICK = soft_tick()                                   # Karte: leises, dumpfes Tippen
 TAP = soft_tick(0.03, 14, 0.006)                     # Handy: noch weicher
 CHINK = soft_tick(0.05, 10, 0.012) * 0.9             # Münzen: kurzes Klimpern ohne Ton
@@ -168,6 +174,26 @@ def place(buf, sound, cue, gain, lead=0.0):
     buf[i:j] += y[:j - i] * gain
 
 
+def humanize_voice(v):
+    """Macht die TTS-Stimme natürlicher: Trittschall weg, mehr Wärme und Präsenz, weniger Zischen,
+    sanfte Kompression und ein kleiner Raum (wie in einem Zimmer aufgenommen statt trocken aus dem Rechner)."""
+    import subprocess
+    chain = ("highpass=f=75,"
+             "equalizer=f=170:t=q:w=1.0:g=2.5,"        # Wärme
+             "equalizer=f=450:t=q:w=1.2:g=-1.5,"       # weniger 'Pappe'
+             "equalizer=f=3200:t=q:w=1.4:g=1.5,"       # Präsenz
+             "equalizer=f=7200:t=q:w=2.0:g=-3,"        # Zischlaute weicher
+             "acompressor=threshold=-22dB:ratio=2.2:attack=10:release=150:makeup=1.5,"
+             "aecho=0.85:0.5:19|33|47:0.09|0.06|0.04")  # kleiner Raum
+    pcm = (np.clip(v, -1, 1) * 32767).astype(np.int16).tobytes()
+    out = subprocess.run(["ffmpeg", "-v", "error", "-f", "s16le", "-ar", str(SR), "-ac", "1", "-i", "-",
+                          "-af", chain, "-f", "s16le", "-ar", str(SR), "-ac", "1", "-"],
+                         input=pcm, capture_output=True, check=True).stdout
+    y = np.frombuffer(out, np.int16).astype(np.float64) / 32768
+    y = np.pad(y, (0, max(0, len(v) - len(y))))[:len(v)]
+    return y * (np.max(np.abs(v)) / max(np.max(np.abs(y)), 1e-9))
+
+
 def stereo(mono):
     return np.stack([mono, mono], axis=1)
 
@@ -176,6 +202,7 @@ def main():
     voice = np.zeros(N)
     for st, tim in zip(AUDIO_START, TIM):
         add(voice, np.load(tim["audio"]), st, 1.0)
+    voice = humanize_voice(voice)
 
     mus = music()
     e = np.abs(voice)
@@ -191,18 +218,18 @@ def main():
         if ev["skip"]:
             continue
         t = ev["t"]
-        if ev["pay"] == "card":                         # Karte: weicher runder UI-Pop
-            place(fx, es("ui_pop/soft", card_p[i % 3]), t, 0.2, -0.01)
-        elif ev["pay"] == "phone":                      # Handy: etwas hellerer "Boop"
-            place(fx, es("ui_pop/boop", phone_p[i % 3]), t, 0.18, -0.01)
-        elif ev["pay"] == "bills":                      # Scheine: Rascheln + Holz-Knock beim Übergeben
+        if ev["pay"] == "card":                         # Karte: Klick-Piep (leise)
+            add(fx[:, 0], CLICK, t, 0.12); add(fx[:, 1], CLICK, t, 0.12)
+        elif ev["pay"] == "phone":                      # Handy: Tipp-Piep (leise)
+            add(fx[:, 0], TAP3, t, 0.13); add(fx[:, 1], TAP3, t, 0.13)
+        elif ev["pay"] == "bills":                      # Scheine: Rascheln, dann Klick beim Übergeben
             add(fx[:, 0], RUSTLE, t, 0.35)
             add(fx[:, 1], RUSTLE, t + 0.01, 0.35)
-            place(fx, es("knock/wood"), t + 0.6, 0.22, -0.04)
-        elif ev["pay"] == "coin":                       # Münzen: kleiner Wasser-Plink statt Klingeln
-            place(fx, es("drip/plink"), t, 0.13)
-        if ev["push"]:                                  # Push-Nachricht: runder Holz-Ding
-            place(fx, es("notify/mid_wood"), t + 0.06, 0.2)
+            add(fx[:, 0], CLICK, t + 0.6, 0.11); add(fx[:, 1], CLICK, t + 0.6, 0.11)
+        elif ev["pay"] == "coin":                       # Münzen: leises Klingeln
+            add(fx[:, 0], COIN3, t, 0.07); add(fx[:, 1], COIN3, t + 0.004, 0.07)
+        if ev["push"]:                                  # Push-Nachricht: Ping (leise)
+            add(fx[:, 0], PING, t + 0.05, 0.08); add(fx[:, 1], PING, t + 0.05, 0.08)
     for k in range(4):                                  # Geldautomat
         add(fx[:, k % 2], RUSTLE, ATM_T[0] + 0.35 + k * 0.12, 0.45)
     place(fx, es("knock/double"), ATM_T[0] + 0.1, 0.25, -0.04)

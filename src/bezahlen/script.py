@@ -1,5 +1,5 @@
 """Sprechertext je Szene (feste Zeitfenster, 60 s gesamt)."""
-VOICE = "de-DE-ConradNeural"   # ruhige, tiefe Erzählstimme
+VOICE = "de-DE-ConradNeural"   # der kostenlose Dienst liefert für andere Männerstimmen ohnehin Conrad
 
 # start/end = Zeitfenster der Szene im Video (Sekunden)
 SCENES = [
