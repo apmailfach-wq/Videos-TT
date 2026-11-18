@@ -115,3 +115,35 @@ python3 render.py preview 5 12.9   # Standbilder -> build/ueberleben/stills/
 
 **Beschreibung:** Die meisten würden hier falsch entscheiden. Du auch? 🚗💦 Folge 2 – „Überlebst du das?“
 **Hashtags:** #überlebstdudas #survival #notfall #wasweresdu #wissen #lifehack #fürdich #fyp #deutschland
+
+## wildunfall-folge3.mp4 („Überlebst du das?“ – Folge 3: Wildunfall)
+
+48,2 s · 1080×1920 · 30 fps · Stereo · Draufsicht-Format (wie virale „Was tun auf Glatteis?“-Clips), ruhig erzählt mit Action.
+Voiceover: edge-tts `de-DE-ChristophNeural` (+8 %), Untertitel Wort-für-Wort (Nunito Black, Schlüsselwörter gelb).
+
+| Abschnitt | Inhalt |
+|---|---|
+| Hook | Nachts auf der Landstraße – Reh springt ins Fernlicht, Augen leuchten |
+| Instinkt | Karte „LENKRAD REISSEN“, Auto weicht aus → Freeze „FALSCH!“ → Schleudern, Baum, Laub fliegt |
+| Zurückspulen | VHS-Rücklauf bis vor das Reh |
+| Richtig | „LENKRAD FEST“, „VOLL BREMSEN“ (ABS, Bremsspuren), „HUPEN“, „ABBLENDEN“ – Auto steht, Reh springt weg, zwei weitere folgen |
+| Vergleich | Karten REH vs. BAUM (Gefahrenbalken) |
+| Danach | Warnblinker, Warnweste, Warndreieck, Polizei rufen |
+| Merk dir | NICHT AUSWEICHEN · FESTHALTEN · BREMSEN |
+| Frage | „Ehrlich: Wärst du ausgewichen? 👇“ – leuchtende Augen im Wald |
+
+Grafik: Vektor-Engine mit 2× Supersampling, Echtzeit-Lichtkarte (Fern-/Abblendlicht-Kegel, Rück-/Bremslicht,
+Warnblinker, Leitpfosten-Reflexe, Augenreflexe), Tone-Mapping, Glow, Bodennebel, Herbstwald, Filmkorn.
+Ton: Stimme + ruhige Spannungs-Pads mit Ducking, tempoabhängiger Motor/Reifen, Eule, Quietschen, Crash + Tinnitus,
+Tape-Rewind, ABS-Bremse, Hupe, Relais, Schritte, DTMF 110 – alles synthetisiert.
+
+```bash
+cd src/wildunfall
+python3 tts.py       # Stimme + Wort-Timings
+python3 render.py    # -> ../../wildunfall-folge3.mp4
+```
+Fakten (ADAC/DVR): bei Wild auf der Fahrbahn abblenden, hupen, bremsen; bei unvermeidbarem Zusammenstoß Lenkrad
+festhalten, nicht ausweichen; danach Unfallstelle sichern und Polizei rufen, Tier nicht anfassen.
+
+**Beschreibung:** Würdest du ausweichen? Genau das ist der Fehler. 🦌🚗 Folge 3 – „Überlebst du das?“
+**Hashtags:** #überlebstdudas #wildunfall #wildwechsel #autofahren #führerschein #wissen #lifehack #fürdich #fyp #deutschland

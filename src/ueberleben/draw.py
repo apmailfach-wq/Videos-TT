@@ -50,7 +50,7 @@ class Pen:
     def __init__(self, cam, top=NIGHT_TOP, bot=NIGHT_BOT, img=None):
         cx, cy, z, rot = cam[:4]
         flip = cam[4] if len(cam) > 4 else 1
-        self.img = img if img is not None else grad2x(top, bot).copy()
+        self.img = img if img is not None else grad2x(top, bot).convert("RGB")  # RGB canvas -> alpha fills blend
         self.d = ImageDraw.Draw(self.img, "RGBA")
         a = math.radians(rot)
         c, s = math.cos(a) * z, math.sin(a) * z
