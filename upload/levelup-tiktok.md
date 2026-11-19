@@ -1,21 +1,26 @@
 # Upload: Dein Leben ist ein Game (Level up)
 
-- **Video:** `levelup-dein-leben-ist-ein-game.mp4` (30,8 s, 1080×1920, 30 fps, −15 LUFS)
-- **Cover:** im Upload-Editor das Bild mit „LEVEL UP!“ (ca. Sekunde 18–19) wählen
+- **Video:** `levelup-dein-leben-ist-ein-game.mp4` (31 s, 1080×1920)
+- **Cover:** Bild mit „LEVEL UP!“ (ca. Sekunde 18) – im Cover-Editor zusätzlich als Text: „Du bist nur Level 1 🎮“
 
 ## Beschreibung (komplett kopieren)
 
 ```
-Du bist nicht schlecht. Du bist nur noch Level 1. 🎮
-Jeder Fehler = XP. Game Over gibt's nur, wenn du aufhörst.
+Du bist nicht schlecht – du bist nur noch Level 1 🎮
 
-Auf welchem Level bist du gerade? 👇
+Jeder Fehler gibt dir XP. Jedes Hinfallen bringt dich näher ans Level Up.
+Game Over gibt’s nur, wenn du aufhörst. 💪
 
-#motivation #levelup #gaming #nichtaufgeben #schule #fürdich #fyp #motivationde #glaubandich #zocken
+Schick das jemandem, der gerade aufgeben will ❤️
+Auf welchem Level bist du? Schreib’s in die Kommentare 👇
+
+Motivation für Schule, Sport & Gaming
+
+#motivation #nichtaufgeben #levelup #motivationde #gaming #schule #jugendliche #glaubandich #fyp #fürdich
 ```
 
 ## Kommentar zum Anpinnen
 
 ```
-Schreib dein Level in die Kommentare 👇 (ehrlich!)
+Ich bin gerade Level ___ 😅 und du? 👇
 ```
