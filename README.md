@@ -82,7 +82,9 @@ python3 render.py preview 5 30 # Standbilder
 
 **„Was wäre, wenn der schönste Himmel deines Lebens der letzte wäre?“** – 74,5 s · 1080×1920 · 30 fps ·
 Ich-Perspektive von der Kurhaus-Terrasse über einem Kurplatz an der Ostsee, blaue Stunde: Polarlichter über dem Meer
-(mit Spiegelung im Wasser), Seebrücke mit Laternen und Riesenrad, beleuchteter Ort entlang der Küste, Leuchtturm.
+(mit Spiegelung im Wasser), Seebrücke mit Laternen und Riesenrad, beleuchteter Ort entlang der Küste, Leuchtturm,
+beleuchtetes Kreuzfahrtschiff (bleibt im Blackout hell), Segelboote und Fischkutter. Die Druckwelle lässt Segelboote kentern,
+das zurückweichende Meer legt die Kutter trocken, der Tsunami hebt das Kreuzfahrtschiff auf seinen Kamm.
 Erzähler: edge-tts `de-DE-FlorianMultilingualNeural` (natürliche Tonhöhe). Oben links immer „DEIN AKKU“ (34 % → 0 %).
 
 | Zeit | Szene | Akku · Zeile |

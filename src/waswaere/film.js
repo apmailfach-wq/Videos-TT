@@ -108,6 +108,7 @@ const SKY_GLSL = `  uniform float uTime,uAurora,uRed,uDust,uFlash,uGlow,uCity,uS
       }
       acc *= .42*22./float(AUR_STEPS)*uAurora*smoothstep(.015,.12,el)*(.75+.25*smoothstep(.0,.5,el));
     }
+    acc = .95*(vec3(1.) - exp(-acc*1.25));   // soft saturation keeps the hue, no white hot spots
     col += acc*(1.-uDust*.97);
     // aurora glow on the horizon haze
     col += vec3(.01,.05,.035)*uAurora*exp(-max(el,0.)*7.)*(1.-uDust);
@@ -599,6 +600,102 @@ const tsunami = new THREE.Group(); scene.add(tsunami);
 const TSU_T0 = 32.0, TSU_HIT = 33.95;
 const tsuZ = t => lerp(-1600, 0, clamp((t - TSU_T0) / (TSU_HIT - TSU_T0)) ** 0.85);
 const seaDrop = t => 4.6 * sstep(31.7, 32.9, t);
+
+// ------------------------------------------------------------------ ships on the evening sea
+// A lit cruise ship crossing the horizon (own generators: stays lit in the blackout), sailing boats with
+// mast lights and fishing boats with deck lights. Pressure wave capsizes / darkens them, the receding sea
+// strands the fishing boats on the bottom, the tsunami lifts the cruise ship onto its crest.
+const shipWinTex = canvasTex(256, 64, (g, w, h) => {
+  g.fillStyle = '#000'; g.fillRect(0, 0, w, h); const r = mulberry(606);
+  for (let row = 0; row < 3; row++) for (let i = 0; i < 32; i++) if (r() < 0.86) { const v = 0.7 + r() * 0.3; g.fillStyle = `rgb(255,${210 * v | 0},${140 * v | 0})`; g.fillRect(i * 8 + 2, 6 + row * 20, 5, 9); }
+});
+shipWinTex.wrapS = THREE.RepeatWrapping;
+const ships = [];
+function lightSprite(color, size, parent, x, y, z) {
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+  s.scale.set(size, size, 1); s.position.set(x, y, z); parent.add(s); return s;
+}
+function reflStreak(color, w, h) {
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: streakTex, color, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+  s.center.set(0.5, 1); s.scale.set(w, h, 1); world.add(s); return s;
+}
+function hullWithBow(len, hgt, wid, color) {
+  const grp = new THREE.Group(); const m = flat(color);
+  const hull = new THREE.Mesh(new THREE.BoxGeometry(len, hgt, wid), m); hull.position.y = hgt / 2 - hgt * 0.35; grp.add(hull);
+  const bow = new THREE.Mesh(new THREE.CylinderGeometry(wid * 0.58, wid * 0.58, hgt, 3), m); bow.rotation.y = Math.PI / 2; bow.scale.set(1, 1, 1.7);
+  bow.position.set(len / 2 + wid * 0.29 * 1.7 - 0.5, hgt / 2 - hgt * 0.35, 0); grp.add(bow);
+  return grp;
+}
+{ // cruise ship
+  const g = new THREE.Group(); const body = new THREE.Group(); g.add(body); world.add(g);
+  body.add(hullWithBow(150, 11, 24, 0x18222f));
+  const stripe = new THREE.Mesh(new THREE.BoxGeometry(150.2, 0.8, 24.2), flat(0xd8d8d8)); stripe.position.y = 6.6; body.add(stripe);
+  const deckMats = [];
+  [[124, 10.5, 20, 0], [104, 14.5, 18, -6], [76, 18.5, 16, -12], [40, 22.5, 14, -6]].forEach(([len, y, wid, x]) => {
+    const tex = shipWinTex.clone(); tex.repeat.set(len / 70, 1); tex.needsUpdate = true;
+    const side = new THREE.MeshStandardMaterial({ color: 0xf2f0ea, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 1.6, flatShading: true, roughness: 0.8 });
+    const top = flat(0xe8e6e0); deckMats.push(side);
+    const d = new THREE.Mesh(new THREE.BoxGeometry(len, 4, wid), [side, side, top, top, side, side]); d.position.set(x, y, 0); body.add(d);
+  });
+  const funnel = new THREE.Mesh(new THREE.CylinderGeometry(3.6, 4.2, 9, 8), flat(0xf0f0f0)); funnel.position.set(-40, 28, 0); body.add(funnel);
+  const ftop = new THREE.Mesh(new THREE.CylinderGeometry(3.7, 3.7, 2.4, 8), flat(0xb02828)); ftop.position.set(-40, 33.2, 0); body.add(ftop);
+  const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.5, 12, 5), flat(0xdddddd)); mast.position.set(30, 30, 0); body.add(mast);
+  const lights = [lightSprite(0xffffff, 7, body, 30, 36.5, 0), lightSprite(0xff3030, 5, body, 92, 8, 9), lightSprite(0x30ff70, 5, body, 92, 8, -9), lightSprite(0xffffff, 5, body, -76, 13, 0)];
+  // dressing lights bow -> mast -> stern
+  for (let i = 0; i <= 18; i++) { const u = i / 18; lights.push(lightSprite(i % 3 ? 0xffe2a0 : 0xa0d8ff, 2.2, body, lerp(96, 30, u), lerp(9, 36, u), 0)); lights.push(lightSprite(i % 3 ? 0xffe2a0 : 0xffa0c0, 2.2, body, lerp(30, -76, u), lerp(36, 14, u), 0)); }
+  const refl = [-60, -40, -20, 0, 20, 40, 60].map(() => reflStreak(0xffb070, 9, 70));
+  ships.push({ type: 'cruise', g, body, deckMats, lights, refl, x0: -165, z: -420, vx: 4.5, draft: 3, ph: 0.3, reflX: [-60, -40, -20, 0, 20, 40, 60] });
+}
+function makeSailboat(x, z, ry, ph) {
+  const g = new THREE.Group(); const body = new THREE.Group(); g.add(body); world.add(g);
+  body.add(hullWithBow(9, 1.6, 3, 0xe8e4dc));
+  const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 13, 4), flat(0xcccccc)); mast.position.set(0.5, 7, 0); body.add(mast);
+  const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.Float32BufferAttribute([0.6, 1.6, 0, 0.6, 13, 0, -4.2, 1.8, 0, 0.8, 1.6, 0, 0.8, 11, 0, 5.2, 1.6, 0], 3)); sg.computeVertexNormals();
+  const sail = new THREE.Mesh(sg, new THREE.MeshStandardMaterial({ color: 0xf4f1ea, side: THREE.DoubleSide, flatShading: true, roughness: 0.9, emissive: 0x222018 })); body.add(sail);
+  const lights = [lightSprite(0xffffff, 2.4, body, 0.5, 13.6, 0), lightSprite(0xff3030, 1.6, body, 5, 1.6, 1.2)];
+  const refl = [reflStreak(0xfff0d0, 1.2, 18)];
+  g.rotation.y = ry;
+  ships.push({ type: 'sail', g, body, lights, refl, x0: x, z, vx: 0.6, draft: 0.8, ph, reflX: [0] });
+}
+makeSailboat(-55, -330, 0.4, 1.1); makeSailboat(-18, -560, -0.3, 2.3); makeSailboat(-140, -700, 0.2, 3.7); makeSailboat(62, -470, 2.6, 4.1); makeSailboat(-95, -420, -0.9, 5.2);
+function makeFisher(x, z, ry, ph, col) {
+  const g = new THREE.Group(); const body = new THREE.Group(); g.add(body); world.add(g);
+  body.add(hullWithBow(12, 2.4, 4, col));
+  const cab = new THREE.Mesh(new THREE.BoxGeometry(3.2, 2.6, 3), [flat(0xeeeeee), flat(0xeeeeee), flat(0xdddddd), flat(0xdddddd), new THREE.MeshBasicMaterial({ color: 0xffd9a0 }), flat(0xeeeeee)]); cab.position.set(-1.5, 2.9, 0); body.add(cab);
+  const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 6, 4), flat(0x888888)); mast.position.set(1, 4.5, 0); body.add(mast);
+  const lights = [lightSprite(0xffd28a, 7, body, 1, 7, 0), lightSprite(0xffffff, 2, body, 1, 7.6, 0), lightSprite(0x30ff70, 1.4, body, 5.5, 1.6, -1.6)];
+  const refl = [reflStreak(0xffc080, 3, 26)];
+  g.rotation.y = ry;
+  ships.push({ type: 'fish', g, body, lights, refl, x0: x, z, vx: 0, draft: 1.2, ph, reflX: [0], cabMat: cab.material[4] });
+}
+makeFisher(-35, -135, 0.6, 0.7, 0x8a2a24); makeFisher(-78, -175, -0.4, 2.9, 0x2a4a6a);
+const tsuH = t => lerp(12, 50, sstep(TSU_T0, TSU_T0 + 1.5, t));
+function updateShips(t) {
+  const wl = SEA_Y - seaDrop(t); const chop = seaU.uChop.value;
+  for (const S of ships) {
+    const th = waveHit(S.z);
+    let x = S.x0 + S.vx * Math.min(t, th), z = S.z, y = wl, rx = 0, rz = 0;
+    const amp = S.type === 'cruise' ? 0.25 : 0.5;
+    y += Math.sin(RT * 0.9 + S.ph) * amp * chop; rx = Math.sin(RT * 0.7 + S.ph * 2) * 0.02 * chop * (S.type === 'cruise' ? 0.3 : 1); rz = Math.sin(RT * 0.6 + S.ph) * 0.015 * chop;
+    // pressure wave: boats capsize, the liner lists and is pushed
+    if (t > th) { const d = t - th; z += (S.type === 'cruise' ? 25 : 40) * (1 - Math.exp(-d * 1.5));
+      rx += (S.type === 'sail' ? 1.45 : S.type === 'fish' ? 0.4 : 0.12) * sstep(0, 0.7, d); }
+    // the sea draws back: stranded on the bottom
+    const bed = bedY(RAIL_Z - z) + S.draft * 0.5;
+    if (y < bed) { y = bed; rx += 0.32 * sstep(0, 1, bed - wl); }
+    // the tsunami lifts and carries everything in front of it
+    const tz = tsuZ(t);
+    if (t > TSU_T0 && t < 34.05 && tz > z - 4) { const crest = SEA_Y - seaDrop(t) - 1 + tsuH(t) * 0.92; const k = sstep(z - 4, z + 30, tz);
+      y = lerp(y, crest - (S.type === 'cruise' ? 6 : 1), k); z = lerp(z, tz - 3, k); rx += -0.35 * k; }
+    S.g.position.set(x, y, z); S.body.rotation.set(rx, 0, rz);
+    // lights: on until the wave hits (ships have their own power), flicker, then a few emergency lights
+    const on = t < th ? (t > 16 && t < 16.25 ? 0.4 : 1) : t < th + 0.5 ? (Math.floor(RT * 20) % 2 ? 1 : 0.1) : 0;
+    S.lights.forEach((l, i) => { l.visible = on > 0.3 || (i === 0 && S.type === 'cruise' && t > th); l.material.opacity = on > 0.3 ? 1 : 0.6; });
+    if (S.deckMats) S.deckMats.forEach(m => { m.emissiveIntensity = 1.6 * on + 0.05; });
+    if (S.cabMat) S.cabMat.color.setHex(on > 0.3 ? 0xffd9a0 : 0x222222);
+    S.refl.forEach((r, i) => { const rot = S.g.rotation.y; r.visible = on > 0.3 && seaDrop(t) < 0.3; r.position.set(x + S.reflX[i] * Math.cos(rot), wl + 0.05, z - S.reflX[i] * Math.sin(rot)); r.scale.y = (S.type === 'cruise' ? 70 : 20) + Math.sin(RT * 2 + i) * 3; });
+  }
+}
 
 // ------------------------------------------------------------------ shock wave wall
 const wallMat = new THREE.ShaderMaterial({
@@ -1136,6 +1233,7 @@ function updateWorld(t) {
       plumeCol.scale.set(rad, H, rad); plumeRing.scale.setScalar(250 + fT * 520); plumeRing.position.y = 20;
       plumeMat.uniforms.uTime.value = RT; plumeMat.uniforms.uGlowP.value = Math.exp(-fT * 0.5);
       plumeMat.uniforms.uA.value = sstep(0, 0.25, fT) * (1 - sstep(6, 13, fT)) * (1 - skyU.uDust.value * 0.8); } }
+  updateShips(t);
   // the tsunami
   { tsunami.visible = t > TSU_T0 - 0.05 && t < 34.05;
     if (tsunami.visible) { const H = lerp(12, 50, sstep(TSU_T0, TSU_T0 + 1.5, t));

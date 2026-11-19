@@ -286,6 +286,15 @@ n = int(3.0 * SR); tt = np.arange(n) / SR
 boom = band(rng.standard_normal(n), 25, 3000, 0.4) * np.exp(-tt * 3.5) + np.sin(2 * np.pi * (60 - 25 * tt) * tt) * np.exp(-tt * 2.5)
 place(norm(boom), EX, 0.75, -0.2)
 
+# the cruise ship sounds its horn (deep, two tones), far away over the water
+def horn(at, dur, gain):
+    n = int(dur * SR); tt = np.arange(n) / SR
+    e = np.clip(tt / 0.25, 0, 1) * np.clip((dur - tt) / 0.5, 0, 1)
+    sig = sum(np.sign(np.sin(2 * np.pi * f * tt)) * w for f, w in [(98, 1.0), (147, 0.6), (196, 0.25)])
+    sig = band(sig, 60, 900, 0.3) * e
+    place(norm(sig), at, gain, -0.35)
+horn(U(4.2), 2.6, 0.09)
+horn(U(9.6), 1.2, 0.07)
 # the sea: gentle surf on the promenade, rougher after the impact
 surf = band(rng.standard_normal(N), 150, 2500, 0.4) * (0.55 + 0.45 * np.clip(np.sin(2 * np.pi * t / 6.5) * 0.5 + 0.5 + 0.2 * smooth_noise(0.6, seed=81), 0, 1.3))
 add(norm(surf) * env(0, U(24.0), 0.5, 0.05) * (1 + 0.8 * np.clip((t - U(20)) / 3, 0, 1)), 0.06, 0.25)
