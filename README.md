@@ -77,3 +77,21 @@ python3 render.py              # rendert ../../fuehrerschein-video-neon.mp4
 python3 render.py shots        # Schnittliste
 python3 render.py preview 5 30 # Standbilder
 ```
+
+## handy-weg-motivation.mp4 (Motivation-Short)
+
+**Thema:** „Handy weg – leg los“: Motivation für Jugendliche, weniger zu scrollen und eine Stunde am Tag etwas für sich zu tun.
+Länge ca. 46 s · 1080×1920 · 30 fps · Stimme `de-DE-FlorianMultilingualNeural` (+8 %)
+
+Flat-Illustration auf knalligen Verlaufs-/Sunburst-Hintergründen, Cartoon-Kid im blauen Hoodie,
+ein großes Wort pro Moment (Schlüsselwörter gelb), selbst synthetisierte Musik: düsterer Herzschlag-Teil,
+Riser und Beat-Drop bei „Aber weißt du was?“. Szenen: Bildschirmzeit-Zähler · Endlos-Feed · andere trainieren/lernen/bauen ·
+24-h-Uhr mit „App-Monster“ · Aufstehen, Handy fliegt weg · Handy in die Kiste, 60-Min-Timer, Sport/Lernen/Malen/Rausgehen ·
+Jubel auf dem Hügel · Handy „OFF“ + Kommentar-Aufforderung.
+
+```bash
+cd src/motivation
+python3 tts.py                      # Voiceover + Wort-Timings -> build/motivation/
+python3 render.py                   # rendert ../../handy-weg-motivation.mp4
+python3 render.py preview 3 20 40   # Standbilder
+```
