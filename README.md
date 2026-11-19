@@ -95,3 +95,21 @@ python3 tts.py                      # Voiceover + Wort-Timings -> build/motivati
 python3 render.py                   # rendert ../../handy-weg-motivation.mp4
 python3 render.py preview 3 20 40   # Standbilder
 ```
+
+## handy-redet-mit-dir.mp4 („Dein Handy redet mit dir“, Humor-Version)
+
+**Konzept:** Das Handy ist ein klammernder Ex: Es spricht dich direkt an (quengelige, hochgepitchte Stimme, als Chat-Bubble),
+ein trockener Erzähler kontert mit Punchlines („Dein Handy hat 100 % Akku. Du hast zwei.“, „Das ist kein Leben.
+Das ist ein Ladebildschirm.“, „Die Likes warten. Deine Träume nicht.“). Schluss: Teilen-Aufforderung
+„Schick das dem Freund mit der höchsten Bildschirmzeit“ + Bildschirmzeit-Ranking.
+
+Länge ca. 61 s · eigener Look: Neo-Brutalismus/Sticker-Stil (knallige Flächen mit Punktraster, dicke schwarze Outlines
+und harte Schatten an allen Illustrationen, schräge Slam-Caption-Sticker, Emoji-Gags), Marimba-Beat mit
+„Record-Stop“ bei den Pointen. Stimmen: `de-DE-AmalaNeural` (Handy, +22 Hz) und `de-DE-ConradNeural` (Erzähler).
+
+```bash
+cd src/handy2
+python3 tts.py            # beide Stimmen + Wort-Timings -> build/handy2/
+python3 render.py         # rendert ../../handy-redet-mit-dir.mp4
+python3 render.py times   # Szenen-Zeitplan
+```
