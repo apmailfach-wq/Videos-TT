@@ -16,19 +16,25 @@ LINES = [
     "Folge für mehr Level-ups!",
 ]
 VOICE, RATE, PITCH = "de-DE-FlorianMultilingualNeural", "+4%", "+0Hz"
+# spoken spelling (so "up" sounds English) -> back to the written word for the captions
+SPEAK = [("XP", "X P"), ("Level up", "Level App"), ("Level-ups", "Level Apps")]
+UNSPEAK = {"App": "up", "Apps": "ups"}
 OUT = Path(__file__).resolve().parents[2] / "build" / "levelup" / "voice"
 
 
 async def synth(i, text):
     mp3 = OUT / f"raw{i:02d}.mp3"
-    comm = edge_tts.Communicate(text.replace("XP", "X P"), VOICE, rate=RATE, pitch=PITCH, boundary="WordBoundary", proxy=os.environ.get("HTTPS_PROXY"))
+    spoken = text
+    for a, b in SPEAK:
+        spoken = spoken.replace(a, b)
+    comm = edge_tts.Communicate(spoken, VOICE, rate=RATE, pitch=PITCH, boundary="WordBoundary", proxy=os.environ.get("HTTPS_PROXY"))
     words = []
     with open(mp3, "wb") as f:
         async for ch in comm.stream():
             if ch["type"] == "audio":
                 f.write(ch["data"])
             elif ch["type"] == "WordBoundary":
-                words.append({"text": ch["text"], "start": ch["offset"] / 1e7, "end": (ch["offset"] + ch["duration"]) / 1e7})
+                words.append({"text": UNSPEAK.get(ch["text"].strip(" .,!?"), ch["text"]), "start": ch["offset"] / 1e7, "end": (ch["offset"] + ch["duration"]) / 1e7})
     wav = OUT / f"line{i:02d}.wav"
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(mp3), "-af", "highpass=f=70,acompressor=threshold=-20dB:ratio=3:attack=5:release=120",
                     "-ar", "48000", "-ac", "1", str(wav)], check=True)

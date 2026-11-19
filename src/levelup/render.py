@@ -32,7 +32,7 @@ for i, ln in enumerate(LINES):
 DUR = _t
 N = int(math.ceil(DUR * FPS))
 
-KEYWORDS = {"game", "level", "1", "xp", "stärker", "schneller", "besser", "fehler", "up", "aufhörst", "weiter", "level-ups", "scheiterst", "nicht", "nur"}
+KEYWORDS = {"game", "level", "1", "xp", "stärker", "schneller", "besser", "fehler", "up", "aufhörst", "weiter", "level-ups", "ups", "scheiterst", "nicht", "nur"}
 
 
 def words_abs():
