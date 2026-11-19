@@ -103,7 +103,7 @@ ein trockener Erzähler kontert mit Punchlines („Dein Handy hat 100 % Akku. Du
 Das ist ein Ladebildschirm.“, „Die Likes warten. Deine Träume nicht.“). Schluss: Teilen-Aufforderung
 „Schick das dem Freund mit der höchsten Bildschirmzeit“ + Bildschirmzeit-Ranking.
 
-Länge ca. 61 s · eigener Look: Neo-Brutalismus/Sticker-Stil (knallige Flächen mit Punktraster, dicke schwarze Outlines
+Länge ca. 50 s · Hook: schwarzer Screen, Stoppschild knallt rein, Bildschirm wackelt, Bass-Boom, „STOPP! Leg das Handy weg!“ · eigener Look: Neo-Brutalismus/Sticker-Stil (knallige Flächen mit Punktraster, dicke schwarze Outlines
 und harte Schatten an allen Illustrationen, schräge Slam-Caption-Sticker, Emoji-Gags), Marimba-Beat mit
 „Record-Stop“ bei den Pointen. Stimmen: `de-DE-AmalaNeural` (Handy, +22 Hz) und `de-DE-ConradNeural` (Erzähler).
 

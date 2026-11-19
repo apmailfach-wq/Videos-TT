@@ -99,7 +99,7 @@ def at(k, word, occ=0, lead=0.04):
 
 
 # ------------------------------------------------------------------ backgrounds
-BG = {"hook": ACID, "stats": CYAN, "akku": ACID, "please": PINK, "count": ORANGE, "night": NIGHT,
+BG = {"hook": BLACK, "stats": CYAN, "akku": ACID, "please": PINK, "count": ORANGE, "night": NIGHT,
       "offline": CYAN, "plan": LIME, "panic": RED, "dreams": VIOLET, "sad": PINK, "update": LIME,
       "cta": ACID}
 
@@ -357,6 +357,8 @@ def slam_img(text, hi_idx, rot):
 
 
 def draw_slam(frame, i, t, y=420):
+    if KEYS[i] == "hook":
+        y = 400
     for ci, ch in enumerate(chunks_of(i)):
         st = ch[0][0] - 0.03
         nxt = chunks_of(i)[ci + 1][0][0] - 0.03 if ci + 1 < len(chunks_of(i)) else OFF[i] + DUR[i]
@@ -380,19 +382,22 @@ def draw_slam(frame, i, t, y=420):
 # each scene: fn(c, frame_later_list, t, lt) draws into sticker layer c; returns list of
 # (callable(frame)) overlays drawn after stickers (emoji etc.)
 def sc_hook(c, t, lt, post):
-    drop = ease_back(lt / 0.55, 2.2)
-    y = lerp(-500, 1250, drop)
-    stop = c01((lt - at("hook", "Nicht")) / 0.2)
-    handy(c, W / 2, y, s=1.2, mood="happy", t=t, la=lerp(30, 160, stop), lel=lerp(0, 20, stop),
-          ra=-40 - 20 * math.sin(lt * 10) * (1 - stop) if lt < 1.2 else -150 - 20 * math.sin(lt * 9),
-          rel=-30)
-    # swiping thumb gets blocked
-    if lt > at("hook", "weiterscrollen"):
-        k = c01((lt - at("hook", "weiterscrollen")) / 0.6)
-        tx = W - 130
-        ty = lerp(1800, 1500, ease_out(k)) + (40 * math.sin(lt * 30) if k >= 1 and lt < 2.6 else 0)
-        post.append(lambda fr: put_emoji(fr, "👆", tx, ty, 170))
-        post.append(lambda fr: put_emoji(fr, "🚫", tx, ty - 200, 130 * ease_back(k)))
+    # giant stop sign slams in, phone screams, swiping thumb gets blocked
+    p = ease_back(lt / 0.25, 3.0)
+    r = 330 * p
+    cx, cy = W / 2, 1020
+    pts = [(cx + r * math.cos(math.radians(22.5 + k * 45)), cy + r * math.sin(math.radians(22.5 + k * 45))) for k in range(8)]
+    c.poly(pts, (220, 20, 30))
+    pts2 = [(cx + 0.88 * r * math.cos(math.radians(22.5 + k * 45)), cy + 0.88 * r * math.sin(math.radians(22.5 + k * 45))) for k in range(8)]
+    c.poly(pts2, WHITE)
+    pts3 = [(cx + 0.8 * r * math.cos(math.radians(22.5 + k * 45)), cy + 0.8 * r * math.sin(math.radians(22.5 + k * 45))) for k in range(8)]
+    c.poly(pts3, (220, 20, 30))
+    c.text(cx, cy, "STOPP", 112 * p, WHITE)
+    handy(c, 300, 1620, s=0.55, mood="panic", t=t, la=170, ra=-170, shake=0.6)
+    post.append(lambda fr: put_emoji(fr, "👆", 860, 1660 + 30 * math.sin(lt * 30), 170))
+    post.append(lambda fr: put_emoji(fr, "🚫", 860, 1460, 150 * ease_back((lt - 0.3) / 0.3)))
+    if lt > at("hook", "Leben"):
+        post.append(lambda fr: put_emoji(fr, "⚰️", 820, 640, 130 * ease_back((lt - at("hook", "Leben")) / 0.3), rot=10))
 
 
 def sc_stats(c, t, lt, post):
@@ -678,6 +683,12 @@ def render_frame(n):
         z = 1 + 0.07 * q
         fr = frame.resize((int(W * z), int(H * z)), Image.BILINEAR)
         frame = fr.crop(((fr.width - W) // 2, (fr.height - H) // 2, (fr.width - W) // 2 + W, (fr.height - H) // 2 + H))
+    if t < 1.0:
+        q = (1 - t) ** 2
+        dx, dy = int(math.sin(t * 90) * 34 * q), int(math.cos(t * 70) * 34 * q)
+        frame = frame.transform((W, H), Image.AFFINE, (1, 0, dx, 0, 1, dy), fillcolor=(220, 20, 30))
+        if t < 0.12:
+            frame.alpha_composite(Image.new("RGBA", (W, H), (255, 255, 255, 200)))
     # punchline 'freeze' frame look: black-and-white flash
     for kk, w, occ in (("akku", "zwei", 0), ("night", "Ladebildschirm", 0), ("dreams", "nicht", 0)):
         tp = s0(kk) + at(kk, w, occ) + 0.45
@@ -776,6 +787,11 @@ def make_music(n):
             wn = np.convolve(wn, np.ones(10) / 10, mode="same")
             a = max(0, j - wl // 2)
             out[a:a + wl] += 0.12 * wn[:max(0, min(wl, n - a))]
+    bl = int(1.2 * SR)
+    bt = np.arange(bl) / SR
+    boom = np.sin(2 * np.pi * (40 + 90 * np.exp(-bt * 12)) * bt) * np.exp(-bt * 3)
+    boom += 0.6 * rng.standard_normal(bl) * np.exp(-bt * 18)
+    out[:bl] += 1.4 * boom
     out *= np.clip((TOTAL - tt) / 0.8, 0, 1)
     return out / max(1e-6, np.abs(out).max())
 
