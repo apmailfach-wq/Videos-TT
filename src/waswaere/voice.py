@@ -1,7 +1,7 @@
 """Narration for "Was wäre, wenn … Teil 1": one file per line, deep documentary voice.
 
-Default: edge-tts de-DE-ConradNeural, slowed and pitched down (rubberband keeps it natural).
-To use other recordings (e.g. ElevenLabs), drop line00.wav … line10.wav into build/waswaere/voice/
+Default: edge-tts de-DE-FlorianMultilingualNeural at a natural pitch, slightly slower.
+To use other recordings (e.g. ElevenLabs), drop line00.wav … line11.wav into build/waswaere/voice/
 and run with --keep: only the durations are re-measured.
 """
 import asyncio, json, os, ssl, subprocess, sys
@@ -9,19 +9,20 @@ from pathlib import Path
 
 NARRATION = [
     "Was wäre, wenn der schönste Himmel deines Lebens … der letzte wäre?",
-    "Ein Sonnensturm trifft die Erde. Polarlichter über Frankfurt. Die ganze Stadt ist auf der Straße.",
+    "Ein Sonnensturm trifft die Erde. Polarlichter über der Ostsee. Der ganze Ort steht an der Promenade.",
     "Der Sturm legt Satelliten und Stromnetze lahm.",
     "Dann … ein heller Streifen. Alle halten ihn für einen Teil der Show. Deshalb warnt dich niemand.",
-    "Ein Asteroid schlägt hundert Kilometer entfernt ein. Mit mehr Energie als alle Atomwaffen der Welt.",
+    "Ein Asteroid stürzt hundert Kilometer entfernt ins Meer. Mit mehr Energie als alle Atomwaffen der Welt.",
     "Zuerst kommt das Erdbeben.",
     "Dann … die Druckwelle.",
-    "Millionen Menschen lebten hier.",
+    "Tausende Menschen standen hier.",
     "Der schönste Himmel deines Lebens … verschwindet.",
+    "Das Meer zieht sich zurück. Und dann … kommt es wieder.",
     "Es war das Letzte, was du gefilmt hast.",
     "Teil zwei: Die Sonne verschwindet. Folge, um es zu sehen.",
 ]
-VOICE, RATE, PITCH = "de-DE-ConradNeural", "-8%", "-6Hz"
-SHIFT = 0.89  # extra pitch shift (rubberband) for a deeper timbre
+VOICE, RATE, PITCH = "de-DE-FlorianMultilingualNeural", "-4%", "+0Hz"
+SHIFT = 1.0   # no artificial pitch shift: natural voice
 OUT = Path(__file__).resolve().parents[2] / "build" / "waswaere" / "voice"
 
 
@@ -39,8 +40,8 @@ async def synth(i, text):
     await comm.save(str(mp3))
     wav = OUT / f"line{i:02d}.wav"
     # deeper, warmer: pitch down, low shelf, gentle compression, trim silence
-    af = (f"rubberband=pitch={SHIFT}:formant=preserved,"
-          "equalizer=f=140:t=q:w=1:g=3,equalizer=f=3500:t=q:w=1.5:g=-2,"
+    af = ((f"rubberband=pitch={SHIFT}:formant=preserved," if SHIFT != 1.0 else "") +
+          "highpass=f=70,equalizer=f=220:t=q:w=1:g=1.5,"
           "acompressor=threshold=-20dB:ratio=3:attack=5:release=120,"
           "silenceremove=start_periods=1:start_threshold=-50dB,areverse,silenceremove=start_periods=1:start_threshold=-50dB,areverse")
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(mp3), "-af", af, "-ar", "48000", "-ac", "1", str(wav)], check=True)

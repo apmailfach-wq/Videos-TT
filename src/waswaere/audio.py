@@ -286,6 +286,31 @@ n = int(3.0 * SR); tt = np.arange(n) / SR
 boom = band(rng.standard_normal(n), 25, 3000, 0.4) * np.exp(-tt * 3.5) + np.sin(2 * np.pi * (60 - 25 * tt) * tt) * np.exp(-tt * 2.5)
 place(norm(boom), EX, 0.75, -0.2)
 
+# the sea: gentle surf on the promenade, rougher after the impact
+surf = band(rng.standard_normal(N), 150, 2500, 0.4) * (0.55 + 0.45 * np.clip(np.sin(2 * np.pi * t / 6.5) * 0.5 + 0.5 + 0.2 * smooth_noise(0.6, seed=81), 0, 1.3))
+add(norm(surf) * env(0, U(24.0), 0.5, 0.05) * (1 + 0.8 * np.clip((t - U(20)) / 3, 0, 1)), 0.06, 0.25)
+# Ferris wheel fairground organ hint: soft music box until the blackout
+mb = np.zeros(N)
+for k, f in enumerate([523.3, 659.3, 784.0, 659.3, 587.3, 698.5, 880.0, 698.5] * 8):
+    a0 = 0.3 + k * 0.42
+    if a0 > U(7.7): break
+    n = int(0.6 * SR); tt = np.arange(n) / SR
+    i = int(a0 * SR); mb[i:i + n] += (np.sin(2 * np.pi * f * tt) + 0.3 * np.sin(4 * np.pi * f * tt)) * np.exp(-tt * 5)
+add(mb * env(0, U(7.7), 0.5, 0.05), 0.02, 0.6)
+# gondolas and pier segments crashing into the water
+for a in [U(x) for x in [21.3, 21.75, 22.2, 22.65, 23.1, 21.6, 22.9]]:
+    n = int(1.2 * SR); tt = np.arange(n) / SR
+    place(norm(band(rng.standard_normal(n), 200, 5000) * np.exp(-tt * 4) + np.sin(2 * np.pi * (110 - 60 * tt) * tt) * np.exp(-tt * 6)), a, 0.12, 0.5)
+# the sea draws back (sucking hiss), the tsunami roars in and hits
+suck = band(rng.standard_normal(N), 300, 6000, 0.4) * env(U(31.6), U(33.0), 0.8, 0.8)
+add(norm(suck), 0.07, 0.1)
+TS = U(33.95)
+roar2 = band(np.cumsum(rng.standard_normal(N)), 25, 1200, 0.4); roar2 = roar2 - np.convolve(roar2, np.ones(2400) / 2400, mode='same')
+renv = np.clip((t - U(32.0)) / (TS - U(32.0)), 0, 1) ** 2.0 * env(U(32.0), TS + 0.05, 0.05, 0.02)
+add(norm(roar2) * renv, 0.9)
+crash = band(rng.standard_normal(N), 30, 8000, 0.4) * env(TS, U(34.0) + 0.5, 0.004, 0.4) * np.exp(-np.clip(t - TS, 0, None) * 2.0)
+add(norm(crash), 0.9)
+
 # ------------------------------------------------------------------ master: SFX bus + narration
 sfx = np.stack([L, Rch], 1)
 SILENT = [(U(24.0), U(25.0)), (U(41.0), DUR)]
