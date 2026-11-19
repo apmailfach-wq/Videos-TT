@@ -1607,6 +1607,7 @@ function composite(t, u, mode) {
   ctx.globalAlpha = 0.05; ctx.globalCompositeOperation = 'overlay';
   ctx.drawImage(grain[Math.floor(RT * 30) % grain.length], 0, 0, W, H);
   ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+  if (window.cleanFrame) return;   // stills for covers: no HUD / captions
   drawTitle(u);
   drawCaption(u);
   drawEndCard(u);

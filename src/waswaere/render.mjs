@@ -33,6 +33,7 @@ const [mode, ...rest] = process.argv.slice(2);
 const { browser, page } = await open();
 if (mode === 'stills') {
   const [dir, ...ts] = rest; fs.mkdirSync(dir, { recursive: true });
+  if (process.env.CLEAN) await page.evaluate(() => { window.cleanFrame = true; });
   for (const t of ts) { const t0 = Date.now(); save(await page.evaluate(x => window.renderFrame(x), +t), path.join(dir, `t${(+t).toFixed(2)}.jpg`)); console.log(t, Date.now() - t0, 'ms'); }
 } else {
   const [a, b, dir] = rest; fs.mkdirSync(dir, { recursive: true });
