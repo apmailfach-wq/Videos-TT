@@ -1,6 +1,7 @@
 // Drive film.js in headless Chromium and write JPEG frames.
 // usage: node render.mjs frames <start> <end> <outDir>     (frame indices, 30 fps)
 //        node render.mjs stills <outDir> t1 t2 ...          (seconds)
+//        node render.mjs times <times.json> <start> <end> <outDir>  (clean frames at listed film times)
 import { createRequire } from 'node:module';
 const { chromium } = createRequire(import.meta.url)(process.env.PLAYWRIGHT_PATH || 'playwright');
 import fs from 'node:fs';
@@ -35,6 +36,16 @@ if (mode === 'stills') {
   const [dir, ...ts] = rest; fs.mkdirSync(dir, { recursive: true });
   if (process.env.CLEAN) await page.evaluate(() => { window.cleanFrame = true; });
   for (const t of ts) { const t0 = Date.now(); save(await page.evaluate(x => window.renderFrame(x), +t), path.join(dir, `t${(+t).toFixed(2)}.jpg`)); console.log(t, Date.now() - t0, 'ms'); }
+} else if (mode === 'times') {
+  const [file, a, b, dir] = rest; fs.mkdirSync(dir, { recursive: true });
+  const ts = JSON.parse(fs.readFileSync(file, 'utf8'));
+  await page.evaluate(() => { window.cleanFrame = true; });
+  for (let i = +a; i < Math.min(+b, ts.length); i++) {
+    const f = path.join(dir, `f${String(i).padStart(5, '0')}.jpg`);
+    if (fs.existsSync(f)) continue;
+    save(await page.evaluate(x => window.renderFrame(x), ts[i]), f);
+    if (i % 30 === 0) console.log(`frame ${i}`);
+  }
 } else {
   const [a, b, dir] = rest; fs.mkdirSync(dir, { recursive: true });
   const t0 = Date.now();
