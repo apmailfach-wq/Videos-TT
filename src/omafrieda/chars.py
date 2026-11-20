@@ -136,12 +136,11 @@ def head(who, D, expr="neutral", mouth=0.0, blink=False, look=(0.0, 0.0), gl=0.0
     rx, ry = D * 0.49, D * 0.52
     # ---- Haare hinten
     if hs == "oma":
-        for k in range(15):
-            a = math.radians(160 + k * (220 / 14))
-            r = D * (0.47 if 200 < 160 + k * (220 / 14) < 340 else 0.5)
-            x, y = cx + math.cos(a) * r, cy - D * 0.06 + math.sin(a) * r * 0.95
-            rr = D * (0.15 + 0.03 * ((k * 7) % 3) / 2)
-            ell(im, x, y, rr, rr * 0.95, HAIR_WHITE, amb=0.72, spec=0.12, ambc=(0.97, 0.97, 1.02))
+        HG = (226, 226, 230)
+        # Dutt oben am Hinterkopf
+        ell(im, cx + D * 0.02, cy - D * 0.66, D * 0.21, D * 0.18, HG, amb=0.62, spec=0.18, ambc=(0.95, 0.95, 1.0))
+        # Volumen hinten/seitlich (glatt, nach hinten gekämmt)
+        ell(im, cx, cy - D * 0.1, D * 0.56, D * 0.55, HG, amb=0.6, spec=0.12, ambc=(0.95, 0.95, 1.0))
     elif hs == "curly_dark":
         for k in range(15):
             a = math.radians(160 + k * (220 / 14))
@@ -280,9 +279,9 @@ def head(who, D, expr="neutral", mouth=0.0, blink=False, look=(0.0, 0.0), gl=0.0
             d.line(pts, fill=LIP, width=lw, joint="curve")
     # ---- Brille (Oma)
     if c["glasses"]:
-        gr = D * 0.125
+        gr = D * 0.13
         gy = ey + gl * D
-        gw = max(3, int(D * 0.02))
+        gw = max(2, int(D * 0.011))
         lens = Image.new("RGBA", im.size, (0, 0, 0, 0))
         ldr = ImageDraw.Draw(lens)
         for sx in (-1, 1):
@@ -293,23 +292,30 @@ def head(who, D, expr="neutral", mouth=0.0, blink=False, look=(0.0, 0.0), gl=0.0
         im.alpha_composite(lens)
         for sx in (-1, 1):
             gx = cx + sx * ex
-            d.ellipse([gx - gr, gy - gr, gx + gr, gy + gr], outline=darker(GOLD, 0.7), width=gw + 2)
-            d.ellipse([gx - gr + 1, gy - gr + 1, gx + gr - 1, gy + gr - 1], outline=GOLD, width=gw)
+            d.ellipse([gx - gr, gy - gr, gx + gr, gy + gr], outline=(70, 55, 40), width=gw + 1)
+            d.ellipse([gx - gr + 1, gy - gr + 1, gx + gr - 1, gy + gr - 1], outline=(176, 140, 72), width=max(1, gw - 1))
             d.arc([gx - gr + 2, gy - gr + 2, gx + gr - 2, gy + gr - 2], 200, 260, fill=(255, 235, 160),
                   width=max(1, gw // 2))
-            d.line([(gx + sx * gr, gy - gr * 0.2), (cx + sx * rx * 0.98, ey - D * 0.02)], fill=GOLD, width=gw)
-        d.arc([cx - ex + gr * 0.9, gy - gr * 0.5, cx + ex - gr * 0.9, gy + gr * 0.3], 200, 340, fill=GOLD, width=gw)
+            d.line([(gx + sx * gr, gy - gr * 0.2), (cx + sx * rx * 0.98, ey - D * 0.02)], fill=(120, 95, 55), width=gw)
+        d.arc([cx - ex + gr * 0.9, gy - gr * 0.5, cx + ex - gr * 0.9, gy + gr * 0.3], 200, 340, fill=(120, 95, 55),
+              width=gw)
     # ---- Haare vorne
     if hs == "oma":
-        xs = [-0.36, -0.24, -0.12, 0.0, 0.12, 0.24, 0.36]
-        for k, xf in enumerate(xs):
-            yf = -0.4 + abs(xf) * 0.32 + (0.02 if k % 2 else 0)
-            ell(im, cx + xf * D, cy + yf * D, D * 0.1, D * 0.09, HAIR_WHITE, amb=0.72, spec=0.12,
-                ambc=(0.97, 0.97, 1.02))
+        HG = (232, 232, 236)
+        poly(im, [(cx - rx * 1.06, cy - ry * 0.02), (cx - rx * 1.0, cy - ry * 0.62), (cx - rx * 0.55, cy - ry * 1.0),
+                  (cx, cy - ry * 1.1), (cx + rx * 0.55, cy - ry * 1.0), (cx + rx * 1.0, cy - ry * 0.62),
+                  (cx + rx * 1.06, cy - ry * 0.02), (cx + rx * 0.8, cy - ry * 0.3), (cx + rx * 0.4, cy - ry * 0.6),
+                  (cx, cy - ry * 0.66), (cx - rx * 0.4, cy - ry * 0.6), (cx - rx * 0.8, cy - ry * 0.3)],
+             HG, radius=D * 0.1, amb=0.62, spec=0.2, ambc=(0.95, 0.95, 1.0))
+        hd = ImageDraw.Draw(im)
+        for k in range(-5, 6):
+            x0 = cx + k * D * 0.075
+            hd.line([(x0, cy - ry * 0.64 + abs(k) * D * 0.02), (cx + k * D * 0.035, cy - ry * 1.05)],
+                    fill=(185, 185, 195), width=max(1, int(D * 0.008)))
+        # ein paar lose Strähnen
         for sx in (-1, 1):
-            for k in range(3):
-                ell(im, cx + sx * D * (0.47 - 0.02 * k), cy - D * 0.2 + k * D * 0.13, D * 0.09, D * 0.08,
-                    HAIR_WHITE, amb=0.72, spec=0.12, ambc=(0.97, 0.97, 1.02))
+            hd.arc([cx + sx * rx * 0.95 - D * 0.08, cy - D * 0.1, cx + sx * rx * 0.95 + D * 0.08, cy + D * 0.2],
+                   90 if sx < 0 else 270, 270 if sx < 0 else 90, fill=(215, 215, 222), width=max(1, int(D * 0.01)))
     elif hs == "curly_dark":
         for k, xf in enumerate([-0.34, -0.2, -0.06, 0.08, 0.22, 0.36]):
             ell(im, cx + xf * D, cy + (-0.42 + abs(xf) * 0.3) * D, D * 0.11, D * 0.1, (70, 45, 32), amb=0.5)
@@ -380,17 +386,20 @@ def head(who, D, expr="neutral", mouth=0.0, blink=False, look=(0.0, 0.0), gl=0.0
 
 # ------------------------------------------------------------------ Requisiten
 def handbag(c, x, y, D, open_=False):
-    """Handtasche; (x, y) = Griffoberkante (in der Hand)."""
-    bw, bh = D * 0.72, D * 0.52
-    top = y + D * 0.28
+    """Weiche braune Leder-Umhängetasche; (x, y) = Riemen in der Hand."""
+    bw, bh = D * 0.8, D * 0.6
+    top = y + D * 0.34
     dd = ImageDraw.Draw(c)
-    dd.arc([x - bw * 0.32, y - D * 0.02, x + bw * 0.32, top + D * 0.25], 180, 360, fill=(110, 62, 30),
-           width=max(3, int(D * 0.055)))
-    poly(c, [(x - bw * 0.46, top), (x + bw * 0.46, top), (x + bw * 0.55, top + bh), (x - bw * 0.55, top + bh)],
-         (150, 88, 44), radius=D * 0.12, amb=0.45, spec=0.25)
-    poly(c, [(x - bw * 0.47, top - D * 0.01), (x + bw * 0.47, top - D * 0.01), (x + bw * 0.42, top + bh * 0.42),
-             (x - bw * 0.42, top + bh * 0.42)], (126, 72, 34), radius=D * 0.06, amb=0.45, spec=0.2)
-    ell(c, x, top + bh * 0.4, D * 0.07, D * 0.05, GOLD, amb=0.5, spec=0.7, shine=40)
+    dd.line([(x - bw * 0.36, top + D * 0.03), (x, y), (x + bw * 0.36, top + D * 0.03)], fill=(120, 66, 34),
+            width=max(3, int(D * 0.06)), joint="curve")
+    poly(c, [(x - bw * 0.44, top), (x + bw * 0.44, top), (x + bw * 0.52, top + bh * 0.8), (x + bw * 0.4, top + bh),
+             (x - bw * 0.4, top + bh), (x - bw * 0.52, top + bh * 0.8)], (152, 84, 40), radius=D * 0.16, amb=0.45,
+         spec=0.3)
+    dd = ImageDraw.Draw(c)
+    dd.line([(x - bw * 0.4, top + bh * 0.42), (x + bw * 0.4, top + bh * 0.42)], fill=(112, 60, 28),
+            width=max(2, int(D * 0.02)))
+    for sx in (-1, 1):
+        ell(c, x + sx * bw * 0.36, top + D * 0.03, D * 0.035, D * 0.035, GOLD, amb=0.5, spec=0.7, shine=40)
 
 
 def knitting(c, x, y, D, phase=0.0):
@@ -482,8 +491,8 @@ def trophy(c, x, y, D):
 # ------------------------------------------------------------------ Körper
 BODY = {
     # sh: Schulterbreite (halb), hip: Hüfte (halb), tl: Rumpflänge, arm: Ärmeldicke, top: Farbe Oberteil
-    "oma": dict(sh=0.47, hip=0.5, tl=1.25, arm=0.29, hand=0.135, top=(214, 186, 142), leg=(236, 205, 185),
-                shoe=(120, 72, 38), skirt=(130, 72, 168)),
+    "oma": dict(sh=0.47, hip=0.5, tl=1.25, arm=0.29, hand=0.135, top=(228, 214, 192), leg=(236, 205, 185),
+                shoe=(120, 72, 38), skirt=(178, 164, 156)),
     "judo": dict(sh=0.52, hip=0.48, tl=1.3, arm=0.3, hand=0.135, top=(250, 250, 248), leg=(250, 250, 248),
                  shoe=None, pants=(250, 250, 248)),
     "thief": dict(sh=0.56, hip=0.46, tl=1.45, arm=0.3, hand=0.14, top=(76, 78, 90), leg=(50, 80, 140),
@@ -556,11 +565,9 @@ def person_raw(who, D, pose, expr="neutral", mouth=0.0, blink=False, look=(0.0, 
         tex.putalpha(ImageChops_mul(tex.getchannel("A"), mask))
         im.alpha_composite(tex)
         # Bluse (V) + Kragen
-        poly(im, [pt((-0.2, -0.03)), pt((0.2, -0.03)), pt((0.07, 0.62)), pt((-0.07, 0.62))], (252, 252, 250),
+        poly(im, [pt((-0.2, -0.03)), pt((0.2, -0.03)), pt((0.07, 0.62)), pt((-0.07, 0.62))], (238, 230, 216),
              radius=D * 0.05, amb=0.6)
-        poly(im, [pt((-0.22, -0.05)), pt((-0.02, 0.06)), pt((-0.15, 0.2))], (255, 255, 255), radius=D * 0.03,
-             amb=0.7)
-        poly(im, [pt((0.22, -0.05)), pt((0.02, 0.06)), pt((0.15, 0.2))], (255, 255, 255), radius=D * 0.03, amb=0.7)
+        poly(im, [pt((-0.16, -0.03)), pt((0.16, -0.03)), pt((0.0, 0.2))], skin, radius=D * 0.04, amb=0.55)
         # Strickjacken-Kante
         d.line([pt((-0.08, 0.62)), pt((-0.04, tl))], fill=darker(topc, 0.75), width=max(2, int(D * 0.025)))
         d.line([pt((0.08, 0.62)), pt((0.04, tl))], fill=darker(topc, 0.75), width=max(2, int(D * 0.025)))
@@ -568,8 +575,8 @@ def person_raw(who, D, pose, expr="neutral", mouth=0.0, blink=False, look=(0.0, 
         d.line([pt((0.2, -0.03)), pt((0.08, 0.62))], fill=darker(topc, 0.78), width=max(2, int(D * 0.03)))
         for k in range(4):
             x, y = pt((0.12 - k * 0.012, 0.52 + k * 0.2))
-            ell(im, x, y, D * 0.055, D * 0.055, (150, 96, 50), amb=0.45, spec=0.4)
-            d.ellipse([x - D * 0.012, y - D * 0.012, x + D * 0.012, y + D * 0.012], fill=(90, 55, 25))
+            ell(im, x, y, D * 0.05, D * 0.05, (205, 188, 160), amb=0.5, spec=0.4)
+            d.ellipse([x - D * 0.01, y - D * 0.01, x + D * 0.01, y + D * 0.01], fill=(150, 130, 100))
         # Taschen
         for sx in (-1, 1):
             x, y = pt((sx * 0.3, 1.0))
@@ -617,8 +624,11 @@ def person_raw(who, D, pose, expr="neutral", mouth=0.0, blink=False, look=(0.0, 
     # Hals
     ell(im, nx, ny - D * 0.02, D * 0.17, D * 0.12, skin, amb=0.45)
     if body == "oma":
-        poly(im, [pt((-0.2, -0.04)), pt((0.0, 0.1)), pt((0.2, -0.04)), pt((0.12, 0.12)), pt((-0.12, 0.12))],
-             (255, 255, 255), radius=D * 0.03, amb=0.7)
+        # Perlenkette
+        for k in range(15):
+            u = -1 + 2 * k / 14
+            px, py = pt((0.2 * u, 0.0 + 0.3 * (1 - u * u)))
+            ell(im, px, py, D * 0.028, D * 0.028, (250, 246, 236), amb=0.65, spec=0.8, shine=30)
     if body == "thief":
         d.arc([nx - D * 0.36, ny - D * 0.2, nx + D * 0.36, ny + D * 0.18], 10, 170, fill=(60, 62, 72),
               width=int(D * 0.07))
@@ -689,6 +699,29 @@ def _arm(im, pt, side, b, arm, topc, skin, D):
                                fill=darker(skin, 0.8), width=max(2, int(D * 0.015)))
 
 
+def _pattern(im, pts, D):
+    """Kleines Blümchen-/Punktmuster auf dem Rock."""
+    lay = Image.new("RGBA", im.size, (0, 0, 0, 0))
+    d = ImageDraw.Draw(lay)
+    xs = [p[0] for p in pts]
+    ys = [p[1] for p in pts]
+    step = D * 0.11
+    r = max(1.5, D * 0.018)
+    y = min(ys)
+    row = 0
+    while y < max(ys):
+        x = min(xs) + (step / 2 if row % 2 else 0)
+        while x < max(xs):
+            d.ellipse([x - r, y - r, x + r, y + r], fill=(120, 100, 85, 150))
+            x += step
+        y += step * 0.8
+        row += 1
+    m = Image.new("L", im.size, 0)
+    ImageDraw.Draw(m).polygon(pts, fill=255)
+    lay.putalpha(ImageChops_mul(lay.getchannel("A"), m))
+    im.alpha_composite(lay)
+
+
 def _legs(im, pt, b, P, D, skin, wet_f):
     lower = P["lower"]
     tl = b["tl"]
@@ -699,15 +732,17 @@ def _legs(im, pt, b, P, D, skin, wet_f):
             for sx in (-1, 1):
                 limb(im, pt((sx * 0.2, tl + 0.6)), pt((sx * 0.21, tl + 1.45)), D * 0.2, legc, amb=0.5, spec=0.2)
                 ell(im, *pt((sx * 0.24, tl + 1.52)), D * 0.17, D * 0.1, shoe, amb=0.45, spec=0.35)
-            poly(im, [pt((-b["hip"], tl - 0.05)), pt((b["hip"], tl - 0.05)), pt((0.66, tl + 0.92)),
-                      pt((-0.66, tl + 0.92))], darker(b["skirt"], wet_f), radius=D * 0.18, amb=0.45, spec=0.12, rim=0.2)
+            sk = [pt((-b["hip"], tl - 0.05)), pt((b["hip"], tl - 0.05)), pt((0.66, tl + 0.92)), pt((-0.66, tl + 0.92))]
+            poly(im, sk, darker(b["skirt"], wet_f), radius=D * 0.18, amb=0.45, spec=0.12, rim=0.2)
+            _pattern(im, sk, D)
         else:
             for sx in (-1, 1):
                 limb(im, pt((sx * 0.24, tl + 0.5)), pt((sx * 0.25, tl + 1.12)), D * 0.21, legc, amb=0.5, spec=0.2)
                 ell(im, *pt((sx * 0.27, tl + 1.18)), D * 0.17, D * 0.11, shoe, amb=0.45, spec=0.35)
-            poly(im, [pt((-b["hip"], tl - 0.05)), pt((b["hip"], tl - 0.05)), pt((0.64, tl + 0.42)),
-                      pt((0.6, tl + 0.6)), pt((-0.6, tl + 0.6)), pt((-0.64, tl + 0.42))], darker(b["skirt"], wet_f),
-                 radius=D * 0.18, amb=0.45, spec=0.12, rim=0.2)
+            sk = [pt((-b["hip"], tl - 0.05)), pt((b["hip"], tl - 0.05)), pt((0.64, tl + 0.42)), pt((0.6, tl + 0.6)),
+                  pt((-0.6, tl + 0.6)), pt((-0.64, tl + 0.42))]
+            poly(im, sk, darker(b["skirt"], wet_f), radius=D * 0.18, amb=0.45, spec=0.12, rim=0.2)
+            _pattern(im, sk, D)
         return
     pants = darker(b.get("pants", b["leg"]), wet_f)
     lw = 0.3 if not b.get("tank") else 0.42
@@ -746,7 +781,7 @@ POSES = {
     "oma_stand_bagdown": dict(lower="skirt_stand", arms=(((-0.62, 0.7), (-0.6, 1.25), "front"),
                                                          ((0.75, 0.75), (0.85, 1.55), "front"))),
     "oma_lift": dict(lower="skirt_stand", arms=(((-0.62, 0.7), (-0.6, 1.25), "front"),
-                                                ((0.85, -0.15), (0.75, -0.95), "front"))),
+                                                ((0.95, -0.55), (0.85, -1.55), "front"))),
     "oma_lift_low": dict(lower="skirt_stand", arms=(((-0.62, 0.7), (-0.6, 1.25), "front"),
                                                     ((0.8, 0.6), (0.8, 1.2), "front"))),
     "oma_glasses": dict(lower="skirt_stand", arms=(((-0.62, 0.7), (-0.6, 1.25), "front"),

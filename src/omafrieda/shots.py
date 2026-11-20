@@ -301,7 +301,7 @@ def shot_gym_lift(t, T):
     v = View(2.25 - 0.15 * t, 590, 1170)
     lifted = t > 0.28
     pose = "oma_lift" if lifted else "oma_lift_low"
-    items = (("dumbbell", (0.75, -0.95), 1.3),) if lifted else (("dumbbell", (0.8, 1.2), 1.3),)
+    items = (("dumbbell", (0.85, -1.55), 1.3),) if lifted else (("dumbbell", (0.8, 1.2), 1.3),)
     f = Wd.gym_frame(T, v, [dict(OMA_GYM, pose=pose, expr="smirk" if lifted else "neutral", look=(0.0, 0.0),
                                  items=items, blink=False)], post=dust(t))
     if lifted:
@@ -317,7 +317,7 @@ def shot_gym_jaw(t, T):
     v = View(1.42, 540, 1250)
     jaw = 0.6 + 0.4 * ease_out(t / 0.2)
     return Wd.gym_frame(T, v, guys(T, "shock", "musk_shock", m=jaw, bounce=False, mk="o") + [
-        dict(OMA_GYM, pose="oma_lift", expr="smirk", items=(("dumbbell", (0.75, -0.95), 1.3),), brow_up=1)],
+        dict(OMA_GYM, pose="oma_lift", expr="smirk", items=(("dumbbell", (0.85, -1.55), 1.3),), brow_up=1)],
                         post=dust(t + 1))
 
 
