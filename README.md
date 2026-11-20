@@ -77,3 +77,31 @@ python3 render.py              # rendert ../../fuehrerschein-video-neon.mp4
 python3 render.py shots        # Schnittliste
 python3 render.py preview 5 30 # Standbilder
 ```
+
+## oma-frieda-faust-folge-1.mp4 (Serie „Oma Frieda Faust“, Folge 1)
+
+**Titel:** Alle unterschätzen Oma Frieda · 35 s · 1080×1920 · 30 fps · weicher 3D-Cartoon-Look
+Format: „Eingefrorenes Bild – Plattenkratzer – Ich erklär's euch“ mit Loop (letzter Frame = erster Frame).
+
+| Zeit | Szene |
+|---|---|
+| 0–2 s | Hook: Dieb fliegt kopfüber über den Brunnen, Freeze + Plattenkratzer, „Er hat die FALSCHE Oma beklaut 😳“, Oma: „Ich erklär's euch.“ |
+| 2–8 s | Zurückspulen → „5 Minuten vorher …“, sonniger Park: strickt, füttert Tauben (Ukulele-Musik, Vogelgezwitscher) |
+| 8–11 s | Musik bricht ab (Tape-Stop): S/W-Foto 1976, junge Frieda im Judo-Anzug mit schwarzem Gürtel + Pokal |
+| 11–16 s | Bus: „Oma, der Platz ist besetzt.“ → „Der Blick 👀“ → Typ sitzt schwitzend in der Ecke |
+| 16–21 s | Fitnessstudio: „Oma, die Hantel ist zu schwer für dich!“ → „Die Hantel 💪“ → Kinnladen fallen |
+| 21–29 s | „Und jetzt … der Dieb.“: „HILFE, DIEB!“, Tauziehen, Loslassen, Zeitlupenflug in den Brunnen, Hustenbonbon-Regen; Sicherheitstipp eingeblendet |
+| 29–32 s | Heldenshot im Gegenlicht: „Mit Frieda Faust legt man sich nicht an!“ + Titel OMA FRIEDA FAUST |
+| 32–35 s | Abstimmung 1️⃣ Supermarkt 🛒 2️⃣ Schule 🏫 3️⃣ Disco 🪩 – „Schreib nur die Zahl! 👇“ → Plattenkratzer, Freeze-Bild vom Anfang |
+
+Stimmen: edge-tts (`de-DE-ChristophNeural` tief als Trailer-Erzähler, `de-AT-IngridNeural` als Oma, u. a.),
+Musik und alle Soundeffekte werden in `render.py` synthetisch erzeugt.
+
+```bash
+cd src/omafrieda
+python3 tts.py                          # Sprachzeilen mit festen Startzeiten -> build/omafrieda/
+python3 render.py                       # rendert ../../oma-frieda-faust-folge-1.mp4
+python3 render.py preview 0.3 14 25.9   # Standbilder -> build/omafrieda/stills/
+```
+- `script.py` – Text, Stimmen, Zeitfenster je Zeile · `chars.py` – Figuren (Oma Frieda, Dieb, Bus-Typ, Muskeltypen …)
+- `world.py` – Park/Brunnen, Bus, Fitnessstudio, Foto · `shots.py` – Schnittliste · `gfx.py` – Soft-3D-Shader, Text
