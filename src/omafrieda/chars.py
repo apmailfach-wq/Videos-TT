@@ -492,7 +492,7 @@ def trophy(c, x, y, D):
 BODY = {
     # sh: Schulterbreite (halb), hip: Hüfte (halb), tl: Rumpflänge, arm: Ärmeldicke, top: Farbe Oberteil
     "oma": dict(sh=0.47, hip=0.5, tl=1.25, arm=0.29, hand=0.135, top=(228, 214, 192), leg=(236, 205, 185),
-                shoe=(150, 42, 60), skirt=(52, 140, 152)),
+                shoe=(150, 42, 60), skirt=(240, 104, 100)),
     "judo": dict(sh=0.52, hip=0.48, tl=1.3, arm=0.3, hand=0.135, top=(250, 250, 248), leg=(250, 250, 248),
                  shoe=None, pants=(250, 250, 248)),
     "thief": dict(sh=0.56, hip=0.46, tl=1.45, arm=0.3, hand=0.14, top=(76, 78, 90), leg=(50, 80, 140),
@@ -721,7 +721,7 @@ def _pattern(im, pts, D):
         x = min(xs) + (step / 2 if row % 2 else 0)
         k = row
         while x < max(xs):
-            col = (255, 175, 195, 235) if k % 2 else (255, 236, 190, 235)
+            col = (255, 250, 240, 235) if k % 2 else (255, 225, 120, 235)
             for a in range(5):
                 ang = a * 2 * math.pi / 5
                 px, py = x + math.cos(ang) * r, y + math.sin(ang) * r
