@@ -48,16 +48,16 @@ def sunny(f):
 _cache = {}
 
 
-def hook_frame(t_hook):
+def hook_frame(t_hook, with_oma=True):
     """t_hook in [0, FREEZE_AT]; danach eingefroren."""
     tt = min(t_hook, FREEZE_AT)
-    key = round(tt * 30)
+    key = (round(tt * 30), with_oma)
     if key in _cache:
         return _cache[key].copy()
     s = 0.465 + 0.035 * tt / FREEZE_AT
     Tsim = 25.9 + tt * 0.25
     v = View(*HOOK_VIEW)
-    f = park_frame(Tsim, v, oma=oma_bench(Tsim, look=(0.0, 0.55), expr="smile"),
+    f = park_frame(Tsim, v, oma=oma_bench(Tsim, look=(0.0, 0.55), expr="smile") if with_oma else None,
                    thief=thief_fly(s, Tsim, 0.85),
                    extras=(("post", lambda fr, vv: bonbon_rain(fr, vv, s, Tsim)),), jet_frozen=False, flock_T=Tsim)
     f = dramatic(f, 0.6)
@@ -86,7 +86,7 @@ def shot_hook_end(t, T):
 
 
 def shot_hook_oma(t, T):
-    bg = hook_frame(1.0)
+    bg = hook_frame(1.0, with_oma=False)  # nur eine Oma im Bild
     bg = cam(bg, 1.3, 520, 820)
     bg = grade(blur(bg, 7), sat=0.55, contrast=0.95, bright=0.85)
     v = View(1.0, 540, 960)

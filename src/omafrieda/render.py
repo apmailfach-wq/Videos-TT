@@ -70,30 +70,59 @@ def mouth_fn(who, T):
 NO_SUB = {"erz6", "erz7"}  # erscheinen ohnehin als große Titel
 
 
+def line_tokens(l):
+    """Wörter mit Satzzeichen aus dem Originaltext (für die Anzeige), sonst die TTS-Wörter."""
+    toks = [t for t in l["text"].split() if any(ch.isalnum() for ch in t)]
+    out, pos = [], 0
+    for w in l["words"]:
+        n = len(w["text"].split())
+        out.append(" ".join(toks[pos:pos + n]))
+        pos += n
+    if pos == len(toks) and all(out):
+        return out
+    return [w["text"] for w in l["words"]]
+
+
 def build_caps():
+    """Ganze kurze Sätze als Untertitel; nur sehr lange Sätze werden am Komma geteilt."""
     caps = []
     for l in TL["lines"]:
         if l["id"] in NO_SUB:
             continue
         ws = l["words"]
-        chunks, cur = [], []
-        for w in ws:
-            cur.append(w)
-            if len(cur) >= 4 or w["text"].endswith(("?", "!", ".")) and len(cur) >= 2:
-                chunks.append(cur)
+        toks = line_tokens(l)
+        idx = list(range(len(ws)))
+        sentences, cur = [], []
+        for i in idx:
+            cur.append(i)
+            if toks[i].endswith(("?", "!", ".")):
+                sentences.append(cur)
                 cur = []
         if cur:
-            chunks.append(cur)
+            sentences.append(cur)
+        chunks = []
+        for sen in sentences:
+            if len(sen) <= 8:
+                chunks.append(sen)
+                continue
+            part = []
+            for i in sen:
+                part.append(i)
+                if toks[i].endswith(",") and len(part) >= 2:
+                    chunks.append(part)
+                    part = []
+            if part:
+                chunks.append(part)
         for k, ch in enumerate(chunks):
-            a = ch[0]["start"]
-            b = chunks[k + 1][0]["start"] if k + 1 < len(chunks) else l["end"] + 0.35
-            caps.append(dict(words=[w["text"] for w in ch], starts=[w["start"] for w in ch], a=a, b=b,
+            a = ws[ch[0]]["start"]
+            b = ws[chunks[k + 1][0]]["start"] if k + 1 < len(chunks) else l["end"] + 0.35
+            caps.append(dict(words=[toks[i] for i in ch], starts=[ws[i]["start"] for i in ch], a=a, b=b,
                              spk=GROUP[l["speaker"]]))
     return caps
 
 
 CAPS = []
-SUB_Y = {S.shot_hook_oma: 1585, S.shot_hero: 1560, S.shot_hero2: 1600}
+SUB_Y = {S.shot_hook_oma: 1400, S.shot_hero: 1420, S.shot_hero2: 1460, S.shot_offer: 1110}
 
 
 def sub_text(words, n):
@@ -105,15 +134,12 @@ def draw_caps(f, T, fn):
     y = SUB_Y.get(fn, 1340)
     for c in CAPS:
         if c["a"] <= T < c["b"]:
-            n = sum(1 for s in c["starts"] if s <= T + 0.02)
-            n = max(1, n)
-            txt = sub_text(c["words"], n)
-            col = (255, 230, 70) if c["spk"] == "oma" else (255, 255, 255)
-            size = 74 if c["spk"] != "oma" or True else 74
-            im = text_img(txt, 84, col, F_INTER, max_w=860)
-            # letztes Wort ploppt
-            age = T - c["starts"][n - 1]
-            sc = 1.0 + 0.12 * (1 - clamp01(age / 0.12))
+            n = max(1, sum(1 for s in c["starts"] if s <= T + 0.02))
+            # ganzer Satz sichtbar, das gerade gesprochene Wort leuchtet gelb (Karaoke-Stil)
+            txt = " ".join(c["words"])
+            wi = sum(len(w.split()) for w in c["words"][:n - 1])
+            im = text_img(txt, 80, (255, 255, 255), F_INTER, max_w=860, hl=(wi, (255, 222, 40)))
+            sc = 1.0 + 0.08 * (1 - clamp01((T - c["a"]) / 0.12))
             paste_c(f, im, 500, y, sc)
 
 
@@ -156,12 +182,12 @@ def overlays(f, T):
         paste_c(f, im, 500, 330, pop(T, 21.05))
     if 26.6 <= T < 29.0:
         a = clamp01((T - 26.6) / 0.25)
-        im = text_img("Echter Tipp: Laut werden und die Tasche lieber loslassen. Nichts ist dein Leben wert.", 40,
-                      (255, 255, 255), F_INTER, max_w=780, stroke=5)
-        box = Image.new("RGBA", (im.width + 30, im.height + 10), (0, 0, 0, 0))
-        ImageDraw.Draw(box).rounded_rectangle([0, 0, box.width, box.height], radius=26, fill=(20, 20, 30, 170))
-        box.alpha_composite(im, (15, 2))
-        paste_c(f, box, 500, 1520, 1.0, a)
+        im = text_img("Echter Tipp: Laut werden und die Tasche lieber loslassen. Nichts ist dein Leben wert.", 56,
+                      (255, 255, 255), F_INTER, max_w=820, stroke=6)
+        box = Image.new("RGBA", (im.width + 40, im.height + 16), (0, 0, 0, 0))
+        ImageDraw.Draw(box).rounded_rectangle([0, 0, box.width, box.height], radius=30, fill=(20, 20, 30, 185))
+        box.alpha_composite(im, (20, 4))
+        paste_c(f, box, 500, 1330, 1.0, a)
     if 30.85 <= T < 32.0:
         dt = T - 30.85
         s = 1.0 + 1.6 * (1 - ease_out(dt / 0.16))
