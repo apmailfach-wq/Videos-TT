@@ -492,7 +492,7 @@ def trophy(c, x, y, D):
 BODY = {
     # sh: Schulterbreite (halb), hip: Hüfte (halb), tl: Rumpflänge, arm: Ärmeldicke, top: Farbe Oberteil
     "oma": dict(sh=0.47, hip=0.5, tl=1.25, arm=0.29, hand=0.135, top=(228, 214, 192), leg=(236, 205, 185),
-                shoe=(150, 42, 60), skirt=(240, 104, 100)),
+                shoe=(150, 42, 60), skirt=(240, 104, 100), oma_pants=(214, 198, 174)),
     "judo": dict(sh=0.52, hip=0.48, tl=1.3, arm=0.3, hand=0.135, top=(250, 250, 248), leg=(250, 250, 248),
                  shoe=None, pants=(250, 250, 248)),
     "thief": dict(sh=0.56, hip=0.46, tl=1.45, arm=0.3, hand=0.14, top=(76, 78, 90), leg=(50, 80, 140),
@@ -741,6 +741,28 @@ def _legs(im, pt, b, P, D, skin, wet_f):
     lower = P["lower"]
     tl = b["tl"]
     shoe = b["shoe"]
+    if lower in ("skirt_stand", "skirt_sit") and b.get("oma_pants"):
+        pc = darker(b["oma_pants"], wet_f)
+        if lower == "skirt_stand":
+            for sx in (-1, 1):
+                limb(im, pt((sx * 0.25, tl + 0.05)), pt((sx * 0.24, tl + 1.42)), D * 0.44, pc, amb=0.5, spec=0.1,
+                     rim=0.15)
+            rrect(im, *pt((-b["hip"], tl - 0.12)), *pt((b["hip"], tl + 0.22)), D * 0.14, pc, amb=0.5, spec=0.1)
+            for sx in (-1, 1):
+                ell(im, *pt((sx * 0.26, tl + 1.52)), D * 0.18, D * 0.1, shoe, amb=0.45, spec=0.35)
+            d = ImageDraw.Draw(im)
+            for sx in (-1, 1):
+                d.line([pt((sx * 0.24, tl + 0.4)), pt((sx * 0.24, tl + 1.38))], fill=darker(pc, 0.86),
+                       width=max(1, int(D * 0.012)))
+        else:
+            for sx in (-1, 1):
+                limb(im, pt((sx * 0.27, tl + 0.4)), pt((sx * 0.27, tl + 1.1)), D * 0.34, pc, amb=0.5, spec=0.1,
+                     rim=0.15)
+                ell(im, *pt((sx * 0.29, tl + 1.18)), D * 0.18, D * 0.11, shoe, amb=0.45, spec=0.35)
+            rrect(im, *pt((-0.6, tl - 0.12)), *pt((0.6, tl + 0.5)), D * 0.22, pc, amb=0.5, spec=0.12, rim=0.15)
+            d = ImageDraw.Draw(im)
+            d.line([pt((0.0, tl + 0.05)), pt((0.0, tl + 0.48))], fill=darker(pc, 0.82), width=max(1, int(D * 0.015)))
+        return
     if lower in ("skirt_stand", "skirt_sit"):
         legc = b["leg"]
         if lower == "skirt_stand":
