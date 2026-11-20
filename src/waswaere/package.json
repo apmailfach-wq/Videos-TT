@@ -1,0 +1,9 @@
+{
+  "name": "waswaere",
+  "private": true,
+  "description": "Was wäre, wenn … Teil 1 – low-poly 3D short, rendered frame by frame with three.js in headless Chromium",
+  "type": "module",
+  "dependencies": {
+    "three": "0.170.0"
+  }
+}
