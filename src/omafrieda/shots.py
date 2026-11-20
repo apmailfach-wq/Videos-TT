@@ -48,6 +48,19 @@ def sunny(f):
 _cache = {}
 
 
+def thief2_of(d, s, T, m=0.0):
+    """Zweiter Dieb fliegt leicht versetzt hinter dem ersten."""
+    x, y = Wd.fly_pos(max(0.0, s - 0.06))
+    return dict(who="thief2", D=112, pose="thief_fly", x=x - 120, y=y + 30, rot=Wd.fly_rot(s) + 35, center=True,
+                expr="shock", mouth=m, flip=True)
+
+
+def two_thieves_extra(s, T, m1=0.85, m2=0.85):
+    def fn(fr, vv):
+        actor(fr, vv, **thief2_of(None, s, T, m2))
+    return fn
+
+
 def hook_frame(t_hook, with_oma=True):
     """t_hook in [0, FREEZE_AT]; danach eingefroren."""
     tt = min(t_hook, FREEZE_AT)
@@ -59,7 +72,8 @@ def hook_frame(t_hook, with_oma=True):
     v = View(*HOOK_VIEW)
     f = park_frame(Tsim, v, oma=oma_bench(Tsim, look=(0.0, 0.55), expr="smile") if with_oma else None,
                    thief=thief_fly(s, Tsim, 0.85),
-                   extras=(("post", lambda fr, vv: bonbon_rain(fr, vv, s, Tsim)),), jet_frozen=False, flock_T=Tsim)
+                   extras=(("pre", two_thieves_extra(s, Tsim)),
+                           ("post", lambda fr, vv: bonbon_rain(fr, vv, s, Tsim))), jet_frozen=False, flock_T=Tsim)
     f = dramatic(f, 0.6)
     _cache[key] = f
     return f.copy()
@@ -76,7 +90,6 @@ def shot_hook(t, T):
             fl = Image.new("RGBA", f.size, (255, 255, 255, int(200 * (1 - dt / 0.12))))
             f.alpha_composite(fl)
     else:
-        # Zeitlupe: leichter Kamera-Drift
         f = cam(f, 1.05 + 0.06 * t, 470, 760)
     return f
 
@@ -89,7 +102,6 @@ def shot_hook_oma(t, T):
     bg = hook_frame(1.0, with_oma=False)  # nur eine Oma im Bild
     bg = cam(bg, 1.3, 520, 820)
     bg = grade(blur(bg, 7), sat=0.55, contrast=0.95, bright=0.85)
-    v = View(1.0, 540, 960)
     z = 1.0 + 0.04 * t
     m = mouth("oma", T)
     actor(bg, View(z, 540, 1100), "oma", 300, "oma_sit_knit", 540, 1330, expr="smirk", look=(0.0, 0.0),
@@ -184,8 +196,10 @@ def shot_photo(t, T, zoom=False):
         if t < 0.1:
             f.alpha_composite(Image.new("RGBA", f.size, (255, 255, 255, int(255 * (1 - t / 0.1)))))
     else:
-        z = 1.75 + 0.18 * t
-        f = cam(f, z, 600, 760)
+        if T < 11.55:
+            f = cam(f, 1.75 + 0.18 * t, 600, 760)
+        else:
+            f = cam(f, 2.3 + 0.25 * (T - 11.55), 640, 1090)
     f = Wd.grain(f, T, 14)
     if int(T * 30) % 7 == 0:
         f = grade(f, bright=1.06)
@@ -234,119 +248,182 @@ def shot_bus_eyes(t, T):
 def shot_bus_after(t, T):
     v = View(1.15, 560, 1150)
     drop = -50 * (1 - ease_out(t / 0.25))
+    m = mouth("jung", T)
+    jump = ease_back(t / 0.25, 2.0)
+    man = dict(MAN, pose="jung_offer", x=lerp(815, 860, jump), y=lerp(1017, 905, jump), expr="scared", sweat=True,
+               look=(-0.6, 0.2), mouth=m, mouth_kind="wavy" if m < 0.1 else None)
     return bus_cool(Wd.bus_frame(T, v, [
-        dict(MAN, pose="jung_straight", x=815, y=1017, expr="scared", sweat=True, look=(-0.5, 0.0),
-             head_off=(0.0, 0.0, 0.0)),
-        dict(who="oma", D=150, pose="oma_sit_rest", x=420, y=1047 + drop, expr="smile", look=(0.0, 0.0),
-             items=(("bag", (0.3, 1.3)),), blink=blink(T, 1))]))
+        dict(who="oma", D=150, pose="oma_sit_rest", x=420, y=1047 + drop, expr="smile", look=(0.5, -0.2),
+             items=(("bag", (0.3, 1.3)),), blink=blink(T, 1)), man]))
 
 
-# ------------------------------------------------------------------ Szene 5: Fitnessstudio
-OMA_GYM = dict(who="oma", D=130, x=540, y=1356)
+# ------------------------------------------------------------------ Szene 5: Armdrücken
+AW_OMA = dict(who="oma", D=150, x=400, y=1150)
+AW_MUSK = dict(who="musk1", D=125, x=745, y=1172)
+TABLE_Y = 1318
 
 
-def guys(T, expr, pose="musk_laugh", m=0.0, bounce=True, mk=None):
-    b = math.sin(T * 18) * 8 if bounce else 0
-    return [dict(who="musk1", D=120, pose=pose, x=270, y=1280 + b, expr=expr, mouth=m, mouth_kind=mk,
-                 look=(0.5, 0.2)),
-            dict(who="musk2", D=120, pose=pose, x=820, y=1280 - b, expr=expr, mouth=m * 0.7, mouth_kind=mk,
-                 look=(-0.5, 0.2), flip=True)]
+def aw_table(f, v):
+    x0, y0 = v.p(150, TABLE_Y)
+    x1, y1 = v.p(990, 1720)
+    from gfx import rrect
+    rrect(f, x0, y0, x1, y1, 20 * v.z, (92, 64, 44), amb=0.5, spec=0.25)
+    rrect(f, x0 - 6 * v.z, y0 - 8 * v.z, x1 + 6 * v.z, y0 + 26 * v.z, 12 * v.z, (130, 92, 62), amb=0.55, spec=0.3)
 
 
-def floor_dumbbell(f, v):
-    from chars import dumbbell
-    im = Image.new("RGBA", (int(260 * v.z), int(140 * v.z)), (0, 0, 0, 0))
-    dumbbell(im, im.width / 2, im.height / 2, 120 * v.z)
-    sx, sy = v.p(720, 1690)
-    Wd.soft_shadow(f, sx, sy + 50 * v.z, 110 * v.z, 14 * v.z, 0.5)
-    paste_c(f, im, sx, sy)
-
-
-def shot_gym_laugh(t, T):
-    v = View(1.32, 540, 1330)
-    m = mouth("musk", T)
-    return Wd.gym_frame(T, v, guys(T, "laugh", m=m) + [
-        dict(OMA_GYM, pose="oma_stand_bag", expr="neutral", look=(0.0, -0.2), items=(("bag", (0.62, 1.2)),),
-             blink=blink(T, 1))], pre=floor_dumbbell)
-
-
-def shot_gym_point(t, T):
-    v = View(2.0 + 0.1 * t, 380, 1150)
-    m = mouth("musk", T)
-    g = guys(T, "laugh", "musk_point", m=m)
-    return Wd.gym_frame(T, v, [g[0], dict(OMA_GYM, pose="oma_stand_bag", expr="neutral",
-                                         items=(("bag", (0.62, 1.2)),))], pre=floor_dumbbell)
-
-
-def shot_gym_bagdown(t, T):
-    v = View(2.2, 600, 1450)
-    return Wd.gym_frame(T, v, [dict(OMA_GYM, pose="oma_stand_bagdown", expr="smirk", look=(0.4, 0.5),
-                                    items=(("bag", (0.85, 1.55)),))], pre=floor_dumbbell)
-
-
-def dust(t):
+def clasp(x, y, D):
     def fn(f, v):
-        d = ImageDraw.Draw(f, "RGBA")
-        r = random.Random(9)
-        for k in range(40):
-            x = r.uniform(300, 800) + math.sin(t * 2 + k) * 20
-            y = r.uniform(900, 1700) - t * 40
-            sx, sy = v.p(x, y)
-            rr = r.uniform(2, 5)
-            d.ellipse([sx - rr, sy - rr, sx + rr, sy + rr], fill=(255, 240, 200, 120))
+        sx, sy = v.p(x, y)
+        Wd.ell(f, sx, sy, D * 0.2 * v.z, D * 0.17 * v.z, (236, 186, 150), amb=0.5, spec=0.25)
     return fn
 
 
-def shot_gym_lift(t, T):
-    v = View(2.25 - 0.15 * t, 590, 1170)
-    lifted = t > 0.28
-    pose = "oma_lift" if lifted else "oma_lift_low"
-    items = (("dumbbell", (0.85, -1.55), 1.3),) if lifted else (("dumbbell", (0.8, 1.2), 1.3),)
-    f = Wd.gym_frame(T, v, [dict(OMA_GYM, pose=pose, expr="smirk" if lifted else "neutral", look=(0.0, 0.0),
-                                 items=items, blink=False)], post=dust(t))
-    if lifted:
-        Wd.rays(f, 620, 700, T, (255, 230, 160), int(45 * clamp01((t - 0.28) / 0.3)), 16, 6)
-        sp = emoji("✨", 90)
-        for k, (x, y) in enumerate(((760, 420), (900, 560), (520, 500))):
-            ph = (t * 2 + k * 0.3) % 1
-            paste_c(f, sp, x, y, 0.6 + 0.5 * math.sin(ph * math.pi), 1.0)
+def musk2_actor(T, expr="laugh", m=0.0, x=930, pose="musk_laugh", **kw):
+    b = math.sin(T * 18) * 6 if expr == "laugh" else 0
+    return dict(who="musk2", D=100, pose=pose, x=x, y=1020 + b, expr=expr, mouth=m, look=(-0.6, 0.2), flip=True, **kw)
+
+
+def aw_frame(T, v, oma_kw, musk_kw, musk2_kw=None, post=()):
+    acts = []
+    if musk2_kw:
+        acts.append(musk2_kw)
+    if musk_kw:
+        acts.append(musk_kw)
+    acts.append(oma_kw)
+
+    def post_fn(f, vv):
+        aw_table(f, vv)
+        for p in post:
+            p(f, vv)
+    return Wd.gym_frame(T, v, acts, post=post_fn)
+
+
+def knit_items():
+    return (("knit", (-0.25, 0.95)),)
+
+
+def shot_aw_wide(t, T):
+    v = View(1.25 + 0.04 * t, 560, 1180)
+    m = mouth("musk", T)
+    return aw_frame(T, v, dict(AW_OMA, pose="oma_sit_knit", expr="smile", look=(0.6, 0.0),
+                               items=(("knit", (0, 1.0)),), knit_phase=round((T * 2.5) % 1.0, 1), blink=blink(T, 1)),
+                    dict(AW_MUSK, pose="aw_musk", expr="laugh", mouth=m, look=(-0.6, 0.1)),
+                    musk2_actor(T, "laugh", mouth("musk", T) * 0.6 if T > 20.6 else 0.2))
+
+
+def shot_aw_laugh(t, T):
+    v = View(1.9, 800, 1110)
+    m = mouth("musk", T)
+    return aw_frame(T, v, dict(AW_OMA, pose="oma_sit_knit", expr="smile", items=(("knit", (0, 1.0)),)),
+                    dict(AW_MUSK, pose="aw_musk", expr="laugh", mouth=max(m, 0.4), mouth_kind="grin"),
+                    musk2_actor(T, "laugh", 0.9, mouth_kind="grin"))
+
+
+def shot_aw_oma(t, T):
+    v = View(2.1 + 0.08 * t, 470, 1110)
+    m = mouth("oma", T)
+    gripped = t > 0.55
+    oma = dict(AW_OMA, pose="aw_oma" if gripped else "oma_sit_knit", expr="smirk", mouth=m, look=(0.5, 0.0),
+               items=knit_items() if gripped else (("knit", (0, 1.0)),), knit_phase=round((T * 3) % 1.0, 1), gl=0.1)
+    post = (clasp(581, 1168, 125),) if gripped else ()
+    return aw_frame(T, v, oma, dict(AW_MUSK, pose="aw_musk", expr="laugh"), post=post)
+
+
+def shot_aw_strain(t, T):
+    sh = shake(T, 5)
+    v = View(2.0, 590, 1190, sh)
+    return aw_frame(T, v, dict(AW_OMA, pose="aw_oma", expr="smile", look=(0.0, 0.6), items=knit_items(),
+                               knit_phase=round((T * 4) % 1.0, 1), blink=blink(T, 1)),
+                    dict(AW_MUSK, pose="aw_musk", expr="strain", sweat=True), post=(clasp(581, 1168, 125),))
+
+
+def shot_aw_slam(t, T):
+    slam = t > 0.18
+    sh = shake(T, 22 * clamp01(1 - (t - 0.18) / 0.5)) if slam else shake(T, 4)
+    v = View(1.35, 600, 1160, sh)
+    oma = dict(AW_OMA, pose="aw_oma_win" if slam else "aw_oma", expr="smirk", look=(0.6, 0.2), items=knit_items(),
+               knit_phase=round((T * 3) % 1.0, 1))
+    if not slam:
+        musk = dict(AW_MUSK, pose="aw_musk", expr="strain", sweat=True)
+        post = (clasp(581, 1168, 125),)
+    else:
+        dt = t - 0.18
+        if dt < 0.12:
+            musk = dict(AW_MUSK, pose="aw_musk_lose", expr="shock", mouth=1.0, mouth_kind="o")
+        else:
+            u = dt - 0.12
+            musk = dict(who="musk1", D=125, pose="musk_shock", x=745 + 520 * u, y=1250 - 700 * u + 900 * u * u,
+                        rot=-260 * u, center=True, expr="shock", mouth=1.0, mouth_kind="o")
+        post = (clasp(660, 1300, 125),)
+    f = aw_frame(T, v, oma, musk, musk2_actor(T, "shock", 0.8, mouth_kind="o") if slam else musk2_actor(T), post=post)
+    if slam and t - 0.18 < 0.07:
+        f.alpha_composite(Image.new("RGBA", f.size, (255, 255, 255, 140)))
     return f
 
 
-def shot_gym_jaw(t, T):
-    v = View(1.42, 540, 1250)
-    jaw = 0.6 + 0.4 * ease_out(t / 0.2)
-    return Wd.gym_frame(T, v, guys(T, "shock", "musk_shock", m=jaw, bounce=False, mk="o") + [
-        dict(OMA_GYM, pose="oma_lift", expr="smirk", items=(("dumbbell", (0.85, -1.55), 1.3),), brow_up=1)],
-                        post=dust(t + 1))
+def shot_aw_next(t, T):
+    v = View(1.3, 640, 1140)
+    m = mouth("oma", T)
+    run = max(0.0, T - 25.8)
+    m2 = musk2_actor(T, "scared", 0.0) if run <= 0 else dict(who="musk2", D=100, pose="musk_run", x=930 + 900 * run,
+                                                              y=1020 - abs(math.sin(run * 20)) * 18, expr="scared",
+                                                              flip=False, look=(1.0, 0.0))
+    oma = dict(AW_OMA, pose="oma_sit_knit", expr="smirk", brow_up=1, mouth=m, look=(0.7, 0.0),
+               items=(("knit", (0, 1.0)),), knit_phase=round((T * 2.5) % 1.0, 1))
+
+    def dust_fn(f, vv):
+        if run > 0:
+            d = ImageDraw.Draw(f, "RGBA")
+            for k in range(8):
+                px, py = vv.p(930 + 900 * run - 120 - k * 40, 1330 + (k % 3) * 10)
+                r = (20 + k * 6) * vv.z
+                d.ellipse([px - r, py - r, px + r, py + r], fill=(200, 200, 210, max(0, 150 - k * 15)))
+    return aw_frame(T, v, oma, None, m2, post=(dust_fn,))
 
 
-# ------------------------------------------------------------------ Szene 6: Der Dieb
+# ------------------------------------------------------------------ Szene 6: Die Diebe
 BAG_BENCH = (662, 1088)
 
 
 def shot_sneak(t, T):
-    v = View(1.35, 620, 1030)
-    x = lerp(300, 505, t / 1.5)
+    v = View(1.3, 600, 1030)
+    x = lerp(280, 480, t / 1.6)
     bob = abs(math.sin(t * 7)) * -14
     th = dict(who="thief", D=110, pose="thief_sneak", x=x, y=1000 + bob, expr="sneaky", look=(0.8, 0.2))
+    th2 = dict(who="thief2", D=110, pose="thief_sneak", x=x - 150, y=1005 - bob, expr="sneaky", look=(0.8, 0.2))
     f = park_frame(T, v, oma=oma_bench(T), thief=th, flock_T=T,
-                   extras=(("pre", world_bag(BAG_BENCH[0] - 30, BAG_BENCH[1] + 2, OMA_D)),))
+                   extras=(("pre", world_bag(BAG_BENCH[0] - 30, BAG_BENCH[1] + 2, OMA_D)),
+                           ("pre", lambda fr, vv: actor(fr, vv, **th2))))
+    return dramatic(f)
+
+
+def shot_whisper(t, T):
+    v = View(2.3, 420, 960)
+    m2 = mouth("dieb2", T)
+    th = dict(who="thief", D=110, pose="thief_sneak", x=480, y=1000, expr="sneaky", look=(-0.7, 0.0),
+              mouth_kind="grin" if T > 29.3 else None)
+    th2 = dict(who="thief2", D=110, pose="thief_sneak", x=350, y=1000, expr="sneaky", look=(0.8, 0.0), mouth=m2,
+               head_off=(0.08, 0.02, -10))
+    f = park_frame(T, v, oma=oma_bench(T), thief=th,
+                   extras=(("pre", world_bag(BAG_BENCH[0] - 30, BAG_BENCH[1] + 2, OMA_D)),
+                           ("pre", lambda fr, vv: actor(fr, vv, **th2))), bg_blur=3)
     return dramatic(f)
 
 
 def shot_grab(t, T):
-    v = View(2.4, 640, 1060)
+    v = View(2.2, 620, 1060)
     reach = ease_out(t / 0.3)
     th = dict(who="thief", D=110, pose="thief_grab", x=lerp(470, 520, reach), y=1000, expr="sneaky",
               look=(0.8, 0.3), flip=True)
+    th2 = dict(who="thief2", D=110, pose="thief_grab", x=lerp(330, 380, reach), y=1005, expr="sneaky", flip=True)
     if t < 0.35:
         oma = oma_bench(T)
         bag = (BAG_BENCH[0] - 30 + 30 * reach, BAG_BENCH[1] + 2)
     else:
         oma = oma_bench(T, pose="oma_sit_hold", flip=True, items=(), look=(0.9, 0.2), expr="glare", gl=0.1)
         bag = BAG_BENCH
-    f = park_frame(T, v, oma=oma, thief=th, extras=(("post", world_bag(*bag, OMA_D)),))
+    f = park_frame(T, v, oma=oma, thief=th, extras=(("pre", lambda fr, vv: actor(fr, vv, **th2)),
+                                                    ("post", world_bag(*bag, OMA_D))))
     return dramatic(f)
 
 
@@ -365,7 +442,7 @@ def shot_passers(t, T):
     v = View(1.65, 380, 930)
     turned = t > 0.12
     ps = []
-    for (who, x, sd) in (("pass1", 190, 1), ("pass2", 590, 2)):
+    for (who, x) in (("pass1", 190), ("pass2", 590)):
         if turned:
             ps.append(dict(who=who, D=75, pose="pass_shock", x=x, y=860, expr="shock", mouth=0.7, mouth_kind="o"))
         else:
@@ -384,25 +461,20 @@ def Wd_pop(dt):
     return ease_back(dt / 0.2, 2.5) if dt < 0.2 else 1.0
 
 
+RELEASE_T = 32.6
+
+
 def shot_tug(t, T):
-    released = t > 0.62
-    sh = shake(T, 4 + 10 * clamp01(t / 0.6)) if not released else shake(T, 18 * clamp01(1 - (t - 0.62) / 0.3))
-    v = View(1.5 + 0.08 * t, 650, 1040, sh)
+    released = T >= RELEASE_T
+    sh = shake(T, 4 + 10 * clamp01(t / 0.7)) if not released else shake(T, 18 * clamp01(1 - (T - RELEASE_T) / 0.3))
+    v = View(1.4 + 0.06 * t, 600, 1040, sh)
+    ex = []
     if not released:
         pull = math.sin(T * 25) * 6
         th = dict(who="thief", D=110, pose="thief_pull", x=470 + pull, y=1000, expr="strain", flip=True)
+        th2 = dict(who="thief2", D=110, pose="thief_pull", x=330 + pull * 1.5, y=1005, expr="strain", flip=True)
         oma = oma_bench(T, pose="oma_sit_pull", flip=True, items=(), look=(0.9, 0.1), expr="smirk", gl=0.1)
         bag = (608 + pull, 1080)
-    else:
-        dt = t - 0.62
-        s = clamp01(dt * 0.35)
-        x, y = Wd.fly_pos(s)
-        th = dict(who="thief", D=110, pose="thief_fly", x=x - 140 * dt, y=y + 150 - 60 * dt, center=True, rot=-15 - 60 * dt,
-                  expr="shock", mouth=0.9, items=(("bag", (1.35, -0.4)),))
-        oma = oma_bench(T, pose="oma_sit_release", flip=True, items=(), look=(0.0, 0.0), expr="smirk", brow_up=-1)
-        bag = None
-    ex = []
-    if bag:
         ex.append(("pre", world_bag(*bag, OMA_D)))
 
         def strap(f, vv):
@@ -411,22 +483,33 @@ def shot_tug(t, T):
             b = vv.p(OMA_NECK[0] - 1.3 * OMA_D, OMA_NECK[1] + 0.55 * OMA_D)
             d.line([a, b], fill=(110, 62, 30), width=int(9 * vv.z))
         ex.append(("pre", strap))
+        ex.append(("pre", lambda fr, vv: actor(fr, vv, **th2)))
+    else:
+        dt = T - RELEASE_T
+        s = clamp01(dt * 0.35)
+        x, y = Wd.fly_pos(s)
+        th = dict(who="thief", D=110, pose="thief_fly", x=x - 140 * dt, y=y + 150 - 60 * dt, center=True,
+                  rot=-15 - 60 * dt, expr="shock", mouth=0.9, items=(("bag", (1.35, -0.4)),))
+        th2 = dict(who="thief2", D=110, pose="thief_fly", x=x - 260 * dt - 120, y=y + 170 - 40 * dt, center=True,
+                   rot=20 - 80 * dt, expr="shock", mouth=0.9, flip=True)
+        ex.append(("pre", lambda fr, vv: actor(fr, vv, **th2)))
+        oma = oma_bench(T, pose="oma_sit_release", flip=True, items=(), look=(0.0, 0.0), expr="smirk", brow_up=-1)
     f = park_frame(T, v, oma=oma, thief=th, extras=tuple(ex))
     f = dramatic(f)
-    if released and t - 0.62 < 0.08:
+    if released and T - RELEASE_T < 0.08:
         f.alpha_composite(Image.new("RGBA", f.size, (255, 255, 255, 150)))
     return f
 
 
-SPLASH_T = 26.33
+SPLASH_T = 34.25
+FLY_A = 32.95
 
 
 def fly_s(t):
-    pts = [(0, 0.0), (0.22, 0.36), (0.78, 0.57), (1.18, 1.0)]
+    pts = [(0, 0.0), (0.22, 0.36), (0.78, 0.57), (1.3, 1.0)]
     for (a, sa), (b, sb) in zip(pts, pts[1:]):
         if t <= b:
-            u = (t - a) / (b - a)
-            return lerp(sa, sb, u)
+            return lerp(sa, sb, (t - a) / (b - a))
     return 1.0
 
 
@@ -434,54 +517,108 @@ def shot_fly(t, T):
     s = fly_s(t)
     v = View(*HOOK_VIEW)
     after = T >= SPLASH_T
-    th = None if after else thief_fly(s, T, mouth("dieb", T))
+    m = mouth("dieb", T)
+    th = None if after else thief_fly(s, T, m)
     oma = oma_bench(T, look=(0.0, 0.55), expr="smile")
     ex = [("post", lambda fr, vv: bonbon_rain(fr, vv, s if not after else 1.0 + (T - SPLASH_T), T))]
-    if after:
-        ex.append(("post", lambda fr, vv: splash(fr, vv, T - SPLASH_T)))
+    if not after:
+        ex.insert(0, ("pre", two_thieves_extra(s, T, m, m)))
+    else:
+        ex.append(("post", lambda fr, vv: splash(fr, vv, T - SPLASH_T, scale=1.3)))
     f = park_frame(T, v, oma=oma, thief=th, extras=tuple(ex), flock_T=T, flock_scare=SPLASH_T + 0.05)
     f = dramatic(f, 0.7)
-    slowmo = 0.22 < t < 0.78
-    if slowmo:
+    if 0.22 < t < 0.78:
         f = grade(f, sat=0.9, contrast=1.05)
     if after and T - SPLASH_T < 0.25:
         f = cam(f, 1.0 + 0.05 * (1 - (T - SPLASH_T) / 0.25), 420, 1100)
     return f
 
 
-def shot_offer(t, T):
-    v = View(1.9 + 0.05 * t, 540, 1000)
-    take = T > 28.35
-    th_pose = "thief_take" if take else "thief_wet"
-    th = dict(who="thief", D=118, pose=th_pose, x=420, y=1010, expr="sad", wet=True, look=(0.7, -0.2),
-              blink=blink(T, 3))
-    m = mouth("oma", T)
-    has_bonbon = not take
-    oma = dict(who="oma", D=118, pose="oma_offer", x=705, y=860, expr="warm", look=(-0.7, 0.2), mouth=m,
-               items=(("bonbon", (-1.2, 0.35)),) if has_bonbon else (), blink=blink(T, 1))
+# Brunnen-Finale: zwei nasse Diebe, Oma verteilt Hustenbonbons
+TH1 = (300, 1012)
+TH2 = (500, 1016)
+OMA_F = (760, 860)
+GIVE_T = 36.15   # Dieb 2 nimmt das Bonbon
+FLICK_T = 36.55  # Oma schnippt Dieb 1 ein Bonbon in den Mund
+PIGEON_T = 37.9
+
+
+def fountain_frame(T, v, oma_kw, bg_blur=0.0, extra_post=()):
+    m1 = 0.0
+    flick_dt = T - FLICK_T
+    if 0.15 < flick_dt < 0.55:
+        m1 = 0.9
+    th1 = dict(who="thief", D=112, pose="thief_wet", x=TH1[0], y=TH1[1], expr="sad" if flick_dt < 0.55 else "smile",
+               wet=True, look=(0.7, -0.2), blink=blink(T, 3), mouth=m1, mouth_kind="o" if m1 else None)
+    took = T > GIVE_T
+    m2 = mouth("dieb2", T)
+    th2 = dict(who="thief2", D=112, pose="thief_take" if took else "thief_wet", x=TH2[0], y=TH2[1],
+               expr="sad", wet=True, look=(0.7, -0.3), mouth=m2, blink=blink(T, 4))
 
     def front(f, vv):
         draw_fountain_front(f, vv)
         r = random.Random(1)
-        for k in range(6):
-            bx = [205, 250, 300, 545, 590, 630][k]
+        for k in range(5):
+            bx = [180, 220, 400, 610, 640][k]
             by = 1105 + r.uniform(-20, 30) + math.sin(T * 3 + k) * 3
             paste_c(f, bonbon_sprite(int(24 * vv.z), (235, 60, 60) if k % 2 else (250, 160, 40), (k * 60) % 360),
                     *vv.p(bx, by))
-        if take:
-            paste_c(f, bonbon_sprite(int(24 * vv.z), (235, 60, 60), 0), *vv.p(420 + 0.95 * 118, 1010 + 0.1 * 118))
-        # Taube landet auf dem Kopf
-        if T > 27.4:
-            u = clamp01((T - 27.4) / 0.45)
-            px = lerp(250, 405, ease_out(u))
-            py = lerp(700, 1010 - 0.5 * 118 - 70, ease_out(u))
+        if took:
+            paste_c(f, bonbon_sprite(int(24 * vv.z), (235, 60, 60), 0),
+                    *vv.p(TH2[0] + 0.95 * 112, TH2[1] + 0.12 * 112))
+        if 0 <= flick_dt < 0.45:
+            u = flick_dt / 0.45
+            hx, hy = OMA_F[0] - 1.2 * 118, OMA_F[1] + 0.35 * 118
+            tx, ty = TH1[0], TH1[1] - 0.5 * 112 + 0.3 * 112
+            px = lerp(hx, tx, u)
+            py = lerp(hy, ty, u) - 260 * 4 * u * (1 - u)
+            paste_c(f, bonbon_sprite(int(24 * vv.z), (250, 160, 40), int(u * 720) // 30 * 30 % 360), *vv.p(px, py))
+        if T > PIGEON_T - 0.45:
+            u = clamp01((T - (PIGEON_T - 0.45)) / 0.45)
+            px = lerp(120, TH1[0] - 5, ease_out(u))
+            py = lerp(700, TH1[1] - 0.5 * 112 - 72, ease_out(u))
             img = pigeon(int(50 * vv.z), int(T * 14) % 4 if u < 1 else -1, 1)
             paste_c(f, img, *vv.p(px, py))
+        for p in extra_post:
+            p(f, vv)
 
-    f = park_frame(T, v, oma=oma, thief=None, extras=(
-        ("pre", lambda fr, vv: actor(fr, vv, **th)), ("post", front),
-        ("post", lambda fr, vv: splash(fr, vv, T - SPLASH_T))), flock_T=None)
+    f = park_frame(T, v, oma=oma_kw, thief=None, bg_blur=bg_blur, extras=(
+        ("pre", lambda fr, vv: actor(fr, vv, **th1)), ("pre", lambda fr, vv: actor(fr, vv, **th2)),
+        ("post", front), ("post", lambda fr, vv: splash(fr, vv, T - SPLASH_T, scale=1.3))))
     return dramatic(f, 0.7)
+
+
+def oma_offer_kw(T, **kw):
+    m = mouth("oma", T)
+    has = T < GIVE_T or (FLICK_T - 0.4 < T < FLICK_T)
+    base = dict(who="oma", D=118, pose="oma_offer", x=OMA_F[0], y=OMA_F[1], expr="warm", look=(-0.7, 0.2), mouth=m,
+                items=(("bonbon", (-1.2, 0.35)),) if has else (), blink=blink(T, 1))
+    base.update(kw)
+    return base
+
+
+def shot_offer_wide(t, T):
+    return fountain_frame(T, View(1.75 + 0.05 * t, 520, 990), oma_offer_kw(T))
+
+
+def shot_offer_close(t, T):
+    return fountain_frame(T, View(2.3, 450, 960), oma_offer_kw(T))
+
+
+def shot_offer_danke(t, T):
+    return fountain_frame(T, View(2.6, 400, 960), oma_offer_kw(T), bg_blur=2)
+
+
+def shot_offer_oma(t, T):
+    kw = dict(pose="oma_stand", expr="smirk", look=(-0.6, 0.1), items=())
+    if 0.5 < (t % 1.2) < 0.9:
+        kw["brow_up"] = 1
+    return fountain_frame(T, View(2.4, OMA_F[0] - 20, 820), oma_offer_kw(T, **kw), bg_blur=3)
+
+
+def shot_offer_end(t, T):
+    kw = dict(pose="oma_stand", expr="warm", look=(-0.6, 0.1), items=())
+    return fountain_frame(T, View(1.7, 520, 990), oma_offer_kw(T, **kw))
 
 
 # ------------------------------------------------------------------ Szene 7: Held
@@ -520,7 +657,7 @@ def shot_hero(t, T):
 
 
 def shot_hero2(t, T):
-    sh = shake(T, 12 * clamp01(1 - (T - 30.9) / 0.35)) if T > 30.9 else (0, 0)
+    sh = shake(T, 12 * clamp01(1 - (T - 43.1) / 0.35)) if T > 43.1 else (0, 0)
     f = hero_frame(t + 1, T, 400, (540 + sh[0], 1330 + sh[1]), 1.0 + 0.03 * t)
     return f
 
@@ -540,35 +677,41 @@ def shot_end(t, T):
 
 SHOTS = [
     (0.00, 0.90, shot_hook),
-    (0.90, 2.00, shot_hook_oma),
-    (2.00, 2.75, shot_rewind),
-    (2.75, 4.30, shot_establish),
-    (4.30, 5.45, shot_80),
-    (5.45, 6.50, shot_knit),
-    (6.50, 7.35, shot_feed),
-    (7.35, 8.00, shot_smile),
-    (8.00, 9.55, lambda t, T: shot_photo(t, T, False)),
-    (9.55, 11.00, lambda t, T: shot_photo(t, T, True)),
-    (11.00, 12.70, shot_bus_wide),
-    (12.70, 13.60, shot_bus_look),
-    (13.60, 14.60, shot_bus_eyes),
-    (14.60, 16.00, shot_bus_after),
-    (16.00, 17.20, shot_gym_laugh),
-    (17.20, 18.50, shot_gym_point),
-    (18.50, 19.10, shot_gym_bagdown),
-    (19.10, 20.20, shot_gym_lift),
-    (20.20, 21.00, shot_gym_jaw),
-    (21.00, 22.50, shot_sneak),
-    (22.50, 23.20, shot_grab),
-    (23.20, 23.80, shot_hilfe),
-    (23.80, 24.30, shot_passers),
-    (24.30, 25.15, shot_tug),
-    (25.15, 26.45, shot_fly),
-    (26.45, 29.00, shot_offer),
-    (29.00, 30.50, shot_hero),
-    (30.50, 32.00, shot_hero2),
-    (32.00, 34.55, shot_end),
-    (34.55, 35.00, shot_hook_end),
+    (0.90, 2.20, shot_hook_oma),
+    (2.20, 2.95, shot_rewind),
+    (2.95, 4.50, shot_establish),
+    (4.50, 5.65, shot_80),
+    (5.65, 6.70, shot_knit),
+    (6.70, 7.70, shot_feed),
+    (7.70, 8.60, shot_smile),
+    (8.60, 10.30, lambda t, T: shot_photo(t, T, False)),
+    (10.30, 12.80, lambda t, T: shot_photo(t, T, True)),
+    (12.80, 14.70, shot_bus_wide),
+    (14.70, 15.50, shot_bus_look),
+    (15.50, 16.50, shot_bus_eyes),
+    (16.50, 18.20, shot_bus_after),
+    (18.20, 20.05, shot_aw_wide),
+    (20.05, 21.25, shot_aw_laugh),
+    (21.25, 22.45, shot_aw_oma),
+    (22.45, 23.70, shot_aw_strain),
+    (23.70, 24.85, shot_aw_slam),
+    (24.85, 26.70, shot_aw_next),
+    (26.70, 28.45, shot_sneak),
+    (28.45, 29.60, shot_whisper),
+    (29.60, 30.30, shot_grab),
+    (30.30, 31.25, shot_hilfe),
+    (31.25, 31.80, shot_passers),
+    (31.80, 32.95, shot_tug),
+    (32.95, 34.45, shot_fly),
+    (34.45, 35.90, shot_offer_wide),
+    (35.90, 37.30, shot_offer_close),
+    (37.30, 38.40, shot_offer_danke),
+    (38.40, 39.90, shot_offer_oma),
+    (39.90, 41.30, shot_offer_end),
+    (41.30, 42.80, shot_hero),
+    (42.80, 44.40, shot_hero2),
+    (44.40, 47.40, shot_end),
+    (47.40, 47.90, shot_hook_end),
 ]
 
 

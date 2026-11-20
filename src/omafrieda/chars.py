@@ -17,6 +17,8 @@ CFG = {
                   female=True, brow=(70, 45, 35), body="judo", lash=True),
     "thief": dict(skin=(236, 192, 160), hair="hood", eye=(110, 72, 40), glasses=False, old=False, female=False,
                   brow=(60, 42, 30), body="thief", stubble=True),
+    "thief2": dict(skin=(228, 184, 152), hair="beanie", eye=(70, 110, 60), glasses=False, old=False, female=False,
+                   brow=(70, 50, 35), body="thief2", stubble=True),
     "jung": dict(skin=(242, 200, 170), hair="cap", eye=(90, 120, 70), glasses=False, old=False, female=False,
                  brow=(90, 60, 35), body="jung"),
     "musk1": dict(skin=(232, 176, 132), hair="flattop", eye=(70, 120, 200), glasses=False, old=False, female=False,
@@ -347,6 +349,17 @@ def head(who, D, expr="neutral", mouth=0.0, blink=False, look=(0.0, 0.0), gl=0.0
             rrect(im, cx + sx * rx * 1.05 - D * 0.1, cy - D * 0.12, cx + sx * rx * 1.05 + D * 0.1, cy + D * 0.2,
                   D * 0.08, (40, 40, 48), amb=0.4, spec=0.35)
             ell(im, cx + sx * rx * 1.1, cy + D * 0.04, D * 0.06, D * 0.1, (240, 70, 80), amb=0.5, spec=0.3)
+    elif hs == "beanie":
+        poly(im, [(cx - rx * 1.04, cy - ry * 0.3), (cx - rx * 0.95, cy - ry * 0.85), (cx - rx * 0.45, cy - ry * 1.22),
+                  (cx, cy - ry * 1.3), (cx + rx * 0.45, cy - ry * 1.22), (cx + rx * 0.95, cy - ry * 0.85),
+                  (cx + rx * 1.04, cy - ry * 0.3)], (214, 52, 64), radius=D * 0.12, amb=0.45, spec=0.15)
+        rrect(im, cx - rx * 1.06, cy - ry * 0.55, cx + rx * 1.06, cy - ry * 0.28, D * 0.06, (190, 40, 52), amb=0.45,
+              spec=0.1)
+        bd = ImageDraw.Draw(im)
+        for k in range(-6, 7):
+            x0 = cx + k * D * 0.07
+            bd.line([(x0, cy - ry * 0.54), (x0, cy - ry * 0.3)], fill=(160, 30, 42), width=max(1, int(D * 0.01)))
+        ell(im, cx, cy - ry * 1.32, D * 0.1, D * 0.09, (245, 245, 245), amb=0.6)
     elif hs == "flattop":
         rrect(im, cx - rx * 0.92, cy - ry * 1.32, cx + rx * 0.92, cy - ry * 0.55, D * 0.08, (245, 210, 100),
               amb=0.5, spec=0.2)
@@ -492,11 +505,13 @@ def trophy(c, x, y, D):
 BODY = {
     # sh: Schulterbreite (halb), hip: Hüfte (halb), tl: Rumpflänge, arm: Ärmeldicke, top: Farbe Oberteil
     "oma": dict(sh=0.47, hip=0.5, tl=1.25, arm=0.29, hand=0.135, top=(228, 214, 192), leg=(236, 205, 185),
-                shoe=(150, 42, 60), skirt=(240, 104, 100), oma_pants=(214, 198, 174)),
+                shoe=(150, 42, 60), skirt=(240, 104, 100)),
     "judo": dict(sh=0.52, hip=0.48, tl=1.3, arm=0.3, hand=0.135, top=(250, 250, 248), leg=(250, 250, 248),
                  shoe=None, pants=(250, 250, 248)),
     "thief": dict(sh=0.56, hip=0.46, tl=1.45, arm=0.3, hand=0.14, top=(76, 78, 90), leg=(50, 80, 140),
                   shoe=(235, 235, 240), pants=(50, 80, 140)),
+    "thief2": dict(sh=0.6, hip=0.5, tl=1.45, arm=0.31, hand=0.14, top=(124, 62, 176), leg=(124, 62, 176),
+                   shoe=(30, 30, 34), pants=(124, 62, 176)),
     "jung": dict(sh=0.58, hip=0.48, tl=1.45, arm=0.31, hand=0.14, top=(40, 190, 170), leg=(60, 90, 150),
                  shoe=(250, 250, 250), pants=(60, 90, 150)),
     "musk1": dict(sh=1.05, hip=0.6, tl=1.55, arm=0.5, hand=0.2, top=(220, 50, 60), leg=(232, 176, 132),
@@ -606,6 +621,11 @@ def person_raw(who, D, pose, expr="neutral", mouth=0.0, blink=False, look=(0.0, 
              darker(topc, 0.88), radius=D * 0.06, amb=0.45)
         for sx in (-1, 1):
             d.line([pt((sx * 0.12, 0.02)), pt((sx * 0.14, 0.45))], fill=(200, 200, 210), width=max(2, int(D * 0.02)))
+    elif body == "thief2":
+        d.line([pt((0.0, 0.0)), pt((0.0, tl))], fill=(240, 240, 240), width=max(2, int(D * 0.025)))
+        for sx in (-1, 1):
+            d.line([pt((sx * b["sh"] * 0.98, 0.15)), pt((sx * b["hip"] * 1.0, tl - 0.05))], fill=(240, 240, 240),
+                   width=max(2, int(D * 0.03)))
     elif body == "jung":
         poly(im, [pt((-0.2, -0.03)), pt((0.2, -0.03)), pt((0.1, tl)), pt((-0.1, tl))], (250, 250, 250),
              radius=D * 0.05, amb=0.6)
@@ -864,6 +884,20 @@ POSES = {
     "musk_shock": dict(lower="pants", legs=(((-0.35, 1.6), (-0.4, 2.3), (-0.45, 3.0)),
                                             ((0.35, 1.6), (0.4, 2.3), (0.45, 3.0))),
                        arms=(((-1.3, 0.4), (-0.6, -0.1), "front"), ((1.3, 0.4), (0.6, -0.1), "front"))),
+    "aw_oma": dict(lower="skirt_sit", arms=(((-0.6, 0.85), (-0.25, 1.08), "front"),
+                                            ((0.75, 1.05), (1.2, 0.1), "fist"))),
+    "aw_oma_win": dict(lower="skirt_sit", arms=(((-0.6, 0.85), (-0.25, 1.08), "front"),
+                                                ((0.9, 0.95), (1.7, 1.0), "fist"))),
+    "aw_musk": dict(lower="pants", legs=(((-0.35, 1.6), (-0.4, 2.3), (-0.45, 3.0)), ((0.35, 1.6), (0.4, 2.3), (0.45, 3.0))),
+                    arms=(((-1.35, 1.0), (-1.3, 0.0), "fist"), ((1.2, 0.8), (0.9, 1.1), "front"))),
+    "aw_musk_lose": dict(lower="pants", legs=(((-0.35, 1.6), (-0.4, 2.3), (-0.45, 3.0)),
+                                              ((0.35, 1.6), (0.4, 2.3), (0.45, 3.0))),
+                         arms=(((-1.2, 0.95), (-0.65, 1.1), "fist"), ((1.25, 0.4), (1.5, -0.1), "front"))),
+    "musk_run": dict(lower="pants", legs=(((-0.35, 1.6), (-0.9, 2.1), (-1.2, 2.7)), ((0.35, 1.6), (0.9, 2.0), (1.0, 2.8))),
+                     arms=(((-1.3, 0.4), (-0.6, -0.1), "front"), ((1.3, 0.4), (0.6, -0.1), "front"))),
+    "jung_offer": dict(lower="pants", legs=(((-0.2, 1.45), (-0.22, 2.15), (-0.24, 2.85)),
+                                            ((0.2, 1.45), (0.22, 2.15), (0.24, 2.85))),
+                       arms=(((-0.85, 0.5), (-1.3, 0.8), "front"), ((0.6, 0.75), (0.55, 1.35), "front"))),
     "pass_stand": dict(lower="pants", legs=STAND_LEGS, arms=(((-0.6, 0.7), (-0.55, 1.25), "front"),
                                                              ((0.6, 0.7), (0.55, 1.25), "front"))),
     "pass_shock": dict(lower="pants", legs=STAND_LEGS, arms=(((-0.7, 0.4), (-0.3, -0.05), "front"),

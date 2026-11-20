@@ -80,20 +80,22 @@ python3 render.py preview 5 30 # Standbilder
 
 ## oma-frieda-faust-folge-1.mp4 (Serie „Oma Frieda Faust“, Folge 1)
 
-**Titel:** Alle unterschätzen Oma Frieda · 35 s · 1080×1920 · 30 fps · weicher 3D-Cartoon-Look
-Aussehen Oma Frieda: grau-weißer Dutt, schmale runde Brille, Perlenkette, cremefarbene Strickjacke mit roter Blumenbrosche, korallrotes Oberteil, beige Stoffhose passend zur Strickjacke, weinrote Schuhe, braune Leder-Umhängetasche.
+**Titel:** Alle unterschätzen Oma Frieda · ca. 48 s · 1080×1920 · 30 fps · weicher 3D-Cartoon-Look
+Aussehen Oma Frieda: grau-weißer Dutt, schmale runde Brille, Perlenkette, cremefarbene Strickjacke mit roter Blumenbrosche,
+korallrote Bluse und korallroter Blümchenrock, weinrote Schuhe, braune Leder-Umhängetasche.
 Format: „Eingefrorenes Bild – Plattenkratzer – Ich erklär's euch“ mit Loop (letzter Frame = erster Frame).
 
 | Zeit | Szene |
 |---|---|
-| 0–2 s | Hook: Dieb fliegt kopfüber über den Brunnen, Freeze + Plattenkratzer, „Er hat die FALSCHE Oma beklaut 😳“, Oma: „Ich erklär's euch.“ |
-| 2–8 s | Zurückspulen → „5 Minuten vorher …“, sonniger Park: strickt, füttert Tauben (Ukulele-Musik, Vogelgezwitscher) |
-| 8–11 s | Musik bricht ab (Tape-Stop): S/W-Foto 1976, junge Frieda im Judo-Anzug mit schwarzem Gürtel + Pokal |
-| 11–16 s | Bus: „Oma, der Platz ist besetzt.“ → „Der Blick 👀“ → Typ sitzt schwitzend in der Ecke |
-| 16–21 s | Fitnessstudio: „Oma, die Hantel ist zu schwer für dich!“ → „Die Hantel 💪“ → Kinnladen fallen |
-| 21–29 s | „Und jetzt … der Dieb.“: „HILFE, DIEB!“, Tauziehen, Loslassen, Zeitlupenflug in den Brunnen, Hustenbonbon-Regen; Sicherheitstipp eingeblendet |
-| 29–32 s | Heldenshot im Gegenlicht: „Mit Frieda Faust legt man sich nicht an!“ + Titel OMA FRIEDA FAUST |
-| 32–35 s | Abstimmung 1️⃣ Supermarkt 🛒 2️⃣ Schule 🏫 3️⃣ Disco 🪩 – „Schreib nur die Zahl! 👇“ → Plattenkratzer, Freeze-Bild vom Anfang |
+| 0–2 s | Hook: zwei Diebe fliegen kopfüber über den Brunnen, Freeze + Plattenkratzer, „Sie haben die FALSCHE Oma beklaut 😳“, Oma: „Ich erklär's euch.“ |
+| 2–9 s | Zurückspulen → „5 Minuten vorher …“, sonniger Park: strickt, füttert Tauben |
+| 9–13 s | Tape-Stop, S/W-Foto 1976: Judo-Trainerin, „Schwarzer Gürtel.“ |
+| 13–18 s | Bus: „Oma, der Platz ist besetzt.“ → „Der Blick 👀“ → Typ springt auf: „Bitte sehr, der Platz ist frei!“ |
+| 18–27 s | Fitnessstudio: „Oma, Armdrücken? Gegen mich?“ → Oma strickt mit links weiter und knallt ihn mit rechts auf den Tisch → „Nächster?“ → zweiter Typ rennt weg |
+| 27–34 s | „Und jetzt … die Diebe.“ – „Leichte Beute.“ – „Hilfe, Diebe!“ – Tauziehen, Oma lässt los, beide fliegen in Zeitlupe in den Brunnen |
+| 34–41 s | Hustenbonbons für beide (einer per Schnipser in den Mund), Taube auf dem Kopf, „Danke, Oma.“, „Und nächstes Mal fragt ihr, ob ihr die Tasche tragen dürft.“ + Sicherheitstipp |
+| 41–44 s | Heldenshot: „Mit Frieda Faust legt man sich nicht an!“ + Titel |
+| 44–48 s | Abstimmung 1️⃣ Supermarkt 🛒 2️⃣ Schule 🏫 3️⃣ Disco 🪩 → Plattenkratzer, Freeze-Bild vom Anfang |
 
 Stimmen: edge-tts (`de-DE-ChristophNeural` tief als Trailer-Erzähler, `de-AT-IngridNeural` als Oma, u. a.),
 Musik und alle Soundeffekte werden in `render.py` synthetisch erzeugt.
