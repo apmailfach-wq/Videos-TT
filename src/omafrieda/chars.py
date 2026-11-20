@@ -505,7 +505,7 @@ def trophy(c, x, y, D):
 BODY = {
     # sh: Schulterbreite (halb), hip: Hüfte (halb), tl: Rumpflänge, arm: Ärmeldicke, top: Farbe Oberteil
     "oma": dict(sh=0.47, hip=0.5, tl=1.25, arm=0.29, hand=0.135, top=(228, 214, 192), leg=(236, 205, 185),
-                shoe=(150, 42, 60), skirt=(240, 104, 100)),
+                shoe=(120, 72, 38), skirt=(178, 164, 156)),
     "judo": dict(sh=0.52, hip=0.48, tl=1.3, arm=0.3, hand=0.135, top=(250, 250, 248), leg=(250, 250, 248),
                  shoe=None, pants=(250, 250, 248)),
     "thief": dict(sh=0.56, hip=0.46, tl=1.45, arm=0.3, hand=0.14, top=(76, 78, 90), leg=(50, 80, 140),
@@ -580,7 +580,7 @@ def person_raw(who, D, pose, expr="neutral", mouth=0.0, blink=False, look=(0.0, 
         tex.putalpha(ImageChops_mul(tex.getchannel("A"), mask))
         im.alpha_composite(tex)
         # Bluse (V) + Kragen
-        poly(im, [pt((-0.2, -0.03)), pt((0.2, -0.03)), pt((0.07, 0.62)), pt((-0.07, 0.62))], (242, 108, 112),
+        poly(im, [pt((-0.2, -0.03)), pt((0.2, -0.03)), pt((0.07, 0.62)), pt((-0.07, 0.62))], (238, 230, 216),
              radius=D * 0.05, amb=0.6)
         poly(im, [pt((-0.16, -0.03)), pt((0.16, -0.03)), pt((0.0, 0.2))], skin, radius=D * 0.04, amb=0.55)
         # Strickjacken-Kante
@@ -592,13 +592,6 @@ def person_raw(who, D, pose, expr="neutral", mouth=0.0, blink=False, look=(0.0, 
             x, y = pt((0.12 - k * 0.012, 0.52 + k * 0.2))
             ell(im, x, y, D * 0.05, D * 0.05, (205, 188, 160), amb=0.5, spec=0.4)
             d.ellipse([x - D * 0.01, y - D * 0.01, x + D * 0.01, y + D * 0.01], fill=(150, 130, 100))
-        # Blumen-Brosche
-        bx, by = pt((-0.3, 0.42))
-        for a in range(6):
-            ang = a * math.pi / 3
-            ell(im, bx + math.cos(ang) * D * 0.045, by + math.sin(ang) * D * 0.045, D * 0.04, D * 0.04,
-                (230, 50, 90), amb=0.5, spec=0.4)
-        ell(im, bx, by, D * 0.035, D * 0.035, GOLD, amb=0.5, spec=0.7, shine=30)
         # Taschen
         for sx in (-1, 1):
             x, y = pt((sx * 0.3, 1.0))
@@ -732,23 +725,15 @@ def _pattern(im, pts, D):
     d = ImageDraw.Draw(lay)
     xs = [p[0] for p in pts]
     ys = [p[1] for p in pts]
-    step = D * 0.16
+    step = D * 0.11
     r = max(1.5, D * 0.018)
     y = min(ys)
     row = 0
-    r = max(2.0, D * 0.026)
     while y < max(ys):
         x = min(xs) + (step / 2 if row % 2 else 0)
-        k = row
         while x < max(xs):
-            col = (255, 250, 240, 235) if k % 2 else (255, 225, 120, 235)
-            for a in range(5):
-                ang = a * 2 * math.pi / 5
-                px, py = x + math.cos(ang) * r, y + math.sin(ang) * r
-                d.ellipse([px - r * 0.7, py - r * 0.7, px + r * 0.7, py + r * 0.7], fill=col)
-            d.ellipse([x - r * 0.5, y - r * 0.5, x + r * 0.5, y + r * 0.5], fill=(250, 200, 60, 255))
+            d.ellipse([x - r, y - r, x + r, y + r], fill=(120, 100, 85, 150))
             x += step
-            k += 1
         y += step * 0.8
         row += 1
     m = Image.new("L", im.size, 0)

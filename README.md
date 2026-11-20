@@ -81,8 +81,8 @@ python3 render.py preview 5 30 # Standbilder
 ## oma-frieda-faust-folge-1.mp4 (Serie „Oma Frieda Faust“, Folge 1)
 
 **Titel:** Alle unterschätzen Oma Frieda · ca. 48 s · 1080×1920 · 30 fps · weicher 3D-Cartoon-Look
-Aussehen Oma Frieda: grau-weißer Dutt, schmale runde Brille, Perlenkette, cremefarbene Strickjacke mit roter Blumenbrosche,
-korallrote Bluse und korallroter Blümchenrock, weinrote Schuhe, braune Leder-Umhängetasche.
+Aussehen Oma Frieda: grau-weißer Dutt, schmale runde Brille, Perlenkette, cremefarbene Strickjacke mit hellem Oberteil,
+beiger Rock mit kleinen Punkten, braune Schuhe, braune Leder-Umhängetasche.
 Format: „Eingefrorenes Bild – Plattenkratzer – Ich erklär's euch“ mit Loop (letzter Frame = erster Frame).
 
 | Zeit | Szene |
