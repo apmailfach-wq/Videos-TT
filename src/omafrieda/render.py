@@ -130,7 +130,7 @@ def overlays(f, T):
         a = 0.0 if T < 2.0 else 34.55
         im = text_img("Er hat die FALSCHE Oma beklaut 😳", 80, (255, 255, 255), F_BLACK, max_w=880,
                       hl=(3, (255, 60, 60)))
-        paste_c(f, im, 500, 330, pop(T, a + 0.02, 0.22) if T < 2.0 else 1.0)
+        paste_c(f, im, 500, 330, 1.0)
     if 2.2 <= T < 3.9:
         im = text_img("⏪ 5 Minuten vorher …", 72, (255, 255, 255), F_BLACK, max_w=900)
         paste_c(f, im, 500, 330, pop(T, 2.2))

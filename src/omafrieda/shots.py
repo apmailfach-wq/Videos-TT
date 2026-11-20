@@ -69,7 +69,7 @@ def shot_hook(t, T):
     f = hook_frame(t)
     if t >= FREEZE_AT:
         dt = t - FREEZE_AT
-        z = 1.0 + 0.05 * ease_out(dt / 0.15)
+        z = 1.05 + 0.03 * ease_out(dt / 0.15)
         f = cam(f, z, 470, 760)
         f = grade(f, sat=0.75, contrast=1.08)
         if dt < 0.12:
@@ -77,7 +77,7 @@ def shot_hook(t, T):
             f.alpha_composite(fl)
     else:
         # Zeitlupe: leichter Kamera-Drift
-        f = cam(f, 1.0 + 0.02 * t, 470, 760)
+        f = cam(f, 1.05 + 0.06 * t, 470, 760)
     return f
 
 
