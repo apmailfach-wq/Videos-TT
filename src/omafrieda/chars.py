@@ -29,6 +29,15 @@ CFG = {
                   brow=(110, 60, 30), body="pass1", lash=True),
     "pass2": dict(skin=(205, 150, 110), hair="bald", eye=(60, 40, 25), glasses=False, old=True, female=False,
                   brow=(80, 80, 80), body="pass2"),
+    # Kinder (Folge 2: Schule)
+    "rowdy": dict(skin=(242, 198, 168), hair="spiky", eye=(70, 110, 60), glasses=False, old=False, female=False,
+                  brow=(140, 70, 35), body="rowdy"),
+    "kleiner": dict(skin=(250, 214, 190), hair="bowl", eye=(60, 135, 225), glasses=False, old=False, female=False,
+                    brow=(200, 160, 80), body="kleiner"),
+    "girl": dict(skin=(236, 190, 160), hair="pigtails", eye=(110, 72, 40), glasses=False, old=False, female=True,
+                 brow=(90, 55, 30), body="girl", lash=True),
+    "gamer": dict(skin=(190, 130, 95), hair="curly_dark", eye=(60, 40, 25), glasses=False, old=False, female=False,
+                  brow=(40, 28, 20), body="gamer"),
 }
 
 HAIR_WHITE = (246, 245, 252)
@@ -371,6 +380,38 @@ def head(who, D, expr="neutral", mouth=0.0, blink=False, look=(0.0, 0.0), gl=0.0
         poly(im, [(cx - rx * 1.08, cy + ry * 0.1), (cx - rx * 0.9, cy - ry * 0.85), (cx, cy - ry * 1.12),
                   (cx + rx * 0.9, cy - ry * 0.85), (cx + rx * 1.08, cy + ry * 0.1), (cx + rx * 0.7, cy - ry * 0.4),
                   (cx - rx * 0.2, cy - ry * 0.55)], (130, 72, 36), radius=D * 0.12, amb=0.45, spec=0.15)
+    elif hs == "spiky":
+        col = (176, 84, 38)
+        pts = [(cx - rx * 1.02, cy - ry * 0.25)]
+        for k in range(9):
+            u = k / 8
+            ang = math.pi * (1 - u)
+            bx = cx + math.cos(ang) * rx * 0.98
+            byy = cy - ry * 0.25 - math.sin(ang) * ry * 0.85
+            pts.append((bx, byy))
+            if k < 8:
+                ang2 = math.pi * (1 - (k + 0.5) / 8)
+                pts.append((cx + math.cos(ang2) * rx * 1.25, cy - ry * 0.3 - math.sin(ang2) * ry * 1.2))
+        pts += [(cx + rx * 1.02, cy - ry * 0.25), (cx, cy - ry * 0.55)]
+        poly(im, pts, col, radius=D * 0.06, amb=0.5, spec=0.2)
+        fd = ImageDraw.Draw(im)
+        for (fx, fy) in ((-0.22, 0.12), (-0.28, 0.18), (-0.18, 0.2), (0.22, 0.12), (0.28, 0.18), (0.18, 0.2)):
+            fd.ellipse([cx + fx * D - D * 0.012, cy + fy * D - D * 0.012, cx + fx * D + D * 0.012,
+                        cy + fy * D + D * 0.012], fill=(200, 120, 80))
+    elif hs == "bowl":
+        poly(im, [(cx - rx * 1.06, cy + ry * 0.05), (cx - rx * 1.0, cy - ry * 0.7), (cx - rx * 0.5, cy - ry * 1.12),
+                  (cx, cy - ry * 1.18), (cx + rx * 0.5, cy - ry * 1.12), (cx + rx * 1.0, cy - ry * 0.7),
+                  (cx + rx * 1.06, cy + ry * 0.05), (cx + rx * 0.85, cy - ry * 0.32), (cx - rx * 0.85, cy - ry * 0.32)],
+             (246, 206, 96), radius=D * 0.1, amb=0.55, spec=0.25)
+    elif hs == "pigtails":
+        hc = (96, 56, 30)
+        for sx in (-1, 1):
+            ell(im, cx + sx * rx * 1.25, cy + ry * 0.15, D * 0.17, D * 0.24, hc, amb=0.5, spec=0.15)
+            ell(im, cx + sx * rx * 1.02, cy - ry * 0.3, D * 0.08, D * 0.07, (240, 70, 140), amb=0.55, spec=0.3)
+        poly(im, [(cx - rx * 1.03, cy - ry * 0.05), (cx - rx * 0.95, cy - ry * 0.75), (cx - rx * 0.4, cy - ry * 1.1),
+                  (cx, cy - ry * 1.14), (cx + rx * 0.4, cy - ry * 1.1), (cx + rx * 0.95, cy - ry * 0.75),
+                  (cx + rx * 1.03, cy - ry * 0.05), (cx + rx * 0.6, cy - ry * 0.55), (cx, cy - ry * 0.62),
+                  (cx - rx * 0.6, cy - ry * 0.55)], hc, radius=D * 0.1, amb=0.5, spec=0.2)
     elif hs == "bald":
         for sx in (-1, 1):
             ell(im, cx + sx * rx * 0.92, cy - D * 0.06, D * 0.09, D * 0.14, (200, 200, 205), amb=0.6)
@@ -489,6 +530,34 @@ def bonbon_bag(c, x, y, D):
         bonbon(c, x + dx * D, y + dy * D, D * 0.16, (235, 70, 60) if k % 2 else (250, 160, 40))
 
 
+def sandwich(c, x, y, D):
+    """Pausenbrot (zwei Brotscheiben mit Salat und Käse)."""
+    w, h = D * 0.55, D * 0.18
+    rrect(c, x - w / 2, y + h * 0.4, x + w / 2, y + h * 1.4, D * 0.07, (214, 160, 90), amb=0.5, spec=0.15)
+    poly(c, [(x - w * 0.55, y + h * 0.45), (x + w * 0.55, y + h * 0.3), (x + w * 0.5, y + h * 0.6),
+             (x - w * 0.5, y + h * 0.7)], (110, 200, 80), radius=D * 0.02, amb=0.6)
+    poly(c, [(x - w * 0.45, y + h * 0.2), (x + w * 0.5, y + h * 0.15), (x + w * 0.3, y + h * 0.55),
+             (x - w * 0.4, y + h * 0.5)], (255, 210, 70), radius=D * 0.02, amb=0.6)
+    rrect(c, x - w / 2, y - h * 0.6, x + w / 2, y + h * 0.35, D * 0.08, (226, 172, 100), amb=0.5, spec=0.2)
+
+
+def phone(c, x, y, D, sock=False):
+    w, h = D * 0.24, D * 0.42
+    if sock:
+        rrect(c, x - w * 0.7, y - h * 0.62, x + w * 0.7, y + h * 0.62, D * 0.08, (247, 140, 182), amb=0.55, spec=0.15)
+        d = ImageDraw.Draw(c)
+        for k in range(6):
+            yy = y - h * 0.5 + k * h * 0.2
+            d.line([(x - w * 0.6, yy), (x + w * 0.6, yy)], fill=(222, 105, 150), width=max(1, int(D * 0.012)))
+        d.text((x, y), "MATHE", font=font(F_BLACK, max(6, int(D * 0.075))), fill=(255, 255, 255), anchor="mm")
+        return
+    rrect(c, x - w / 2, y - h / 2, x + w / 2, y + h / 2, D * 0.04, (30, 30, 40), amb=0.4, spec=0.5)
+    d = ImageDraw.Draw(c)
+    d.rounded_rectangle([x - w * 0.4, y - h * 0.42, x + w * 0.4, y + h * 0.42], radius=D * 0.02,
+                        fill=(90, 200, 255))
+    d.rectangle([x - w * 0.3, y - h * 0.1, x + w * 0.3, y + h * 0.1], fill=(255, 220, 60))
+
+
 def trophy(c, x, y, D):
     """Pokal; (x, y) = Griff unten."""
     rrect(c, x - D * 0.3, y + D * 0.25, x + D * 0.3, y + D * 0.42, D * 0.04, (60, 50, 40), amb=0.4)
@@ -522,6 +591,14 @@ BODY = {
                   shoe=(60, 40, 30), pants=(60, 70, 110)),
     "pass2": dict(sh=0.55, hip=0.52, tl=1.4, arm=0.3, hand=0.14, top=(90, 130, 90), leg=(110, 100, 90),
                   shoe=(50, 40, 30), pants=(110, 100, 90)),
+    "rowdy": dict(sh=0.56, hip=0.46, tl=1.2, arm=0.29, hand=0.14, top=(222, 58, 50), leg=(60, 82, 140),
+                  shoe=(245, 245, 245), pants=(60, 82, 140)),
+    "kleiner": dict(sh=0.42, hip=0.38, tl=1.0, arm=0.24, hand=0.12, top=(252, 200, 60), leg=(70, 110, 200),
+                    shoe=(225, 60, 60), pants=(70, 110, 200)),
+    "girl": dict(sh=0.45, hip=0.42, tl=1.05, arm=0.25, hand=0.12, top=(40, 180, 170), leg=(230, 110, 160),
+                 shoe=(250, 250, 250), pants=(230, 110, 160)),
+    "gamer": dict(sh=0.48, hip=0.44, tl=1.1, arm=0.27, hand=0.13, top=(80, 170, 80), leg=(110, 110, 120),
+                  shoe=(30, 30, 34), pants=(110, 110, 120)),
 }
 
 
@@ -675,6 +752,12 @@ def person_raw(who, D, pose, expr="neutral", mouth=0.0, blink=False, look=(0.0, 
             trophy(im, *pt(it[1]), D)
         elif kind == "bonbonbag":
             bonbon_bag(im, *pt(it[1]), D)
+        elif kind == "sandwich":
+            sandwich(im, *pt(it[1]), D)
+        elif kind == "phone":
+            phone(im, *pt(it[1]), D, sock=False)
+        elif kind == "phone_sock":
+            phone(im, *pt(it[1]), D, sock=True)
     # --- Arme vorne
     for side in (-1, 1):
         arm = P["arms"][0 if side < 0 else 1]
@@ -883,6 +966,42 @@ POSES = {
     "jung_offer": dict(lower="pants", legs=(((-0.2, 1.45), (-0.22, 2.15), (-0.24, 2.85)),
                                             ((0.2, 1.45), (0.22, 2.15), (0.24, 2.85))),
                        arms=(((-0.85, 0.5), (-1.3, 0.8), "front"), ((0.6, 0.75), (0.55, 1.35), "front"))),
+    "kid_stand": dict(lower="pants", legs=(((-0.18, 1.2), (-0.2, 1.7), (-0.22, 2.2)), ((0.18, 1.2), (0.2, 1.7), (0.22, 2.2))),
+                      arms=(((-0.55, 0.6), (-0.5, 1.05), "front"), ((0.55, 0.6), (0.5, 1.05), "front"))),
+    "kid_desk": dict(lower="pants", legs=(((-0.18, 1.2), (-0.2, 1.7), (-0.22, 2.2)), ((0.18, 1.2), (0.2, 1.7), (0.22, 2.2))),
+                     arms=(((-0.6, 0.75), (-0.3, 0.95), "front"), ((0.6, 0.75), (0.3, 0.95), "front"))),
+    "kid_laugh": dict(lower="pants", legs=(((-0.18, 1.2), (-0.2, 1.7), (-0.22, 2.2)), ((0.18, 1.2), (0.2, 1.7), (0.22, 2.2))),
+                      arms=(((-0.6, 0.6), (-0.15, 0.85), "front"), ((0.6, 0.6), (0.15, 0.85), "front"))),
+    "kid_cheer": dict(lower="pants", legs=(((-0.18, 1.2), (-0.3, 1.7), (-0.35, 2.2)), ((0.18, 1.2), (0.3, 1.7), (0.35, 2.2))),
+                      arms=(((-0.75, 0.0), (-0.7, -0.6), "front"), ((0.75, 0.0), (0.7, -0.6), "front"))),
+    "kid_throw": dict(lower="pants", legs=(((-0.18, 1.2), (-0.2, 1.7), (-0.22, 2.2)), ((0.18, 1.2), (0.2, 1.7), (0.22, 2.2))),
+                      arms=(((-0.6, 0.75), (-0.3, 0.95), "front"), ((0.75, 0.0), (0.55, -0.55), "front"))),
+    "kid_phone": dict(lower="pants", legs=(((-0.18, 1.2), (-0.2, 1.7), (-0.22, 2.2)), ((0.18, 1.2), (0.2, 1.7), (0.22, 2.2))),
+                      arms=(((-0.55, 0.7), (-0.12, 0.85), "front"), ((0.55, 0.7), (0.12, 0.85), "front"))),
+    "kid_reach": dict(lower="pants", legs=(((-0.18, 1.2), (-0.2, 1.7), (-0.22, 2.2)), ((0.18, 1.2), (0.2, 1.7), (0.22, 2.2))),
+                      arms=(((-0.6, 0.6), (-0.6, 1.05), "front"), ((0.7, 0.2), (0.95, -0.25), "front"))),
+    "rowdy_grab": dict(lower="pants", legs=(((-0.18, 1.2), (-0.25, 1.7), (-0.3, 2.25)), ((0.18, 1.2), (0.25, 1.7), (0.3, 2.25))),
+                       arms=(((-0.65, 0.7), (-0.35, 1.0), "front"), ((0.8, 0.05), (0.75, -0.5), "front"))),
+    "rowdy_point": dict(lower="pants", legs=(((-0.18, 1.2), (-0.25, 1.7), (-0.3, 2.25)), ((0.18, 1.2), (0.25, 1.7), (0.3, 2.25))),
+                        arms=(((-0.75, 0.35), (-1.15, 0.2), "front"), ((0.8, 0.05), (0.75, -0.5), "front"))),
+    "rowdy_fly": dict(lower="pants", legs=(((-0.18, 1.25), (-0.6, 1.6), (-0.75, 2.1)), ((0.18, 1.25), (0.5, 1.8), (0.4, 2.3))),
+                      arms=(((-0.85, -0.05), (-1.15, -0.45), "front"), ((0.85, 0.0), (1.2, -0.35), "front"))),
+    "rowdy_sit": dict(lower="pants", legs=(((-0.18, 1.25), (-0.5, 1.3), (-0.65, 1.75)), ((0.18, 1.25), (0.5, 1.3), (0.65, 1.75))),
+                      arms=(((-0.65, 0.6), (-0.7, 1.15), "front"), ((0.65, 0.6), (0.7, 1.15), "front"))),
+    "rowdy_take": dict(lower="pants", legs=(((-0.18, 1.25), (-0.5, 1.3), (-0.65, 1.75)), ((0.18, 1.25), (0.5, 1.3), (0.65, 1.75))),
+                       arms=(((-0.65, 0.6), (-0.7, 1.15), "front"), ((0.7, 0.55), (0.9, 0.15), "front"))),
+    "oma_grab": dict(lower="skirt_stand", arms=(((-0.75, 0.45), (-1.25, 0.3), "front"),
+                                                ((-0.4, 0.55), (-1.1, 0.4), "front"))),
+    "oma_throw": dict(lower="skirt_stand", arms=(((-0.6, 0.0), (-0.9, -0.55), "front"),
+                                                 ((0.45, 0.0), (0.2, -0.6), "front"))),
+    "oma_knit_stand": dict(lower="skirt_stand", arms=(((-0.6, 0.85), (-0.12, 1.1), "front"),
+                                                      ((0.6, 0.85), (0.12, 1.1), "front"))),
+    "oma_catch": dict(lower="skirt_stand", arms=(((-0.6, 0.85), (-0.12, 1.1), "front"),
+                                                 ((0.8, 0.3), (1.05, -0.2), "front"))),
+    "oma_take_phone": dict(lower="skirt_stand", arms=(((-0.62, 0.7), (-0.6, 1.25), "front"),
+                                                      ((0.75, 0.45), (1.1, 0.35), "front"))),
+    "oma_show_phone": dict(lower="skirt_stand", arms=(((-0.62, 0.7), (-0.6, 1.25), "front"),
+                                                      ((0.75, 0.2), (0.75, -0.25), "front"))),
     "pass_stand": dict(lower="pants", legs=STAND_LEGS, arms=(((-0.6, 0.7), (-0.55, 1.25), "front"),
                                                              ((0.6, 0.7), (0.55, 1.25), "front"))),
     "pass_shock": dict(lower="pants", legs=STAND_LEGS, arms=(((-0.7, 0.4), (-0.3, -0.05), "front"),
