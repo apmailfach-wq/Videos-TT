@@ -109,22 +109,25 @@ python3 render.py preview 0.3 14 25.9   # Standbilder -> build/omafrieda/stills/
 - `script.py` – Text, Stimmen, Zeitfenster je Zeile · `chars.py` – Figuren (Oma Frieda, Dieb, Bus-Typ, Muskeltypen …)
 - `world.py` – Park/Brunnen, Bus, Fitnessstudio, Foto · `shots.py` – Schnittliste · `gfx.py` – Soft-3D-Shader, Text
 
-## oma-frieda-faust-folge-2.mp4 (Folge 2: Oma Frieda geht zur Schule)
+## oma-frieda-faust-folge-2.mp4 (Folge 2: Oma Frieda geht zur Schule – neue Fassung)
 
-42,5 s · 1080×1920 · 30 fps · gleicher Look und gleiches Format wie Folge 1 (Hook mit Freeze, Rückblende, Loop).
+63 s · 1080×1920 · 30 fps · natürlicherer Look (Hände mit Fingern, Schnürschuhe, Waden, gedeckte Farben, Filmkorn),
+realistischer Schulhof (Betonbau, Asphalt mit Rissen, Graffiti, Fahrradständer, Dixi-Klos + Zettel „Toiletten defekt“).
 
 | Zeit | Szene |
 |---|---|
-| 0–2 s | Hook: Rowdy fliegt kopfüber über die Tischtennisplatte, „Er hat die FALSCHE Lehrerin geärgert 😳“ |
-| 2–8 s | „Heute Morgen …“: Oma kommt zur Schule, schreibt „Frau Faust“ an die Tafel – Vertretungslehrerin |
-| 8–15 s | Klasse lacht, Papierkügelchen → Oma fängt es mit der Stricknadel, ohne hinzusehen („Die Stricknadeln 🧶“), Foto-Rückblende Judo |
-| 15–19 s | Handy unterm Tisch → „Handy weg. Erst Mathe.“ – Handy steckt in rosa Strick-Socke |
-| 19–29 s | Große Pause: Rowdy klaut dem Kleinen das Pausenbrot → „Der Blick“ → Judo-Wurf in den Sandkasten |
-| 29–36 s | Hustenbonbon für den sandigen Rowdy, Brot zurück an den Kleinen, „Danke, Frau Faust!“ + Tipp gegen Mobbing |
-| 36–42 s | „Mit Frieda Faust legt man sich nicht an!“ → Abstimmung 1️⃣ Supermarkt 2️⃣ Disco 3️⃣ Arztpraxis → Loop |
+| 0–2 s | Hook: Achtklässler kippt nach Omas Fußfeger rückwärts ins Dixi, „Er hat sich mit der FALSCHEN Oma angelegt 😳“ |
+| 2–8 s | „Heute Morgen …“: Oma kommt zur Schule (Dixis, Zettel), „Frau Faust“ an der Tafel – Vertretungslehrerin |
+| 8–17 s | „Ey, die Oma ist unsere Lehrerin?“ – „Und ihr seid heute meine Enkel. Pech gehabt.“ – Papierkügelchen auf der Stricknadel: „Zielen üben wir in Sport.“ |
+| 17–27 s | „Handy weg. Ich hab achtzig Jahre ohne geschafft.“ – „Die Klos sind schon wieder kaputt!“ – „Kaputt gemacht, Kind. Das ist ein Unterschied.“ |
+| 27–41 s | Große Pause: zwei Achtklässler nehmen einem Fünftklässler den Rucksack weg, „Ab ins Dixi mit dir!“ – Oma: „Zwei Große gegen einen Kleinen. Wie mutig.“ – „Ich bin achtzig. Ich halt mich aus gar nichts mehr raus.“ |
+| 41–47 s | Griff → Schritt → Fußfeger (sichtbar, Zeitlupe) → er kippt ins Dixi, Tür knallt, BESETZT. „Du auch?“ – „Ich geh schon!“ (zweiter verschwindet selbst im Dixi) |
+| 47–56 s | Hustenbonbon unter der Tür durch: „Riecht ja streng da drin.“ – Rucksack zurück: „Das ist nicht petzen. Das ist mutig.“ + Tipp gegen Mobbing |
+| 56–63 s | „Mit Frieda Faust legt man sich nicht an!“ → Abstimmung 1️⃣ Supermarkt 2️⃣ Disco 3️⃣ Arztpraxis → Loop |
 
 ```bash
 cd src/omafrieda2
 python3 tts.py && python3 render.py      # -> ../../oma-frieda-faust-folge-2.mp4
 ```
-Nutzt Figuren/Grafik aus `src/omafrieda/` (chars.py, gfx.py, world.py); neu: `world2.py` (Schulhof, Klassenzimmer), `shots2.py`.
+Nutzt Figuren/Grafik aus `src/omafrieda/`; neu: `world3.py` (Schulhof + Dixi-Klos), `shots3.py` (Schnittliste),
+`world2.py` (Klassenzimmer).

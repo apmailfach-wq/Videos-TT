@@ -665,7 +665,7 @@ def main():
     build_audio(wav)
     silent = BUILD / "video_noaudio.mp4"
     ff = subprocess.Popen(["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s",
-                           f"{W}x{H}", "-r", str(FPS), "-i", "-", "-c:v", "libx264", "-preset", "medium", "-crf", "18",
+                           f"{W}x{H}", "-r", str(FPS), "-i", "-", "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-maxrate", "9M", "-bufsize", "18M",
                            "-pix_fmt", "yuv420p", str(silent)], stdin=subprocess.PIPE)
     procs = int(os.environ.get("PROCS", "4"))
     with Pool(procs, initializer=init) as pool:

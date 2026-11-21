@@ -36,6 +36,8 @@ CFG = {
                     brow=(200, 160, 80), body="kleiner"),
     "girl": dict(skin=(236, 190, 160), hair="pigtails", eye=(110, 72, 40), glasses=False, old=False, female=True,
                  brow=(90, 55, 30), body="girl", lash=True),
+    "bully2": dict(skin=(232, 190, 160), hair="cap", eye=(80, 60, 40), glasses=False, old=False, female=False,
+                   brow=(70, 50, 30), body="bully2"),
     "gamer": dict(skin=(190, 130, 95), hair="curly_dark", eye=(60, 40, 25), glasses=False, old=False, female=False,
                   brow=(40, 28, 20), body="gamer"),
 }
@@ -541,6 +543,17 @@ def sandwich(c, x, y, D):
     rrect(c, x - w / 2, y - h * 0.6, x + w / 2, y + h * 0.35, D * 0.08, (226, 172, 100), amb=0.5, spec=0.2)
 
 
+def backpack(c, x, y, D):
+    """Kinder-Rucksack; (x, y) = Griffschlaufe oben."""
+    d = ImageDraw.Draw(c)
+    d.arc([x - D * 0.1, y - D * 0.06, x + D * 0.1, y + D * 0.12], 180, 360, fill=(30, 60, 120), width=max(2, int(D * 0.035)))
+    rrect(c, x - D * 0.3, y + D * 0.04, x + D * 0.3, y + D * 0.72, D * 0.14, (50, 110, 210), amb=0.5, spec=0.2)
+    rrect(c, x - D * 0.22, y + D * 0.38, x + D * 0.22, y + D * 0.66, D * 0.08, (240, 190, 40), amb=0.55, spec=0.2)
+    d = ImageDraw.Draw(c)
+    d.line([(x - D * 0.2, y + D * 0.38), (x + D * 0.2, y + D * 0.38)], fill=(40, 40, 50), width=max(1, int(D * 0.015)))
+    ell(c, x + D * 0.12, y + D * 0.2, D * 0.06, D * 0.06, (250, 90, 120), amb=0.6, spec=0.3)
+
+
 def phone(c, x, y, D, sock=False):
     w, h = D * 0.24, D * 0.42
     if sock:
@@ -573,7 +586,7 @@ def trophy(c, x, y, D):
 # ------------------------------------------------------------------ Körper
 BODY = {
     # sh: Schulterbreite (halb), hip: Hüfte (halb), tl: Rumpflänge, arm: Ärmeldicke, top: Farbe Oberteil
-    "oma": dict(sh=0.47, hip=0.5, tl=1.25, arm=0.29, hand=0.135, top=(228, 214, 192), leg=(236, 205, 185),
+    "oma": dict(sh=0.47, hip=0.5, tl=1.25, arm=0.26, hand=0.135, top=(228, 214, 192), leg=(236, 205, 185),
                 shoe=(120, 72, 38), skirt=(178, 164, 156)),
     "judo": dict(sh=0.52, hip=0.48, tl=1.3, arm=0.3, hand=0.135, top=(250, 250, 248), leg=(250, 250, 248),
                  shoe=None, pants=(250, 250, 248)),
@@ -597,6 +610,8 @@ BODY = {
                     shoe=(225, 60, 60), pants=(70, 110, 200)),
     "girl": dict(sh=0.45, hip=0.42, tl=1.05, arm=0.25, hand=0.12, top=(40, 180, 170), leg=(230, 110, 160),
                  shoe=(250, 250, 250), pants=(230, 110, 160)),
+    "bully2": dict(sh=0.56, hip=0.46, tl=1.3, arm=0.29, hand=0.14, top=(44, 44, 52), leg=(120, 120, 128),
+                   shoe=(245, 245, 245), pants=(120, 120, 128)),
     "gamer": dict(sh=0.48, hip=0.44, tl=1.1, arm=0.27, hand=0.13, top=(80, 170, 80), leg=(110, 110, 120),
                   shoe=(30, 30, 34), pants=(110, 110, 120)),
 }
@@ -696,6 +711,9 @@ def person_raw(who, D, pose, expr="neutral", mouth=0.0, blink=False, look=(0.0, 
         for sx in (-1, 1):
             d.line([pt((sx * b["sh"] * 0.98, 0.15)), pt((sx * b["hip"] * 1.0, tl - 0.05))], fill=(240, 240, 240),
                    width=max(2, int(D * 0.03)))
+    elif body == "bully2":
+        d.text(pt((0.0, 0.55)), "NO", font=font(F_BLACK, max(8, int(D * 0.16))), fill=(250, 250, 250), anchor="mm")
+        d.text(pt((0.0, 0.78)), "RULES", font=font(F_BLACK, max(8, int(D * 0.11))), fill=(240, 70, 70), anchor="mm")
     elif body == "jung":
         poly(im, [pt((-0.2, -0.03)), pt((0.2, -0.03)), pt((0.1, tl)), pt((-0.1, tl))], (250, 250, 250),
              radius=D * 0.05, amb=0.6)
@@ -754,6 +772,8 @@ def person_raw(who, D, pose, expr="neutral", mouth=0.0, blink=False, look=(0.0, 
             bonbon_bag(im, *pt(it[1]), D)
         elif kind == "sandwich":
             sandwich(im, *pt(it[1]), D)
+        elif kind == "backpack":
+            backpack(im, *pt(it[1]), D)
         elif kind == "phone":
             phone(im, *pt(it[1]), D, sock=False)
         elif kind == "phone_sock":
@@ -791,15 +811,14 @@ def _arm(im, pt, side, b, arm, topc, skin, D):
         ell(im, mx, my, D * b["arm"] * 0.62, D * b["arm"] * 0.55, skin, amb=0.45, spec=0.3)
     elif b["top"] != skin:
         # Ärmelbündchen
-        cxx, cyy = h[0] + (e[0] - h[0]) * 0.28, h[1] + (e[1] - h[1]) * 0.28
-        ell(im, cxx, cyy, D * b["arm"] * 0.55, D * b["arm"] * 0.5, darker(topc, 0.9), amb=0.45)
-    ell(im, h[0], h[1], D * b["hand"], D * b["hand"] * 1.05, skin, amb=0.5, spec=0.2)
+        cxx, cyy = h[0] + (e[0] - h[0]) * 0.16, h[1] + (e[1] - h[1]) * 0.16
+        ell(im, cxx, cyy, D * b["arm"] * 0.46, D * b["arm"] * 0.3, darker(topc, 0.9), amb=0.5)
+    S = D * b["hand"] / 0.135 * 1.25
     if mode == "finger":
-        # Zeigefinger nach oben (Brille hochschieben)
-        limb(im, (h[0], h[1] - D * 0.05), (h[0] + D * 0.02, h[1] - D * 0.22), D * 0.07, skin, amb=0.5)
-    if mode == "fist":
-        ImageDraw.Draw(im).arc([h[0] - D * 0.08, h[1] - D * 0.06, h[0] + D * 0.08, h[1] + D * 0.08], 180, 360,
-                               fill=darker(skin, 0.8), width=max(2, int(D * 0.015)))
+        # Zeigefinger nach oben (Brille hochschieben): Hand zeigt nach oben
+        hand_draw(im, h, (h[0], h[1] + D), S, skin, "finger", side)
+    else:
+        hand_draw(im, h, e, S, skin, mode, side)
 
 
 def _pattern(im, pts, D):
@@ -854,16 +873,21 @@ def _legs(im, pt, b, P, D, skin, wet_f):
     if lower in ("skirt_stand", "skirt_sit"):
         legc = b["leg"]
         if lower == "skirt_stand":
-            for sx in (-1, 1):
-                limb(im, pt((sx * 0.2, tl + 0.6)), pt((sx * 0.21, tl + 1.45)), D * 0.2, legc, amb=0.5, spec=0.2)
-                ell(im, *pt((sx * 0.24, tl + 1.52)), D * 0.17, D * 0.1, shoe, amb=0.45, spec=0.35)
-            sk = [pt((-b["hip"], tl - 0.05)), pt((b["hip"], tl - 0.05)), pt((0.66, tl + 0.92)), pt((-0.66, tl + 0.92))]
+            legs = P.get("legs") or (((-0.2, tl + 0.1), (-0.21, tl + 0.85), (-0.21, tl + 1.45)),
+                                     ((0.2, tl + 0.1), (0.21, tl + 0.85), (0.21, tl + 1.45)))
+            for side, (hp, kn, ft) in zip((-1, 1), legs):
+                _leg_natural(im, pt(kn), pt(ft), D, legc)
+                shoe_draw(im, *pt(ft), D, shoe, "lace", side)
+            (_, kl, _), (_, kr, _) = legs
+            hem_l = (min(kl[0] - 0.45, -0.5), max(kl[1], tl + 0.85) + 0.07)
+            hem_r = (max(kr[0] + 0.45, 0.5), max(kr[1], tl + 0.85) + 0.07)
+            sk = [pt((-b["hip"], tl - 0.05)), pt((b["hip"], tl - 0.05)), pt(hem_r), pt(hem_l)]
             poly(im, sk, darker(b["skirt"], wet_f), radius=D * 0.18, amb=0.45, spec=0.12, rim=0.2)
             _pattern(im, sk, D)
         else:
             for sx in (-1, 1):
-                limb(im, pt((sx * 0.24, tl + 0.5)), pt((sx * 0.25, tl + 1.12)), D * 0.21, legc, amb=0.5, spec=0.2)
-                ell(im, *pt((sx * 0.27, tl + 1.18)), D * 0.17, D * 0.11, shoe, amb=0.45, spec=0.35)
+                _leg_natural(im, pt((sx * 0.25, tl + 0.5)), pt((sx * 0.25, tl + 1.12)), D, legc)
+                shoe_draw(im, *pt((sx * 0.25, tl + 1.12)), D, shoe, "lace", sx)
             sk = [pt((-b["hip"], tl - 0.05)), pt((b["hip"], tl - 0.05)), pt((0.64, tl + 0.42)), pt((0.6, tl + 0.6)),
                   pt((-0.6, tl + 0.6)), pt((-0.64, tl + 0.42))]
             poly(im, sk, darker(b["skirt"], wet_f), radius=D * 0.18, amb=0.45, spec=0.12, rim=0.2)
@@ -874,12 +898,95 @@ def _legs(im, pt, b, P, D, skin, wet_f):
     for side in (-1, 1):
         hip_p, knee, foot = P["legs"][0 if side < 0 else 1]
         limb3(im, pt(hip_p), pt(knee), pt(foot), D * lw, pants, amb=0.45, spec=0.12, rim=0.15)
+        fx, fy = pt(foot)
         if shoe:
-            fx, fy = pt(foot)
-            ell(im, fx + side * D * 0.04, fy + D * 0.06, D * 0.19, D * 0.11, shoe, amb=0.5, spec=0.35)
+            shoe_draw(im, fx, fy, D * (1.15 if b.get("tank") else 1.0), shoe, "sneaker" if sum(shoe) > 500 else "lace",
+                      side)
+        else:
+            shoe_draw(im, fx, fy, D, skin, "bare", side)
     if b.get("tank") or b.get("pants"):
         rrect(im, *pt((-b["hip"] * 1.02, tl - 0.15)), *pt((b["hip"] * 1.02, tl + 0.2)), D * 0.1, pants, amb=0.45,
               spec=0.12)
+
+
+def _leg_natural(im, knee, ankle, D, col):
+    """Unterschenkel mit Wade und schmalem Knöchel."""
+    kx, ky = knee
+    ax, ay = ankle
+    limb(im, (kx, ky), (ax, ay - D * 0.04), D * 0.13, col, amb=0.5, spec=0.2)
+    cx, cy = kx + (ax - kx) * 0.3, ky + (ay - ky) * 0.3
+    ang = math.degrees(math.atan2(ax - kx, ay - ky))
+    calf = Image.new("RGBA", (int(D * 0.5), int(D * 0.6)), (0, 0, 0, 0))
+    ell(calf, calf.width / 2, calf.height / 2, D * 0.085, D * 0.19, col, amb=0.5, spec=0.2)
+    calf = calf.rotate(ang, resample=Image.BICUBIC)
+    im.alpha_composite(calf, (int(cx - calf.width / 2), int(cy - calf.height / 2)))
+
+
+def shoe_draw(im, x, y, D, col, kind="lace", side=1):
+    """Schuh in Vorderansicht; (x, y) = Knöchel."""
+    if kind == "bare":
+        ell(im, x, y + D * 0.06, D * 0.09, D * 0.075, col, amb=0.5, spec=0.2)
+        d = ImageDraw.Draw(im)
+        for k in range(4):
+            tx = x - D * 0.06 + k * D * 0.04
+            d.ellipse([tx - D * 0.018, y + D * 0.1, tx + D * 0.018, y + D * 0.135], fill=darker(col, 0.92))
+        return
+    # Sohle
+    sole = (70, 52, 40) if kind == "lace" else (235, 235, 238)
+    rrect(im, x - D * 0.14, y + D * 0.1, x + D * 0.14, y + D * 0.155, D * 0.025, sole, amb=0.5, spec=0.2)
+    # Schuh-Körper: Knöchelöffnung oben, breite Kappe unten
+    poly(im, [(x - D * 0.085, y - D * 0.03), (x + D * 0.085, y - D * 0.03), (x + D * 0.135, y + D * 0.07),
+              (x + D * 0.13, y + D * 0.12), (x - D * 0.13, y + D * 0.12), (x - D * 0.135, y + D * 0.07)], col,
+         radius=D * 0.05, amb=0.45, spec=0.35 if kind == "lace" else 0.25)
+    ell(im, x, y + D * 0.09, D * 0.12, D * 0.045, mixc(col, (255, 255, 255), 0.08), amb=0.5, spec=0.4)
+    d = ImageDraw.Draw(im)
+    if kind == "lace":
+        lc = mixc(col, (255, 240, 220), 0.35)
+        for k in range(3):
+            yy = y + k * D * 0.028
+            d.line([(x - D * 0.04, yy), (x + D * 0.04, yy + D * 0.012)], fill=lc, width=max(1, int(D * 0.012)))
+            d.line([(x + D * 0.04, yy), (x - D * 0.04, yy + D * 0.012)], fill=lc, width=max(1, int(D * 0.012)))
+    else:
+        d.line([(x - D * 0.12, y + D * 0.06), (x - D * 0.02, y + D * 0.03)], fill=(220, 60, 60) if sum(col) > 600
+               else (240, 240, 240), width=max(2, int(D * 0.02)))
+
+
+def hand_draw(im, h, e, S, skin, mode, side):
+    """Natürliche Hand: Handfläche, vier Finger, Daumen; ausgerichtet am Unterarm (Ellbogen e -> Hand h)."""
+    ux, uy = h[0] - e[0], h[1] - e[1]
+    n = math.hypot(ux, uy) or 1.0
+    ux, uy = ux / n, uy / n
+    px, py = uy * (-side), -ux * (-side)          # zeigt zur Körpermitte (Daumenseite)
+
+    def P(a, bb):
+        return (h[0] + ux * a * S + px * bb * S, h[1] + uy * a * S + py * bb * S)
+
+    fing = mixc(skin, (225, 150, 130), 0.08)
+    # Handfläche als gedrehte Ellipse
+    pts = []
+    for k in range(18):
+        t = 2 * math.pi * k / 18
+        pts.append(P(0.03 + 0.11 * math.sin(t), 0.09 * math.cos(t)))
+    poly(im, pts, skin, radius=S * 0.05, amb=0.5, spec=0.2)
+    d = ImageDraw.Draw(im)
+    if mode in ("fist", "grip"):
+        for k, bb in enumerate((-0.06, -0.02, 0.02, 0.06)):
+            x, y = P(0.12, bb)
+            ell(im, x, y, S * 0.03, S * 0.03, fing, amb=0.5, spec=0.25)
+        limb(im, P(0.0, 0.08), P(0.1, 0.03), S * 0.045, fing, amb=0.5, spec=0.25)
+        return
+    lens = (0.12, 0.15, 0.14, 0.11)
+    if mode == "finger":
+        lens = (0.05, 0.05, 0.05, 0.24)
+    for k, (bb, L) in enumerate(zip((-0.058, -0.02, 0.02, 0.058), lens)):
+        a0 = 0.1
+        curl = 0.0
+        limb(im, P(a0, bb), P(a0 + L, bb * 0.8 + curl), S * 0.043, fing, amb=0.5, spec=0.25)
+        tx, ty = P(a0 + L - 0.012, bb * 0.8 + curl)
+        d = ImageDraw.Draw(im)
+        r = S * 0.012
+        d.ellipse([tx - r, ty - r, tx + r, ty + r], fill=mixc(skin, (255, 255, 255), 0.45))
+    limb(im, P(0.0, 0.085), P(0.09, 0.13), S * 0.048, fing, amb=0.5, spec=0.25)
 
 
 # Arm-Format: (ellbogen, hand, modus) in Kopf-Einheiten relativ zum Nacken; modus "front"/"back"/...
@@ -1002,6 +1109,28 @@ POSES = {
                                                       ((0.75, 0.45), (1.1, 0.35), "front"))),
     "oma_show_phone": dict(lower="skirt_stand", arms=(((-0.62, 0.7), (-0.6, 1.25), "front"),
                                                       ((0.75, 0.2), (0.75, -0.25), "front"))),
+    "b_stand": dict(lower="pants", legs=(((-0.18, 1.3), (-0.2, 2.0), (-0.22, 2.7)), ((0.18, 1.3), (0.2, 2.0), (0.22, 2.7))), arms=(((-0.62, 0.7), (-0.58, 1.3), "front"), ((0.62, 0.7), (0.58, 1.3), "front"))),
+    "b_hold": dict(lower="pants", legs=(((-0.18, 1.3), (-0.2, 2.0), (-0.22, 2.7)), ((0.18, 1.3), (0.2, 2.0), (0.22, 2.7))), arms=(((-0.62, 0.7), (-0.58, 1.3), "front"), ((0.85, 0.05), (0.8, -0.55), "fist"))),
+    "b_push": dict(lower="pants", legs=(((-0.18, 1.3), (-0.35, 1.95), (-0.45, 2.7)), ((0.18, 1.3), (0.3, 2.0), (0.3, 2.7))),
+                   arms=(((0.7, 0.35), (1.1, 0.4), "front"), ((-0.1, 0.6), (0.85, 0.55), "front"))),
+    "b_point": dict(lower="pants", legs=(((-0.18, 1.3), (-0.2, 2.0), (-0.22, 2.7)), ((0.18, 1.3), (0.2, 2.0), (0.22, 2.7))), arms=(((-0.8, 0.35), (-1.2, 0.2), "front"), ((0.62, 0.7), (0.58, 1.3), "front"))),
+    "b_grab": dict(lower="pants", legs=(((-0.18, 1.3), (-0.2, 2.0), (-0.22, 2.7)), ((0.18, 1.3), (0.2, 2.0), (0.22, 2.7))), arms=(((-0.8, 0.45), (-1.25, 0.35), "fist"), ((0.6, 0.75), (0.2, 0.55), "fist"))),
+    "b_trip": dict(lower="pants", legs=(((-0.18, 1.3), (-0.7, 1.7), (-1.1, 1.95)), ((0.18, 1.3), (-0.4, 1.85), (-0.85, 2.2))),
+                   arms=(((-0.75, 0.0), (-0.7, -0.55), "front"), ((0.75, 0.0), (0.7, -0.55), "front"))),
+    "b_fall": dict(lower="pants", legs=(((-0.15, 1.3), (-0.15, 2.0), (-0.12, 2.7)), ((0.15, 1.3), (0.15, 2.0), (0.12, 2.7))),
+                   arms=(((-0.85, -0.05), (-1.1, -0.5), "front"), ((0.85, -0.05), (1.1, -0.5), "front"))),
+    "b_run": dict(lower="pants", legs=(((-0.18, 1.3), (-0.6, 1.8), (-0.9, 2.3)), ((0.18, 1.3), (0.55, 1.75), (0.6, 2.5))),
+                  arms=(((-0.75, 0.4), (-0.4, 0.0), "fist"), ((0.75, 0.6), (1.0, 1.0), "fist"))),
+    "oma_ready": dict(lower="skirt_stand", legs=(((-0.2, 1.35), (-0.21, 2.1), (-0.21, 2.7)), ((0.2, 1.35), (0.21, 2.1), (0.21, 2.7))), arms=(((-0.62, 0.7), (-0.5, 1.15), "front"), ((0.62, 0.7), (0.5, 1.15), "front"))),
+    "oma_grip": dict(lower="skirt_stand", legs=(((-0.2, 1.35), (-0.21, 2.1), (-0.21, 2.7)), ((0.2, 1.35), (0.21, 2.1), (0.21, 2.7))), arms=(((0.05, 0.6), (0.7, 0.5), "grip"), ((0.75, 0.3), (1.0, 0.1), "grip"))),
+    "oma_step": dict(lower="skirt_stand", legs=(((-0.2, 1.35), (-0.3, 2.1), (-0.35, 2.7)), ((0.2, 1.35), (0.42, 2.05), (0.52, 2.68))),
+                     arms=(((0.1, 0.6), (0.85, 0.45), "grip"), ((0.8, 0.3), (1.1, 0.15), "grip"))),
+    "oma_sweep": dict(lower="skirt_stand", legs=(((-0.2, 1.35), (-0.34, 2.05), (-0.4, 2.7)), ((0.2, 1.35), (0.68, 1.95), (1.12, 2.42))),
+                      arms=(((0.0, 0.7), (0.72, 0.68), "grip"), ((0.75, 0.4), (0.95, 0.38), "grip"))),
+    "oma_pull": dict(lower="skirt_stand", legs=(((-0.2, 1.35), (-0.3, 2.08), (-0.34, 2.7)), ((0.2, 1.35), (0.45, 2.05), (0.6, 2.66))),
+                     arms=(((-0.3, 0.8), (0.25, 1.0), "grip"), ((0.6, 0.6), (0.6, 0.85), "grip"))),
+    "oma_knock": dict(lower="skirt_stand", legs=(((-0.2, 1.35), (-0.21, 2.1), (-0.21, 2.7)), ((0.2, 1.35), (0.21, 2.1), (0.21, 2.7))), arms=(((-0.62, 0.7), (-0.6, 1.25), "front"), ((0.85, 0.3), (1.1, -0.05), "fist"))),
+    "oma_give_bag": dict(lower="skirt_stand", legs=(((-0.2, 1.35), (-0.21, 2.1), (-0.21, 2.7)), ((0.2, 1.35), (0.21, 2.1), (0.21, 2.7))), arms=(((-0.62, 0.7), (-0.6, 1.25), "front"), ((-0.55, 0.55), (-1.05, 0.5), "front"))),
     "pass_stand": dict(lower="pants", legs=STAND_LEGS, arms=(((-0.6, 0.7), (-0.55, 1.25), "front"),
                                                              ((0.6, 0.7), (0.55, 1.25), "front"))),
     "pass_shock": dict(lower="pants", legs=STAND_LEGS, arms=(((-0.7, 0.4), (-0.3, -0.05), "front"),
