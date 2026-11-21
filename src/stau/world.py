@@ -194,6 +194,19 @@ def build_materials():
     M["leaf2"] = noise_color_mat("leaf2", (0.03, 0.09, 0.025), (0.09, 0.2, 0.04), 6, rough=0.8, bump=0.6)
     M["paint"] = car_paint_mat()
     M["glass"] = mat("glass", (0.01, 0.012, 0.016), rough=0.04, metal=0.3)
+    gh = mat("glass_hero", (0.12, 0.16, 0.2), rough=0.02)
+    gh.node_tree.nodes["Principled BSDF"].inputs["Alpha"].default_value = 0.3
+    M["glass_hero"] = gh
+    M["redstripe"] = mat("redstripe", (0.75, 0.03, 0.02), rough=0.4)
+    M["orangestripe"] = mat("orangestripe", (1.0, 0.35, 0.0), rough=0.4)
+    bl = mat("bluelight", (0.05, 0.15, 1.0), rough=0.2, emit=(0.1, 0.3, 1.0), emit_strength=1.0)
+    nt = bl.node_tree
+    oi = nt.nodes.new("ShaderNodeObjectInfo")
+    mul = nt.nodes.new("ShaderNodeMath"); mul.operation = "MULTIPLY_ADD"
+    mul.inputs[1].default_value = 40.0; mul.inputs[2].default_value = 0.5
+    nt.links.new(oi.outputs["Alpha"], mul.inputs[0])
+    nt.links.new(mul.outputs[0], nt.nodes["Principled BSDF"].inputs["Emission Strength"])
+    M["bluelight"] = bl
     M["tire"] = mat("tire", (0.02, 0.02, 0.02), rough=0.8)
     M["rim"] = mat("rim", (0.5, 0.5, 0.52), rough=0.3, metal=1.0)
     M["tail"] = brake_mat()
@@ -201,6 +214,7 @@ def build_materials():
     M["plate"] = mat("plate", (0.85, 0.85, 0.82), rough=0.4)
     M["black"] = mat("plastic", (0.025, 0.025, 0.028), rough=0.6)
     M["truckbox"] = mat("truckbox", (0.75, 0.76, 0.78), rough=0.45, metal=0.2)
+    M["reflector"] = mat("reflector", (1.0, 0.6, 0.1), rough=0.2, emit=(1, 0.55, 0.1), emit_strength=2.0)
     M["sign"] = mat("signblue", (0.02, 0.12, 0.45), rough=0.4)
     M["redwhite"] = None  # built in baken()
 
@@ -326,6 +340,18 @@ def build_road(merge_end=None):
         obj("gbeam", box("gb", (14.8, 0.4, 0.5), (6.2, gy, 7.0), M["darksteel"]))
         for sx in (LANES[0], LANES[2]):
             obj("gsign", box("gs", (2.6, 0.12, 2.4), (sx, gy - 0.3, 5.6), M["sign"]))
+    # Leitpfosten (delineator posts) every 50 m – white with black band, as on German motorways
+    lp = join_meshes("leitpfosten", [
+        box("lpw", (0.12, 0.12, 1.0), (0, 0, 0.5), M["white"], bevel=0.02),
+        box("lpb", (0.13, 0.13, 0.25), (0, 0, 0.82), M["black"]),
+        box("lpr", (0.06, 0.02, 0.12), (0, -0.07, 0.82), M["reflector"]),
+    ])
+    y = 0.0
+    while y > ROAD_Y0:
+        y -= 50
+    while y < ROAD_Y1:
+        obj("leitpfosten", lp, (12.15, y, 0))
+        y += 50
     build_trees()
 
 
@@ -392,31 +418,92 @@ def build_trees():
 
 
 # ---------------------------------------------------------------- vehicles
-def car_mesh(kind):
+def strut(name, p0, p1, w, d, material):
+    """Thin box from p0 to p1 (pillar)."""
+    p0, p1 = Vector(p0), Vector(p1)
+    axis = p1 - p0
+    bm = bmesh.new()
+    bmesh.ops.create_cube(bm, size=1.0)
+    q = axis.to_track_quat("Z", "Y")
+    for v in bm.verts:
+        v.co.x *= w; v.co.y *= d; v.co.z *= axis.length
+        v.co = q @ v.co + (p0 + p1) / 2
+    me = bpy.data.meshes.new(name); bm.to_mesh(me); bm.free()
+    me.materials.append(material)
+    return me
+
+
+def cabin_parts(W, zb1, ch, yc, cl, taper, kind, glass, hero=False):
+    """Glass cabin + body-coloured pillars + solid roof."""
+    tx, ty, tsh = taper
+    parts = [box("cab", (W - 0.18, cl, ch), (0, yc, zb1 + ch / 2), glass, bevel=0.07,
+                 taper_top=taper, segs=2)]
+    hw = (W - 0.18) / 2 + 0.012
+    zt = zb1 + ch
+    fr = [0.0, 0.52, 1.0] if kind == "sedan" else [0.0, 0.36, 0.68, 1.0]
+    for f in fr:
+        yb = yc - cl / 2 + f * cl
+        yt = yc + (-cl / 2 + f * cl) * ty + tsh
+        wid = 0.16 if f in (0.0, 1.0) else 0.11
+        for sx in (-1, 1):
+            parts.append(strut("pillar", (sx * hw, yb, zb1 - 0.02), (sx * (hw * tx + 0.004), yt, zt + 0.01),
+                               0.05, wid, M["paint"]))
+    # solid roof sitting on the pillars
+    rl = cl * ty + 0.06
+    parts.append(box("roof", (2 * hw * tx + 0.04, rl, 0.09), (0, yc + tsh, zt + 0.03), M["paint"], bevel=0.04))
+    # window frame strip (beltline) in black
+    parts.append(box("belt", (W - 0.12, cl + 0.02, 0.05), (0, yc, zb1 + 0.01), M["black"]))
+    if kind != "sedan":
+        parts.append(box("rails", (2 * hw * tx - 0.2, rl - 0.3, 0.05), (0, yc + tsh, zt + 0.1), M["black"]))
+    if hero:
+        # interior so the cabin reads as a car, not a glass box
+        dash_y = yc + cl / 2 - 0.35
+        parts.append(box("dash", (W - 0.3, 0.45, 0.25), (0, dash_y, zb1 + 0.05), M["black"], bevel=0.05))
+        for sx in (-0.42, 0.42):
+            parts.append(box("seatback", (0.5, 0.14, 0.6), (sx, yc + 0.55, zb1 + 0.1), M["black"], bevel=0.05))
+            parts.append(box("seatback2", (0.5, 0.14, 0.55), (sx, yc - 0.55, zb1 + 0.05), M["black"], bevel=0.05))
+        parts.append(strut("steer", (-0.42, dash_y - 0.32, zb1 + 0.05), (-0.42, dash_y - 0.22, zb1 + 0.28),
+                           0.36, 0.04, M["black"]))
+    return parts
+
+
+def car_mesh(kind, hero=False):
     parts = []
+    glass = M["glass_hero"] if hero else M["glass"]
     if kind in ("sedan", "wagon", "suv"):
         L, W = 4.6, 1.84
         zb0, zb1 = (0.32, 1.0) if kind != "suv" else (0.38, 1.18)
         parts.append(box("body", (W, L, zb1 - zb0), (0, 0, (zb0 + zb1) / 2), M["paint"], bevel=0.13, segs=3))
-        ch = 0.5 if kind != "suv" else 0.58
+        ch = 0.52 if kind != "suv" else 0.58
         if kind == "sedan":
-            cab = box("cab", (W - 0.18, 2.4, ch), (0, -0.2, zb1 + ch / 2), M["glass"], bevel=0.09,
-                      taper_top=(0.9, 0.72, -0.05), segs=2)
-            roof = box("roof", (W - 0.34, 1.55, 0.06), (0, -0.25, zb1 + ch + 0.0), M["paint"], bevel=0.03)
+            parts += cabin_parts(W, zb1, ch, -0.2, 2.5, (0.9, 0.7, -0.05), kind, glass, hero)
         else:
-            cab = box("cab", (W - 0.18, 3.1, ch), (0, -0.55, zb1 + ch / 2), M["glass"], bevel=0.09,
-                      taper_top=(0.92, 0.9, -0.12), segs=2)
-            roof = box("roof", (W - 0.3, 2.55, 0.06), (0, -0.62, zb1 + ch + 0.0), M["paint"], bevel=0.03)
-            parts.append(box("rails", (W - 0.5, 2.3, 0.05), (0, -0.62, zb1 + ch + 0.07), M["black"]))
-        parts += [cab, roof]
+            parts += cabin_parts(W, zb1, ch, -0.5, 3.2, (0.92, 0.86, -0.15), kind, glass, hero)
         wy = 1.42
         tail_z = zb1 - 0.16
         rear = -L / 2
         front = L / 2
-        # bumpers
+        # bumpers + grille + mirrors
         parts.append(box("bump_r", (W - 0.05, 0.12, 0.2), (0, rear - 0.02, zb0 + 0.12), M["black"], bevel=0.04))
         parts.append(box("bump_f", (W - 0.05, 0.12, 0.2), (0, front + 0.02, zb0 + 0.12), M["black"], bevel=0.04))
+        parts.append(box("grille", (0.8, 0.05, 0.16), (0, front + 0.03, zb1 - 0.3), M["black"], bevel=0.02))
+        for sx in (-1, 1):
+            parts.append(box("mirror", (0.22, 0.1, 0.12), (sx * (W / 2 + 0.08), 0.75, zb1 + 0.08), M["paint"], bevel=0.03))
         wheel_r = 0.34 if kind != "suv" else 0.38
+    elif kind == "ambulance":
+        L, W = 6.0, 2.1
+        parts.append(box("box", (W, 4.0, 2.2), (0, -0.9, 1.6), M["paint"], bevel=0.08))
+        parts.append(box("cab", (W, 1.9, 1.5), (0, 2.0, 1.25), M["paint"], bevel=0.15))
+        parts.append(box("wind", (W - 0.2, 0.5, 0.65), (0, 2.75, 1.75), M["glass"], bevel=0.05, taper_top=(0.95, 0.6, -0.15)))
+        parts.append(box("stripe", (W + 0.02, 6.0, 0.25), (0, -0.05, 1.05), M["redstripe"]))
+        parts.append(box("stripe2", (W + 0.02, 4.0, 0.12), (0, -0.9, 2.3), M["orangestripe"]))
+        for sx in (-0.7, 0.7):
+            parts.append(box("blue", (0.45, 0.3, 0.16), (sx, 1.3, 2.78), M["bluelight"], bevel=0.04))
+            parts.append(box("blue_r", (0.3, 0.2, 0.16), (sx, -2.85, 2.78), M["bluelight"], bevel=0.04))
+        wy = 1.9
+        tail_z = 1.2
+        rear, front = -2.9, 2.95
+        wheel_r = 0.38
     else:  # truck
         L, W = 16.0, 2.5
         parts.append(box("trailer", (W, 12.6, 3.0), (0, -1.6, 2.6), M["truckbox"], bevel=0.05))
@@ -441,7 +528,7 @@ def car_mesh(kind):
     for sx, sy in ws:
         parts.append(cyl("tire", wheel_r, 0.26, (sx, sy, wheel_r), M["tire"]))
         parts.append(cyl("rim", wheel_r * 0.6, 0.27, (sx, sy, wheel_r), M["rim"], verts=12))
-    return join_meshes(kind, parts)
+    return join_meshes(kind + ("_hero" if hero else ""), parts)
 
 
 CAR_COLORS = [(0.8, 0.8, 0.8), (0.82, 0.82, 0.84), (0.45, 0.46, 0.48), (0.02, 0.02, 0.025),
@@ -454,7 +541,9 @@ class Pool:
     """Fixed set of vehicle objects; shots place them every frame."""
 
     def __init__(self, n_cars=400, n_trucks=40):
-        self.meshes = {k: car_mesh(k) for k in ("sedan", "wagon", "suv", "truck")}
+        self.meshes = {k: car_mesh(k) for k in ("sedan", "wagon", "suv", "truck", "ambulance")}
+        self.ambulance = obj("ambulance", self.meshes["ambulance"], (0, 0, -50), None)
+        self.ambulance.color = (0.92, 0.92, 0.9, 0.0)
         self.coll = bpy.data.collections.new("vehicles")
         bpy.context.scene.collection.children.link(self.coll)
         self.cars, self.trucks = [], []
@@ -484,13 +573,13 @@ def place(o, x, y, yaw=0.0, brake=0.0):
 
 
 # ---------------------------------------------------------------- render setup
-def setup_render(w=540, h=960, samples=8):
+def setup_render(w=720, h=1280, samples=6):
     sc = bpy.context.scene
     sc.render.engine = "CYCLES"
     sc.cycles.device = "CPU"
     sc.cycles.samples = samples
     sc.cycles.use_adaptive_sampling = True
-    sc.cycles.adaptive_threshold = 0.08
+    sc.cycles.adaptive_threshold = 0.1
     sc.cycles.use_denoising = True
     try:
         sc.cycles.denoiser = "OPENIMAGEDENOISE"

@@ -1,7 +1,7 @@
 """Traffic models for the shots. All return arrays sampled at FPS."""
 import numpy as np
 
-FPS = 30
+FPS = 25
 
 
 def overreact_lane(n=40, v_init=24.0, t_end=20.0, tb=1.5, tau=0.9, d0=7.0,

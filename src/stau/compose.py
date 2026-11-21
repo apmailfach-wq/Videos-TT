@@ -8,7 +8,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 from script import SCENES
 
-FPS = 30
+from sim import FPS
 W, H = 1080, 1920
 ROOT = Path(__file__).resolve().parents[2]
 BUILD = ROOT / "build" / "stau"
@@ -20,12 +20,14 @@ F_BOLD = "/usr/share/fonts/opentype/inter/Inter-ExtraBold.otf"
 font = lambda p, s: ImageFont.truetype(p, s)
 
 YELLOW = (255, 214, 10)
-HILITE = {"stau", "grund", "stärker.", "stärker", "nichts.", "nichts", "abstand", "tacho,", "tacho",
+HILITE = {"fahranfänger", "pfosten", "fünfzig", "vordermann", "vorne", "gas", "rettungsgasse",
+          "links", "rechts", "pflicht", "speicher", "abwechselnd", "bremslichter", "tacho", "stau", "grund", "stärker.", "stärker", "nichts.", "nichts", "abstand", "tacho,", "tacho",
           "reißverschluss.", "reißverschluss", "ende", "weiterrollen,", "weiterrollen", "bremsen.",
           "drängler?", "kommentare!", "alles.", "alles", "abschwächen."}
 
-TIPS = {"gap": ("TIPP 1", "ABSTAND HALTEN"), "roll": ("TIPP 2", "ROLLEN STATT BREMSEN"),
-        "zipper": ("TIPP 3", "REISSVERSCHLUSS")}
+TIPS = {"gap": ("TIPP 1", "HALBER TACHO"), "posts": ("TIPP 1", "1 PFOSTEN = 50 m"),
+        "roll": ("TIPP 2", "WEIT VORAUSSCHAUEN"), "zipper": ("TIPP 3", "REISSVERSCHLUSS"),
+        "gasse": ("WICHTIG", "RETTUNGSGASSE")}
 
 tim = json.loads((BUILD / "timings.json").read_text())
 
@@ -120,6 +122,22 @@ def ease_out(x):
     return 1 - (1 - x) ** 3
 
 
+def word_t(row, prefix, default=0.0):
+    for w in row["words"]:
+        if w["text"].lower().startswith(prefix.lower()):
+            return w["start"]
+    return default
+
+
+_META = {}
+
+
+def meta_for(shot, lf):
+    if shot not in _META:
+        _META[shot] = json.loads((FR / shot / "meta.json").read_text())
+    return _META[shot].get(str(lf))
+
+
 def overlays(img, row, lf, t):
     shot = row["shot"]
     d = ImageDraw.Draw(img)
@@ -137,9 +155,8 @@ def overlays(img, row, lf, t):
         pill(img, W / 2, y + 100, title, font(F_SUB, 62), (255, 255, 255), (0, 0, 0), alpha=int(255 * a))
     # --- gap: 50 m label on the carpet
     if shot == "gap":
-        meta = json.loads((FR / "gap" / "meta.json").read_text())
-        m = meta.get(str(lf))
-        a = ease_out((t - 2.4) / 0.3)
+        m = meta_for("gap", lf)
+        a = ease_out((t - word_t(row, "Abstand", 2.4)) / 0.3)
         if m and a > 0:
             x, y = m["label"][0] * W, m["label"][1] * H
             pill(img, x, y - 40, "50 m", font(F_SUB, 70), (20, 200, 80), (255, 255, 255), alpha=int(255 * a))
@@ -147,9 +164,8 @@ def overlays(img, row, lf, t):
                  alpha=int(220 * a))
     # --- zipper: marker at merge point
     if shot == "zipper":
-        meta = json.loads((FR / "zipper" / "meta.json").read_text())
-        m = meta.get(str(lf))
-        a = ease_out((t - 2.6) / 0.3)
+        m = meta_for("zipper", lf)
+        a = ease_out((t - word_t(row, "fädel", 2.6)) / 0.3)
         if m and a > 0 and 0 < m["merge"][1] < 1:
             x, y = m["merge"][0] * W, m["merge"][1] * H
             bob = 10 * math.sin(t * 6)
@@ -157,11 +173,50 @@ def overlays(img, row, lf, t):
             ax, ay = x, y - 115 + bob
             d.polygon([(ax - 26, ay), (ax + 26, ay), (ax, ay + 40)], fill=(*YELLOW, int(255 * a)),
                       outline=(0, 0, 0, int(255 * a)), width=4)
-    # --- outro CTA after the voice ends
-    if shot == "outro":
-        a = ease_out((t - (row["dur"] - 3.2)) / 0.35)
+    # --- posts: highlight two Leitpfosten 50 m apart
+    if shot == "posts":
+        m = meta_for("posts", lf)
+        a = ease_out((t - word_t(row, "Pfosten", 2.0)) / 0.3)
+        if m and a > 0:
+            al = int(255 * a)
+            ps = [m[k] for k in ("p1", "p2") if 0 < m[k][1] < 1 and m[k][2] > 0]
+            for x, y, z in ps:
+                x, y = x * W, y * H
+                r = max(16, min(60, 900 / z))
+                d.ellipse((x - r, y - 1.6 * r, x + r, y + 1.6 * r), outline=(*YELLOW, al), width=8)
+            if len(ps) == 2:
+                (x1, y1, _), (x2, y2, _) = ps
+                x1, y1, x2, y2 = x1 * W, y1 * H, x2 * W, y2 * H
+                d.line((x1, y1 - 120, x2, y2 - 70), fill=(*YELLOW, al), width=8)
+                pill(img, (x1 + x2) / 2 - 40, (y1 + y2) / 2 - 170, "50 m", font(F_SUB, 64), YELLOW, (0, 0, 0), alpha=al)
+        b = ease_out((t - word_t(row, "Zwischen", 6.0)) / 0.3)
+        if b > 0:
+            pill(img, W / 2, 1500, "Abstand ≥ 1 Pfosten", font(F_BOLD, 50), (0, 0, 0), (255, 255, 255), alpha=int(230 * b))
+    # --- roll: off the gas
+    if shot == "roll":
+        a = ease_out((t - word_t(row, "geh", 4.0)) / 0.3)
         if a > 0:
-            pill(img, W / 2, 330 - 40 * (1 - a), "UND DU?", font(F_SUB, 70), (225, 30, 30), (255, 255, 255),
+            pill(img, W / 2, 1180, "FUSS VOM GAS – NICHT BREMSEN", font(F_SUB, 46), (20, 200, 80), (255, 255, 255),
+                 alpha=int(255 * a))
+    # --- gasse: arrows left / right
+    if shot == "gasse":
+        a = ease_out((t - word_t(row, "Ganz", 3.5)) / 0.3)
+        if a > 0:
+            al = int(255 * a)
+            pill(img, W * 0.2, 1250, "← LINKS", font(F_SUB, 58), (20, 110, 230), (255, 255, 255), alpha=al)
+            b = ease_out((t - word_t(row, "alle", 4.5)) / 0.3)
+            if b > 0:
+                pill(img, W * 0.74, 1250, "ALLE RECHTS →", font(F_SUB, 58), (20, 110, 230), (255, 255, 255),
+                     alpha=int(255 * b))
+    # --- outro CTA
+    if shot == "outro":
+        a = ease_out((t - 0.2) / 0.3)
+        b = ease_out((t - word_t(row, "Und", 3.0)) / 0.3)
+        if b > 0:
+            pill(img, W / 2, 330 - 40 * (1 - b), "UND DU?", font(F_SUB, 70), (225, 30, 30), (255, 255, 255),
+                 alpha=int(255 * b))
+        elif a > 0:
+            pill(img, W / 2, 330 - 40 * (1 - a), "JETZT SPEICHERN!", font(F_SUB, 70), YELLOW, (0, 0, 0),
                  alpha=int(255 * a))
 
 
@@ -188,9 +243,9 @@ def frame_image(gf):
     t = lf / FPS
     src = FR / row["shot"] / f"{lf:04d}.png"
     base = Image.open(src).convert("RGB").resize((W, H), Image.LANCZOS)
-    base = base.filter(ImageFilter.UnsharpMask(radius=2, percent=60, threshold=2))
+    base = base.filter(ImageFilter.UnsharpMask(radius=1.6, percent=80, threshold=2))
     # punch-in zoom on every cut
-    z = 1.0 + 0.06 * (1 - ease_out(lf / 8))
+    z = 1.0 + 0.06 * (1 - ease_out(lf / 7))
     if z > 1.001:
         cw, ch = int(W / z), int(H / z)
         base = base.crop(((W - cw) // 2, (H - ch) // 2, (W - cw) // 2 + cw, (H - ch) // 2 + ch)).resize((W, H), Image.BILINEAR)
@@ -198,7 +253,7 @@ def frame_image(gf):
     overlays(img, row, lf, t)
     txt, age = caption_at(row, t)
     if txt:
-        draw_caption(img, txt, age, {"roll": 0.74, "gap": 0.36}.get(row["shot"], 0.50))
+        draw_caption(img, txt, age, {"roll": 0.74, "gap": 0.36, "posts": 0.36, "gasse": 0.42}.get(row["shot"], 0.50))
     return img.convert("RGB")
 
 

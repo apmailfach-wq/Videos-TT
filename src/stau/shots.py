@@ -88,18 +88,8 @@ def brake_from(acc, v):
 # ------------------------------------------------------------------ extra props
 def build_props():
     P = {}
-    # hero car: wagon with clear glass + cartoon driver
-    hero_me = W.car_mesh("wagon").copy()
-    clear_glass = bpy.data.materials.new("clearglass")
-    clear_glass.use_nodes = True
-    pb = clear_glass.node_tree.nodes["Principled BSDF"]
-    pb.inputs["Base Color"].default_value = (0.7, 0.8, 0.85, 1)
-    pb.inputs["Roughness"].default_value = 0.0
-    pb.inputs["Alpha"].default_value = 0.04
-    for i, m in enumerate(hero_me.materials):
-        if m.name.startswith("glass"):
-            hero_me.materials[i] = clear_glass
-    hero = W.obj("hero", hero_me, (0, 0, -50))
+    # hero car: wagon with tinted see-through glass, pillars, roof and interior
+    hero = W.obj("hero", W.car_mesh("wagon", hero=True), (0, 0, -50))
     hero.color = (0.1, 0.32, 0.38, 0.0)   # petrol blue like the reference
     # seat + driver billboard
     img = bpy.data.images.load(str(BUILD / "driver.png"))
@@ -125,7 +115,7 @@ def build_props():
     me.materials.append(dm)
     drv = W.obj("driver", me)
     drv.parent = hero
-    drv.location = (-0.45, -0.3, 0.70)
+    drv.location = (-0.45, 0.32, 0.70)
     P["hero"] = hero
 
     # green distance carpet
@@ -374,7 +364,7 @@ class Roll(Shot):
                 kind = "truck" if (li == 1 and k % 5 == 2) else "car"
                 W.place(al.take(kind), x, y + (6 if kind == "truck" else 0), 0, brake_from(acc - 1.5, vel))
         opposite(al, t, hy)
-        u = t / 5.8
+        u = t / 11.0
         loc = (-0.6, hy + lerp(-2.6, 0.6, u), 1.55)
         W.aim(cam, loc, (L0 - 0.45, hy + lerp(0.1, -0.5, u), 1.18), lens=19)
 
@@ -407,7 +397,7 @@ class Zipper(Shot):
             y = y_front + 5 - k * 11.5
             W.place(al.take(), L0, y, 0.0, 1.0 if k % 5 == 1 else 0.0)
         opposite(al, t, ye)
-        cy = ye - 72 + self.V * t
+        cy = ye - 88 + self.V * t
         loc = (L2 + 0.9, cy, 3.4)
         W.aim(cam, loc, (L1 + 2.2, cy + 55, 0.4), lens=21)
 
@@ -415,6 +405,67 @@ class Zipper(Shot):
         ye = self.P["Y_END"]
         p = world_to_camera_view(bpy.context.scene, cam, Vector((L1 + 1.8, ye - 6, 0.5)))
         return {"merge": [p.x, 1 - p.y]}
+
+
+class Posts(Shot):
+    """Leitpfosten every 50 m: one post gap between you and the car in front."""
+    V = 27.8
+
+    def frame(self, al, cam, t):
+        hero = self.P["hero"]
+        hy = 612 + self.V * t
+        W.place(hero, L1, hy)
+        W.place(al.take(), L1, hy + 4.6 + 50)
+        flow(al, L1, t, self.V, hy + 300, 5, 80, 51, back=0, ahead=600)
+        flow(al, L0, t, 34, hy, 6, 70, 52, back=120, ahead=500)
+        flow(al, L2, t, 21, hy, 6, 55, 53, back=120, ahead=500, trucks=0.5)
+        opposite(al, t, hy)
+        loc = (L1 + 2.0, hy - 9.0, 3.3)
+        W.aim(cam, loc, (L1 + 2.6, hy + 38, 0.3), lens=22)
+
+    def meta(self, cam, t):
+        hy = 612 + self.V * t
+        sc = bpy.context.scene
+        front = hy + 2.3
+        p1 = math.ceil(front / 50.0) * 50.0
+        pts = {}
+        for name, y in (("p1", p1), ("p2", p1 + 50), ("p0", p1 - 50)):
+            p = world_to_camera_view(sc, cam, Vector((12.15, y, 0.9)))
+            pts[name] = [p.x, 1 - p.y, p.z]
+        return pts
+
+
+class Gasse(Shot):
+    """Standing traffic forms the emergency corridor, ambulance drives through."""
+
+    def prepare(self):
+        r = random.Random(17)
+        self.cars = []
+        for li, x in enumerate(W.LANES):
+            y = 190.0 + r.uniform(0, 4)
+            while y < 520:
+                kind = "truck" if (li == 2 and r.random() < 0.3) else "car"
+                ln = 16 if kind == "truck" else 4.6
+                self.cars.append((li, x, y + ln / 2, kind, r.uniform(-0.6, 0.4)))
+                y += ln + r.uniform(2.5, 4.0)
+
+    def frame(self, al, cam, t):
+        shift = {0: -0.95, 1: 1.0, 2: 1.25}
+        for li, x, y, kind, delay in self.cars:
+            s = smooth((t - 0.9 - delay - (y - 190) / 400) / 1.8)
+            yaw = (0.07 if li == 0 else -0.07) * math.sin(math.pi * s)
+            W.place(al.take(kind), x + shift[li] * s, y + 1.2 * s, yaw, 1.0)
+        opposite(al, t, 300)
+        amb = self.P["pool"].ambulance
+        ta = max(0.0, t - 2.4)
+        ay = 163 + 6 * ta + 1.1 * ta * ta
+        amb.location = ((W.LANES[0] + W.LANES[1]) / 2 + 0.05, ay, 0)
+        amb.rotation_euler = (0, 0, 0)
+        c = amb.color
+        amb.color = (c[0], c[1], c[2], 1.0 if (t * 3.0) % 1 < 0.5 else 0.0)
+        u = t / 7.7
+        loc = (lerp(4.6, 3.9, u), lerp(170, 182, u), lerp(11, 9.5, u))
+        W.aim(cam, loc, (3.8, lerp(250, 262, u), 0), lens=22)
 
 
 class Outro(Shot):
@@ -433,8 +484,8 @@ class Outro(Shot):
         W.aim(cam, loc, (L1, cy + lerp(60, 120, u), 0), lens=lerp(20, 22, u))
 
 
-SHOTS = {"hook": Hook, "brake": Brake, "wave": Wave, "aerial": Aerial,
-         "gap": Gap, "roll": Roll, "zipper": Zipper, "outro": Outro}
+SHOTS = {"hook": Hook, "brake": Brake, "wave": Wave, "aerial": Aerial, "gap": Gap, "posts": Posts,
+         "roll": Roll, "zipper": Zipper, "gasse": Gasse, "outro": Outro}
 
 
 def frames_for(shot):
@@ -455,6 +506,8 @@ def main():
     step = int(sys.argv[4]) if len(sys.argv) > 4 else 1
     pool, cam = W.build_all()
     P = build_props()
+    P["pool"] = pool
+    pool.ambulance.location = (0, 0, -50)
     show(P["construction"], name == "zipper")
     shot = SHOTS[name](P)
     shot.prepare()
@@ -471,7 +524,7 @@ def main():
     for fi in range(first, min(last, n - 1) + 1, step):
         t = fi / FPS
         al.reset()
-        if name not in ("gap", "roll", "outro"):
+        if name not in ("gap", "posts", "roll", "outro"):
             P["hero"].location = (0, 0, -50)
         P["carpet"].location.z = -50 if name != "gap" else P["carpet"].location.z
         shot.frame(al, cam, t)
