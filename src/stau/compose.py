@@ -110,7 +110,7 @@ def overlays(img, row, lf, t):
     if shot == "hook":
         a = ease_out(t / 0.25)
         y = 330 - 40 * (1 - a)
-        pill(img, W / 2, y, "STAU AUS DEM NICHTS?", font(F_SUB, 64), (225, 30, 30), (255, 255, 255), alpha=int(255 * a))
+        pill(img, W / 2, y, "ACHTUNG STAU!", font(F_SUB, 84), (225, 30, 30), (255, 255, 255), alpha=int(255 * a))
     # --- tip header
     if shot in TIPS:
         num, title = TIPS[shot]
