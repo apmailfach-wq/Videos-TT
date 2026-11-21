@@ -80,17 +80,19 @@ python3 render.py preview 5 30 # Standbilder
 
 ## stau-video.mp4 (3D-Autobahn, Cycles-Render)
 
-**Thema:** „Stau aus dem Nichts“ – warum Staus ohne Grund entstehen und wie man sie verhindert
-Länge ca. 49 s · 1080×1920 · 30 fps · echte 3D-Szene (Blender/Cycles, Raytracing), Comic-Fahrer im Auto,
+**Thema:** „Achtung Stau!“ – warum Staus ohne Grund entstehen und was Fahranfänger dagegen tun können
+Länge ca. 82 s · 1080×1920 (Render 720×1280, hochskaliert) · 25 fps · Stimme: edge-tts Florian Multilingual · echte 3D-Szene (Blender/Cycles, Raytracing), Comic-Fahrer im Auto,
 wortweise Untertitel in der Bildmitte (Stil wie die viralen Autobahn-Erklärvideos)
 
 | Shot | Inhalt |
 |---|---|
-| hook | Drohne über stehendem Stau, Gegenfahrbahn frei – „STAU AUS DEM NICHTS?“ |
+| hook | Drohne über stehendem Stau, Gegenfahrbahn frei – „ACHTUNG STAU!“ |
 | brake / wave / aerial | Reaktionszeit-Modell: jeder Fahrer reagiert 0,9 s später und bremst stärker → ab Auto 5 steht alles |
 | gap | Tipp 1: halber Tacho – grüner Abstands-Teppich, „50 m“-Label (3D-projiziert) |
+| posts | Tipp 1b: Leitpfosten alle 50 m – Pfosten markiert, „Abstand ≥ 1 Pfosten“ |
 | roll | Tipp 2: Seitenansicht des Helden (Comic-Figur) rollt gleichmäßig, Nachbarspur Stop-and-go |
 | zipper | Tipp 3: Spur endet (Baken, Pfeilanhänger) – Reißverschluss erst am Ende, „HIER EINFÄDELN“ |
+| gasse | Rettungsgasse: Autos weichen nach links/rechts aus, Rettungswagen mit Blaulicht fährt durch |
 | outro | Drohne steigt über fließendem Verkehr, Community-Frage |
 
 ```bash
@@ -98,7 +100,7 @@ cd src/stau
 python3 tts.py                      # edge-tts Voiceover + Wort-Timings
 python3 driver.py                   # Comic-Fahrer als PNG
 pip install bpy==5.2.4              # Blender als Python-Modul (eigene venv, Python 3.13)
-BPY=/pfad/zur/venv/bin/python ./render_all.sh   # ~1.540 Frames, 540×960, Cycles CPU (~7 s/Frame)
+BPY=/pfad/zur/venv/bin/python ./render_all.sh   # ~2.045 Frames, 720×1280, Cycles CPU (~15 s/Frame, fortsetzbar)
 python3 compose.py                  # Upscale, Overlays, Ton -> ../../stau-video.mp4
 python3 compose.py preview 1 20     # Kontrollbilder -> build/stau/stills/
 ```

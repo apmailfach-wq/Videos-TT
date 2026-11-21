@@ -529,6 +529,7 @@ def main():
         P["carpet"].location.z = -50 if name != "gap" else P["carpet"].location.z
         shot.frame(al, cam, t)
         al.finish()
+        bpy.context.view_layer.update()
         m = shot.meta(cam, t)
         if m:
             meta[str(fi)] = m
