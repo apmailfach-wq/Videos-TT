@@ -220,3 +220,144 @@ def natural(f, T, amt=1.0):
     f = Image.fromarray(np.clip(a, 0, 255).astype(np.uint8)).convert("RGBA")
     f.alpha_composite(vignette(0.3))
     return f
+
+
+# ------------------------------------------------------------------ Klassenzimmer (realistischer)
+def _plaster(c, y0, y1, base, seed):
+    arr = np.asarray(c).astype(np.int16)
+    n = np.random.default_rng(seed).normal(0, 4, (int((y1 - y0) * K), W * K)).astype(np.int16)
+    arr[int(y0 * K):int(y1 * K), :, :3] = np.clip(arr[int(y0 * K):int(y1 * K), :, :3] + n[..., None], 0, 255)
+    return Image.fromarray(arr.astype(np.uint8), "RGBA")
+
+
+@lru_cache(maxsize=1)
+def board3_static():
+    c = gradient(W * K, H * K, [(0, (226, 220, 204)), (0.64, (232, 226, 210)), (0.641, (176, 188, 178)),
+                                (0.77, (170, 182, 172)), (0.771, (138, 142, 134)), (1.0, (118, 122, 116))])
+    c = _plaster(c, 0, H, None, 5)
+    d = ImageDraw.Draw(c)
+    # Fußleiste + Linoleum-Spiegelung
+    d.rectangle([0, 1470 * K, W * K, 1484 * K], fill=(90, 90, 86))
+    lr = Image.new("RGBA", c.size, (0, 0, 0, 0))
+    ImageDraw.Draw(lr).ellipse([200 * K, 1560 * K, 900 * K, 1760 * K], fill=(255, 255, 255, 26))
+    c.alpha_composite(lr.filter(ImageFilter.GaussianBlur(40 * K)))
+    # Klapptafel: Mitte + Seitenflügel, Alurahmen
+    for (x0, x1) in ((60, 250), (250, 830), (830, 1020)):
+        rrect(c, x0 * K, 390 * K, x1 * K, 1010 * K, 6 * K, (172, 176, 182), amb=0.7, spec=0.4)
+        g = gradient(int((x1 - x0 - 16) * K), int(604 * K), [(0, (44, 76, 62)), (1, (36, 64, 52))])
+        c.alpha_composite(g, (int((x0 + 8) * K), 398 * K))
+    # Kreideschlieren
+    sm = Image.new("RGBA", c.size, (0, 0, 0, 0))
+    sd = ImageDraw.Draw(sm)
+    rnd = random.Random(4)
+    for _ in range(14):
+        x, y = rnd.uniform(80, 980), rnd.uniform(420, 960)
+        sd.ellipse([x * K, y * K, (x + rnd.uniform(80, 220)) * K, (y + rnd.uniform(20, 60)) * K],
+                   fill=(255, 255, 255, 22))
+    c.alpha_composite(sm.filter(ImageFilter.GaussianBlur(14 * K)))
+    d = ImageDraw.Draw(c)
+    hand = font(F_HAND, 70 * K)
+    for (txt, y) in (("Mathe", 450), ("2 + 2 = 4", 550), ("7 · 8 = 56", 650)):
+        d.text((290 * K, y * K), txt, font=hand, fill=(236, 238, 230, 235))
+    d.text((90 * K, 470 * K), "Hausaufgabe:", font=font(F_HAND, 34 * K), fill=(230, 230, 210))
+    d.text((90 * K, 515 * K), "S. 42, Nr. 3", font=font(F_HAND, 34 * K), fill=(230, 230, 210))
+    # Kreideablage mit Kreide und Schwamm
+    rrect(c, 60 * K, 1010 * K, 1020 * K, 1032 * K, 4 * K, (160, 164, 170), amb=0.7, spec=0.4)
+    for x, col in ((300, (250, 250, 245)), (330, (250, 220, 90)), (360, (250, 250, 245))):
+        rrect(c, x * K, 996 * K, (x + 26) * K, 1010 * K, 3 * K, col, amb=0.8)
+    rrect(c, 700 * K, 984 * K, 780 * K, 1012 * K, 6 * K, (240, 200, 60), amb=0.6, spec=0.1)
+    # Uhr
+    ell(c, 540 * K, 260 * K, 62 * K, 62 * K, (250, 250, 250), amb=0.85, spec=0.2)
+    d = ImageDraw.Draw(c)
+    d.ellipse([478 * K, 198 * K, 602 * K, 322 * K], outline=(40, 40, 44), width=6 * K)
+    for k in range(12):
+        a = k * math.pi / 6
+        d.line([((540 + math.cos(a) * 50) * K, (260 + math.sin(a) * 50) * K),
+                ((540 + math.cos(a) * 56) * K, (260 + math.sin(a) * 56) * K)], fill=(40, 40, 44), width=3 * K)
+    d.line([(540 * K, 260 * K), (540 * K, 222 * K)], fill=(30, 30, 30), width=5 * K)
+    d.line([(540 * K, 260 * K), (568 * K, 270 * K)], fill=(30, 30, 30), width=5 * K)
+    # Poster Klassenregeln
+    poster = Image.new("RGBA", (200 * K, 250 * K), (252, 250, 240, 255))
+    pd = ImageDraw.Draw(poster)
+    pd.text((100 * K, 30 * K), "Klassenregeln", font=font(F_HAND, 32 * K), fill=(200, 40, 40), anchor="mm")
+    for k, t in enumerate(("1. Respekt", "2. Zuhören", "3. Kein Handy", "4. Nicht mobben")):
+        pd.text((20 * K, (70 + k * 42) * K), t, font=font(F_HAND, 28 * K), fill=(30, 30, 50))
+    poster = poster.rotate(2, expand=True, resample=Image.BICUBIC)
+    c.alpha_composite(poster, (820 * K, 120 * K))
+    # Lehrerpult mit Büchern, Tasse, Apfel
+    rrect(c, 640 * K, 1300 * K, 1050 * K, 1330 * K, 8 * K, (196, 160, 112), amb=0.6, spec=0.3)
+    rrect(c, 660 * K, 1330 * K, 1030 * K, 1560 * K, 6 * K, (150, 154, 160), amb=0.6, spec=0.2)
+    for k, col in enumerate(((180, 50, 50), (50, 90, 160), (60, 140, 80))):
+        rrect(c, 690 * K, (1270 - k * 26) * K, 850 * K, (1296 - k * 26) * K, 4 * K, col, amb=0.6, spec=0.2)
+    rrect(c, 900 * K, 1236 * K, 950 * K, 1298 * K, 8 * K, (240, 240, 240), amb=0.7, spec=0.3)
+    d = ImageDraw.Draw(c)
+    d.arc([940 * K, 1250 * K, 975 * K, 1285 * K], 270, 90, fill=(230, 230, 230), width=6 * K)
+    ell(c, 1000 * K, 1272 * K, 26 * K, 25 * K, (200, 40, 50), amb=0.5, spec=0.6)
+    return c
+
+
+KIDS_BACK = [dict(who="kid3", D=78, x=300, y=1005), dict(who="kid4", D=78, x=780, y=1000)]
+
+
+@lru_cache(maxsize=1)
+def class3_static():
+    c = gradient(W * K, H * K, [(0, (228, 222, 206)), (0.6, (232, 226, 210)), (0.601, (138, 142, 134)),
+                                (1.0, (116, 120, 114))])
+    c = _plaster(c, 0, H, None, 6)
+    d = ImageDraw.Draw(c)
+    # große Fensterfront mit Bäumen draußen
+    for x0 in (40, 380, 720):
+        rrect(c, x0 * K, 250 * K, (x0 + 320) * K, 700 * K, 6 * K, (236, 236, 236), amb=0.8, spec=0.2)
+        g = gradient(int(296 * K), int(426 * K), [(0, (170, 205, 235)), (0.6, (205, 225, 240)), (0.61, (120, 160, 110)),
+                                                  (1, (100, 140, 95))])
+        out = Image.new("RGBA", g.size, (0, 0, 0, 0))
+        od = ImageDraw.Draw(out)
+        for k in range(3):
+            od.ellipse([(30 + k * 90) * K, 120 * K, (150 + k * 90) * K, 290 * K], fill=(110, 150, 95))
+        g.alpha_composite(out.filter(ImageFilter.GaussianBlur(10 * K)))
+        c.alpha_composite(g, (int((x0 + 12) * K), 262 * K))
+        d = ImageDraw.Draw(c)
+        d.line([((x0 + 160) * K, 262 * K), ((x0 + 160) * K, 688 * K)], fill=(236, 236, 236), width=8 * K)
+        # Fensterbank mit Pflanze
+        rrect(c, (x0 - 6) * K, 700 * K, (x0 + 326) * K, 724 * K, 4 * K, (240, 240, 236), amb=0.8)
+    for x in (140, 560, 900):
+        rrect(c, (x - 28) * K, 650 * K, (x + 28) * K, 702 * K, 8 * K, (190, 100, 60), amb=0.6)
+        for dx, dy in ((-20, -30), (0, -50), (22, -28)):
+            ell(c, (x + dx) * K, (650 + dy) * K, 26 * K, 18 * K, (80, 150, 70), amb=0.6)
+    # Heizkörper unter den Fenstern
+    for x0 in (60, 400, 740):
+        rrect(c, x0 * K, 760 * K, (x0 + 280) * K, 880 * K, 6 * K, (236, 236, 232), amb=0.8, spec=0.2)
+        d = ImageDraw.Draw(c)
+        for k in range(14):
+            xx = x0 + 10 + k * 19
+            d.line([(xx * K, 770 * K), (xx * K, 870 * K)], fill=(200, 200, 196), width=3 * K)
+    # Kinderzeichnungen
+    for k, (x, col) in enumerate(((60, (250, 200, 80)), (230, (120, 190, 240)), (860, (240, 140, 160)))):
+        pic = Image.new("RGBA", (130 * K, 100 * K), (252, 252, 248, 255))
+        pd = ImageDraw.Draw(pic)
+        pd.ellipse([20 * K, 15 * K, 60 * K, 55 * K], fill=col)
+        pd.line([(10 * K, 85 * K), (120 * K, 70 * K)], fill=(80, 160, 80), width=6 * K)
+        pd.rectangle([70 * K, 40 * K, 110 * K, 80 * K], outline=(200, 60, 60), width=4 * K)
+        pic = pic.rotate((-3, 4, -2)[k], expand=True, resample=Image.BICUBIC)
+        c.alpha_composite(pic, (x * K, 110 * K))
+    return c
+
+
+def chair_back(f, v, x, y, D):
+    """Blaue Stuhllehne hinter einem Kind (y = Nacken)."""
+    x0, y0 = v.p(x - 0.65 * D, y + 0.25 * D)
+    x1, y1 = v.p(x + 0.65 * D, y + 1.05 * D)
+    rrect(f, x0, y0, x1, y1, 0.18 * D * v.z, (50, 100, 170), amb=0.55, spec=0.3)
+
+
+def desk3(f, v, x, y, w=300, h=200):
+    """Schultisch: helle Holzplatte, graue Blende, Metallbeine; (x, y) = Mitte Oberkante."""
+    x0, y0 = v.p(x - w / 2, y)
+    x1, y1 = v.p(x + w / 2, y + h)
+    for lx in (x - w / 2 + 20, x + w / 2 - 20):
+        a, b = v.p(lx, y + 20)
+        cc, dd = v.p(lx, y + h + 60)
+        rrect(f, a - 6 * v.z, b, a + 6 * v.z, dd, 4 * v.z, (130, 134, 140), amb=0.6, spec=0.5)
+    rrect(f, x0 + 10 * v.z, y0 + 18 * v.z, x1 - 10 * v.z, y0 + h * 0.62 * v.z, 6 * v.z, (150, 156, 164), amb=0.6,
+          spec=0.2)
+    rrect(f, x0, y0 - 6 * v.z, x1, y0 + 22 * v.z, 6 * v.z, (214, 182, 130), amb=0.65, spec=0.3)

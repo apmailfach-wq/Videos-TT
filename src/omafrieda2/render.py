@@ -127,7 +127,7 @@ CAPS = []
 import shots as _S1  # noqa: E402
 S1_HERO = _S1.shot_hero
 SUB_Y = {S.shot_hook_oma: 1400, S1_HERO: 1420, S.hero2: 1460, S.shot_eyes: 1550, S.shot_achtzig: 1450,
-         S.shot_mutig_close: 1450, S.shot_80: 1450, S.shot_faust_a: 1450, S.shot_stricken_a: 1450,
+         S.shot_mutig_close: 1450, S.shot_80: 1450, S.shot_faust_a: 1450, S.shot_age_a: 1450, S.shot_rollcall: 1450, S.shot_stricken_a: 1450,
          S.shot_morgen_a: 1450}
 
 
@@ -625,10 +625,11 @@ def build_audio(path):
     ins = [S.R_end(p) for p, _ in S.INS]
     for k in range(6):
         put(sfx, fx_click(400 + k), ins[0] + 0.3 + k * 0.13, 0.25)          # Fliegen
-    put(sfx, fx_pop(), ins[1] + 2.0, 0.5)
-    put(sfx, fx_thud(), ins[1] + 2.05, 0.4)
+    put(sfx, fx_pop(), ins[1] + 10.4, 0.5)
+    put(sfx, fx_thud(), ins[1] + 10.45, 0.4)
+    put(sfx, fx_pop(), ins[1] + 2.75, 0.4)
     tg = np.arange(int(0.35 * SR)) / SR
-    put(sfx, np.sin(2 * np.pi * (300 - 200 * tg) * tg) * np.exp(-tg * 6) * 0.5, ins[1] + 3.25, 0.8)  # Schlucken
+    put(sfx, np.sin(2 * np.pi * (300 - 200 * tg) * tg) * np.exp(-tg * 6) * 0.5, ins[1] + 12.0, 0.8)  # Schlucken
     for k in range(8):
         put(sfx, fx_click(500 + k), ins[2] + 2.3 + k * 0.1, 0.35)          # Stricknadeln klappern
     put(sfx, fx_braam(1.2, 49), ins[2] + 2.2, 0.5)

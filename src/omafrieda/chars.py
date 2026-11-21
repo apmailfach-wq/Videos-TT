@@ -38,6 +38,10 @@ CFG = {
                  brow=(90, 55, 30), body="girl", lash=True),
     "bully2": dict(skin=(232, 190, 160), hair="cap", eye=(80, 60, 40), glasses=False, old=False, female=False,
                    brow=(70, 50, 30), body="bully2"),
+    "kid3": dict(skin=(250, 222, 204), hair="bob", eye=(70, 120, 200), glasses=False, old=False, female=True,
+                 brow=(110, 60, 30), body="kid3", lash=True),
+    "kid4": dict(skin=(214, 160, 120), hair="buzz", eye=(60, 40, 25), glasses=False, old=False, female=False,
+                 brow=(30, 22, 18), body="kid4"),
     "gamer": dict(skin=(190, 130, 95), hair="curly_dark", eye=(60, 40, 25), glasses=False, old=False, female=False,
                   brow=(40, 28, 20), body="gamer"),
 }
@@ -612,6 +616,10 @@ BODY = {
                  shoe=(250, 250, 250), pants=(230, 110, 160)),
     "bully2": dict(sh=0.56, hip=0.46, tl=1.3, arm=0.29, hand=0.14, top=(44, 44, 52), leg=(120, 120, 128),
                    shoe=(245, 245, 245), pants=(120, 120, 128)),
+    "kid3": dict(sh=0.44, hip=0.4, tl=1.05, arm=0.25, hand=0.12, top=(150, 90, 190), leg=(60, 70, 120),
+                 shoe=(250, 250, 250), pants=(60, 70, 120)),
+    "kid4": dict(sh=0.46, hip=0.42, tl=1.08, arm=0.26, hand=0.12, top=(245, 150, 50), leg=(70, 80, 100),
+                 shoe=(30, 30, 34), pants=(70, 80, 100)),
     "gamer": dict(sh=0.48, hip=0.44, tl=1.1, arm=0.27, hand=0.13, top=(80, 170, 80), leg=(110, 110, 120),
                   shoe=(30, 30, 34), pants=(110, 110, 120)),
 }

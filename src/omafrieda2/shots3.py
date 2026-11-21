@@ -18,6 +18,31 @@ from gfx import H, W, blur, cam, clamp01, ease_back, ease_io, ease_out, emoji, g
 from world import View, actor, blink, mouth, view_bg  # noqa: E402
 
 shake = S1.shake
+
+# realistischeres Klassenzimmer für alle Klassenszenen
+W2.board_static = W3.board3_static
+
+
+def class_frame3(T, v, kids, post=(), blur_r=0.0, extra=()):
+    f = view_bg(W3.class3_static(), W3.K, v, blur_r).copy()
+    for k in W3.KIDS_BACK:
+        W3.chair_back(f, v, k["x"], k["y"], k["D"])
+        actor(f, v, **dict(k, pose="kid_desk", expr="neutral", blink=blink(T, k["x"]), look=(0.0, 0.1)))
+        W3.desk3(f, v, k["x"], k["y"] + 1.0 * k["D"], 250, 170)
+    for k in kids:
+        W3.chair_back(f, v, k["x"], k["y"], k["D"])
+    for k in kids:
+        actor(f, v, **k)
+    for k in kids:
+        W3.desk3(f, v, k["x"], 1360, 290, 220)
+    for e in extra:
+        e(f, v)
+    for p in post:
+        p(f, v)
+    return f
+
+
+S2.class_frame = class_frame3
 import importlib.util as _ilu  # noqa: E402
 _spec = _ilu.spec_from_file_location("script_f2", str(Path(__file__).resolve().parent / "script.py"))
 _sc = _ilu.module_from_spec(_spec)
@@ -621,6 +646,27 @@ def shot_sniff(t, T):
     return yard(T, v, [oma], dixi={0: (0.0, False, 0.0)}, post=(lambda f, vv: stink(f, vv, T, 0, 1.0),))
 
 
+def shot_rollcall(t, T):
+    return board_oma(t, T, "oma_stand", expr="neutral", look=(0.3, 0.0), gl=0.12)
+
+
+def shot_hand_up(t, T):
+    up = t < 0.55
+    return klass(T, View(1.2, 540, 1080), gamer=dict(pose="kid_reach" if up else "kid_desk",
+                                                     expr="neutral" if up else "shock", look=(0.6, -0.3)),
+                 girl=dict(expr="laugh" if not up else "smirk", mouth=0.6 if not up else 0, mouth_kind="grin"),
+                 kleiner=dict(expr="smile", look=(-0.7, 0.0)))
+
+
+def shot_age_q(t, T):
+    m = mouth("girl", T)
+    return klass(T, View(2.1, 300, 1100), girl=dict(pose="kid_reach", expr="neutral", mouth=m, look=(0.5, -0.4)))
+
+
+def shot_age_a(t, T):
+    return board_oma(t, T, "oma_stand", expr="smirk", look=(-0.3, 0.0), brow_up=1 if t > 1.0 else 0)
+
+
 def shot_faust_q(t, T):
     m = mouth("gamer", T)
     return klass(T, View(2.2, 540, 1100), gamer=dict(pose="kid_reach", expr="neutral", mouth=m, look=(0.0, -0.5)),
@@ -695,7 +741,8 @@ def shot_morgen_a(t, T):
 
 INSERTS = [
     [(0.0, 2.4, shot_sniff)],
-    [(0.0, 1.9, shot_faust_q), (1.9, 3.2, shot_faust_a), (3.2, 3.8, shot_gulp)],
+    [(0.0, 2.7, shot_rollcall), (2.7, 3.55, shot_hand_up), (3.55, 5.9, shot_age_q), (5.9, 8.45, shot_age_a),
+     (8.45, 10.3, shot_faust_q), (10.3, 12.0, shot_faust_a), (12.0, 12.6, shot_gulp)],
     [(0.0, 2.15, shot_stricken_q), (2.15, 4.8, shot_stricken_a)],
     [(0.0, 1.2, shot_besetzt)],
     [(0.0, 1.4, shot_muffled)],

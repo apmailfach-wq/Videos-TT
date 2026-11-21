@@ -180,7 +180,7 @@ def board_text(f, v, T, a=6.0, b=6.9):
     lay = Image.new("RGBA", (520, 150), (0, 0, 0, 0))
     ImageDraw.Draw(lay).text((10, 10), txt[:n], font=font(F_HAND, 110), fill=(255, 250, 200))
     from gfx import paste_c
-    sx, sy = v.p(500 + 260, 840 + 75)
+    sx, sy = v.p(560, 840 + 75)
     paste_c(f, lay, sx, sy, v.z)
 
 

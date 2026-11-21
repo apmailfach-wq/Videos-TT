@@ -15,7 +15,7 @@ VOICES = {
 
 # (id, speaker, text, start_s, latest_end_s)
 # Einschübe für zusätzliche Gags: (Zeitpunkt in der alten Zeitachse, Dauer)
-INS = [(5.90, 2.4), (13.85, 3.8), (40.10, 4.8), (43.95, 1.2), (49.90, 1.4), (56.30, 3.8)]
+INS = [(5.90, 2.4), (13.85, 12.6), (41.70, 4.8), (43.95, 1.2), (49.90, 1.4), (56.30, 3.8)]
 
 
 def R(t):
@@ -38,8 +38,8 @@ _LINES_OLD = [
     ("erz1",  "erz",      "Das ist Frieda. Sie ist achtzig.",                                3.30, 5.80),
     ("erz2",  "erz",      "Heute ist sie Vertretungslehrerin.",                              6.00, 8.10),
     ("girl1", "girl",     "Ey, die Oma ist unsere Lehrerin?",                                8.40, 10.35),
-    ("lach1", "gamer",    "Hahaha!",                                                         10.35, 10.95),
-    ("oma2",  "omaflott", "Und ihr seid heute meine Enkel. Pech gehabt.",                    11.05, 13.85),
+    ("lach1", "gamer",    "Hahaha!",                                                         10.45, 10.95),
+    ("oma2",  "omaflott", "Und ihr seid heute meine Enkel. Pech gehabt.",                    11.20, 13.85),
     ("oma3",  "oma",      "Zielen üben wir in Sport.",                                       15.00, 16.60),
     ("girl2", "girl",     "Wooow!",                                                          16.70, 17.20),
     ("oma4",  "omaflott", "Handy weg. Ich hab achtzig Jahre ohne geschafft.",                18.00, 20.95),
@@ -62,10 +62,13 @@ _LINES_OLD = [
     ("erz5",  "erz",      "Wo geht Oma Frieda als Nächstes hin?",                            59.60, 61.85),
 ]
 
-LINES = [(i, sp, tx, round(R(a), 2), round(R(b), 2)) for i, sp, tx, a, b in _LINES_OLD] + [
+LINES = [(i, sp, tx, round(R(a), 2), round(R_end(b), 2)) for i, sp, tx, a, b in _LINES_OLD] + [
     ("gag1", "oma",      "Ah. Der Duft der Bildung.",                      at(0, 0.20), at(0, 2.25)),
-    ("gag2", "gamer",    "Faust? Wie die Hand?",                           at(1, 0.10), at(1, 1.80)),
-    ("gag3", "oma",      "Genau wie die Hand.",                            at(1, 2.00), at(1, 3.65)),
+    ("gagA", "omaflott", "Anwesenheit! Wer fehlt, hebt die Hand.",         at(1, 0.10), at(1, 2.70)),
+    ("gagB", "girl",     "Frau Faust, wie alt sind Sie eigentlich?",       at(1, 3.55), at(1, 5.80)),
+    ("gagC", "omaflott", "Alt genug, um alle eure Ausreden zu kennen.",    at(1, 5.95), at(1, 8.35)),
+    ("gag2", "gamer",    "Faust? Wie die Hand?",                           at(1, 8.50), at(1, 10.20)),
+    ("gag3", "oma",      "Genau wie die Hand.",                            at(1, 10.40), at(1, 12.00)),
     ("gag4", "rowdy",    "Was willst du machen? Stricken?",                at(2, 0.10), at(2, 2.10)),
     ("gag5", "omaflott", "Ich strick dir gleich 'nen Knoten in die Beine.", at(2, 2.25), at(2, 4.70)),
     ("gag6", "oma",      "Besetzt.",                                       at(3, 0.25), at(3, 1.10)),
