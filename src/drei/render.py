@@ -36,8 +36,8 @@ BED_X = 300                    # pillow / head x
 DOOR_X = 960
 
 # ------------------------------------------------------------------ timeline
-INTRO = 1.5
-DAYS = [(1, 6.5), (2, 5.0), (3, 5.0), (7, 1.7), (21, 1.7), (66, 1.7), (150, 1.7), (365, 6.5)]
+INTRO = 2.8                    # hook card
+DAYS = [(1, 9.0), (2, 4.5), (3, 5.0), (7, 1.9), (21, 1.9), (66, 1.9), (150, 1.9), (365, 6.0)]
 DSTART = []
 _t = INTRO
 for d, L in DAYS:
@@ -80,7 +80,7 @@ def state(who, t):
     alpha = 1.0 - (0.45 * i / (len(DAYS) - 1) if who == 0 else 0)   # AUSREDE fades over the year
     if who == 2 or (who == 1 and mot_gets_up(day)):
         if p < 0.5:
-            return dict(pose="lie", phone=p < night_off + (0.05 if who == 1 else 0), alpha=alpha)
+            return dict(pose="lie", phone=p < (0.22 if who == 2 else night_off + 0.05), alpha=alpha)
         if p < 0.6:
             return dict(pose="sit", k=ease((p - 0.5) / 0.1), alpha=alpha)
         k = (p - 0.6) / 0.28
@@ -129,6 +129,48 @@ def glow_sprite(col, r):
     g = Image.new("RGBA", (4 * r, 4 * r), col + (0,))
     ImageDraw.Draw(g).ellipse([r, r, 3 * r, 3 * r], fill=col + (170,))
     return g.filter(ImageFilter.GaussianBlur(r * 0.6))
+
+
+F_EMOJI = "/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf"
+F_BOLD = "/usr/share/fonts/opentype/inter/Inter-Bold.otf"
+
+
+@lru_cache(maxsize=64)
+def emoji(ch, size):
+    im = Image.new("RGBA", (150, 150), (0, 0, 0, 0))
+    ImageDraw.Draw(im).text((75, 75), ch, font=ImageFont.truetype(F_EMOJI, 109), embedded_color=True, anchor="mm")
+    im = im.crop(im.getbbox())
+    k = size / max(im.size)
+    return im.resize((max(1, int(im.width * k)), max(1, int(im.height * k))), Image.LANCZOS)
+
+
+def put_emoji(img, ch, x, y, size, scale=S):
+    if size < 4:
+        return
+    e = emoji(ch, int(size * scale))
+    img.alpha_composite(e, (int(x * scale - e.width / 2), int(y * scale - e.height / 2)))
+
+
+def bubble(img, x, y, text, p, gold=False):
+    """Speech bubble with tail pointing down-left to (x, y)."""
+    if p <= 0.02:
+        return
+    d = ImageDraw.Draw(img, "RGBA")
+    f = ImageFont.truetype(F_BOLD, int(36 * S * min(1, p)))
+    tw = f.getlength(text) / S
+    x0, y0 = x + 30, y - 110
+    x1, y1 = x0 + tw + 44, y0 + 66
+    bg = (255, 190, 60) if gold else (245, 245, 250)
+    d.rounded_rectangle([x0 * S, y0 * S, x1 * S, y1 * S], 22 * S, fill=bg)
+    d.polygon([(x0 + 24) * S, y1 * S, (x0 + 60) * S, y1 * S, x * S, (y - 20) * S], fill=bg)
+    d.text(((x0 + 22) * S, (y0 + 33) * S), text, font=f, fill=(20, 18, 40), anchor="lm")
+
+
+# night / morning lines (days 1-3)
+SAY_NIGHT = ["Nur noch 5 Minuten…", "Ab morgen wirklich!", "HANDY WEG."]
+SAY_MORNING = {0: "Snooze…", 1: {1: "Los geht's!", 2: "Okay… los.", 3: "…ab morgen."}}
+DOOR_ACT = ["⚽", "🏋️", "📚", "🏃", "🎸", "📚", "⚽", "🏆"]
+STATUS = [("😴", "📉"), ("😩", "📉"), ("💪", "📈")]
 
 
 def put_glow(img, x, y, col, r, a=1.0):
@@ -228,6 +270,8 @@ def render_frame(n):
         d.polygon(sc(DOOR_X - 52, y2, DOOR_X + 52, y2, DOOR_X + 60, y2 + 60, DOOR_X - 240 * door, y2 + 60),
                   fill=(255, 210, 140, int(80 * door)))
         put_glow(img, DOOR_X, y2 - 160, (255, 200, 120), 240, 0.7 * door)
+        if door > 0.5:
+            put_emoji(img, DOOR_ACT[min(i, len(DOOR_ACT) - 1)] if not outro else "🏆", DOOR_X, y2 - 180, 80 * door)
     # rooms: labels, clocks, phones, people
     for who, (label, y) in enumerate(ROWS):
         st = state(who, t)
@@ -246,7 +290,25 @@ def render_frame(n):
         hx = BED_X if st["pose"] != "walk" else st["x"]
         if st["pose"] != "gone":
             ly = y - 210 if st["pose"] == "lie" else y - 330
-            text_spaced(d, hx + 40, ly, label, 36, lab_col + (int(255 * dim),))
+            text_spaced(d, hx - 20, ly, label, 36, lab_col + (int(255 * dim),))
+        if not outro and i <= 2:
+            if 0.02 < p < 0.2 and who != 2:
+                bubble(img, BED_X + 110, y - 160, SAY_NIGHT[who], ease((p - 0.02) / 0.04), gold=who == 2)
+            if 0.55 < p < 0.8 and who in SAY_MORNING:
+                txt = SAY_MORNING[0] if who == 0 else SAY_MORNING[1][day]
+                hy = y - 160 if st["pose"] == "lie" else y - 280
+                bubble(img, (st.get("x", BED_X)) + 110, hy, txt, ease((p - 0.55) / 0.04))
+        if who == 2 and not outro and 0.2 < p < 0.38:       # phone visibly goes into the drawer
+            k = ease((p - 0.22) / 0.09)
+            dr = 1 - abs(2 * ease((p - 0.21) / 0.15) - 1)       # drawer opens then closes
+            d.rectangle(sc(132, y - 70, 208 + 40 * dr, y - 40), fill=(70, 74, 120))
+            px, py = BED_X + 50 + (170 - BED_X - 50) * k, y - 150 + 95 * k
+            if k < 0.98:
+                d.rectangle(sc(px - 11, py - 18, px + 11, py + 18), fill=(160, 205, 255))
+        if 3 <= i and not outro:                              # visible results during the time-lapse
+            em, _ = STATUS[who]
+            sz = 54 + (30 * i / 7 if who == 2 else 0)
+            put_emoji(img, em, 880, y - 150, sz)
         if st["pose"] in ("lie", "sit", "walk"):
             st = dict(st, alpha=st.get("alpha", 1) * dim)
             d2 = ImageDraw.Draw(img, "RGBA")
@@ -261,6 +323,33 @@ def render_frame(n):
         text_spaced(d, W / 2, 350, "NUR EINER LEGTE ES", 46, (255, 200, 90, a), spacing=0.06)
         text_spaced(d, W / 2, 405, "JEDEN ABEND WEG.", 46, (255, 200, 90, a), spacing=0.06)
     frame = img.resize((W, H), Image.LANCZOS)
+    if i == 0 and not outro:                                  # zoom onto DISZIPLIN while he puts the phone away
+        z = ease((p - 0.2) / 0.05) * (1 - ease((p - 0.38) / 0.05))
+        if z > 0:
+            zz = 1 + 0.5 * z
+            cx, cy = 540 + (400 - 540) * z, 960 + (1420 - 960) * z
+            cw, ch = W / zz, H / zz
+            x0 = min(max(cx - cw / 2, 0), W - cw)
+            y0 = min(max(cy - ch / 2, 0), H - ch)
+            frame = frame.crop((int(x0), int(y0), int(x0 + cw), int(y0 + ch))).resize((W, H), Image.BICUBIC)
+            shade = Image.new("L", (1, H))
+            shade.putdata([int(235 * z * max(0, 1 - yy / (H * 0.42))) for yy in range(H)])
+            frame.alpha_composite(Image.merge("RGBA", [Image.new("L", (W, H), v) for v in (8, 10, 28)] + [shade.resize((W, H))]))
+            if 0.26 < p < 0.4:
+                q = ease((p - 0.26) / 0.03)
+                ff = ImageFont.truetype(F_BIG, int(110 * max(q, 0.05)))
+                ImageDraw.Draw(frame).text((W / 2, 380), "HANDY WEG.", font=ff, fill=(255, 190, 60), anchor="mm",
+                                           stroke_width=6, stroke_fill=(10, 12, 30))
+    if t < INTRO:                                             # hook card
+        dd = ImageDraw.Draw(frame, "RGBA")
+        fade = 1 - ease((t - INTRO + 0.4) / 0.4)
+        dd.rectangle([0, 0, W, H], fill=(8, 10, 28, int(225 * fade)))
+        fb = ImageFont.truetype(F_BIG, 104)
+        for k, (txt, col, t0) in enumerate((("3 TEENS.", (255, 255, 255), 0.1), ("1 HANDY.", (120, 180, 255), 0.6),
+                                             ("NUR EINER", (255, 190, 60), 1.2), ("SCHAFFT'S.", (255, 190, 60), 1.4))):
+            a = int(255 * c01((t - t0) / 0.15) * fade)
+            if a > 0:
+                dd.text((W / 2, 690 + k * 150), txt, font=fb, fill=col + (a,), anchor="mm")
     if outro:
         lt = t - OUTRO0
         dd = ImageDraw.Draw(frame, "RGBA")
@@ -275,8 +364,8 @@ def render_frame(n):
             ft = ImageFont.truetype(F_TXT, 56)
             dd.text((W / 2, 1210), "Wer bist du – 1, 2 oder 3?", font=ft, fill=(230, 230, 232, a2), anchor="mm")
             dd.text((W / 2, 1290), "Schreib's in die Kommentare.", font=ft, fill=(160, 160, 165, a2), anchor="mm")
-    if t < 0.6:
-        frame.alpha_composite(Image.new("RGBA", (W, H), (0, 0, 0, int(255 * (1 - t / 0.6)))))
+    if t < 0.15:
+        frame.alpha_composite(Image.new("RGBA", (W, H), (0, 0, 0, int(255 * (1 - t / 0.15)))))
     if t > TOTAL - 0.6:
         frame.alpha_composite(Image.new("RGBA", (W, H), (0, 0, 0, int(255 * c01((t - TOTAL + 0.6) / 0.6)))))
     return frame.convert("RGB").tobytes()
