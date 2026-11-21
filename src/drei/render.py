@@ -38,7 +38,8 @@ CHAIR_X = 790                  # gaming chair in front of the bed
 
 # ------------------------------------------------------------------ timeline
 INTRO = 2.8                    # hook card
-DAYS = [(1, 9.0), (2, 4.5), (3, 5.0), (7, 1.9), (21, 1.9), (66, 1.9), (150, 1.9), (365, 6.0)]
+DAYS = [(1, 13.0), (2, 6.0), (3, 6.0), (7, 2.8), (21, 2.8), (66, 2.8), (150, 2.8), (365, 8.0)]
+NIGHT_LEAD = {0: 5.0, 1: 2.4, 2: 2.4}   # seconds spent in phase 0..0.2 (speech bubbles) on days 1-3
 DSTART = []
 _t = INTRO
 for d, L in DAYS:
@@ -62,7 +63,13 @@ def day_at(t):
     """(index, day number, phase 0..1) – before intro end: day 1 phase 0."""
     for i in range(len(DAYS) - 1, -1, -1):
         if t >= DSTART[i]:
-            return i, DAYS[i][0], c01((t - DSTART[i]) / DAYS[i][1])
+            lt, L = t - DSTART[i], DAYS[i][1]
+            lead = NIGHT_LEAD.get(i)
+            if lead:                                   # slow first part so the bubbles can be read
+                p = 0.2 * lt / lead if lt < lead else 0.2 + 0.8 * (lt - lead) / (L - lead)
+            else:
+                p = lt / L
+            return i, DAYS[i][0], c01(p)
     return 0, 1, 0.0
 
 
@@ -330,7 +337,7 @@ def render_frame(n):
     if morning > 0:
         put_glow(img, 540, 545, (255, 190, 110), 170, 0.6 * morning)
     # day counter + clock time
-    text_spaced(d, 740, 510, f"TAG {day}", 44, (200, 204, 235), anchor="lm")
+    text_spaced(d, 740, 510, f"TAG {day}", 44 * (1 + (0.35 * (1 - ease(p / 0.15)) if i >= 3 else 0)), (200, 204, 235), anchor="lm")
     # signature: golden year bar (day / 365)
     d.rounded_rectangle(sc(740, 600, 1000, 610), 4 * S, fill=(40, 44, 86))
     d.rounded_rectangle(sc(740, 600, 740 + max(8, 260 * day / 365), 610), 4 * S, fill=RED)
@@ -370,8 +377,8 @@ def render_frame(n):
             pass
         text_spaced(d, 300, y + 41, label, 34, lab_col + (int(255 * dim),))     # name plate on the room's front
         if not outro and i <= 2:
-            if 0.02 < p < 0.2 and who != 2:
-                bubble(img, *((CHAIR_X - 10, y - 305) if st["pose"] == "scroll" else (BED_X + 130, y - 160)), SAY_NIGHT[who], ease((p - 0.02) / 0.04), gold=who == 2, left=st["pose"] == "scroll")
+            if (0.02 if who == 0 else 0.09) < p < 0.2 and who != 2:   # one after the other
+                bubble(img, *((CHAIR_X - 10, y - 200) if st["pose"] == "scroll" else (BED_X + 130, y - 160)), SAY_NIGHT[who], ease((p - (0.02 if who == 0 else 0.09)) / 0.03), gold=who == 2, left=st["pose"] == "scroll")
             if 0.55 < p < 0.8 and who in SAY_MORNING:
                 txt = SAY_MORNING[0] if who == 0 else SAY_MORNING[1][day]
                 hy = y - 160 if st["pose"] == "lie" else y - 280
@@ -385,8 +392,8 @@ def render_frame(n):
                 d.rectangle(sc(px - 11, py - 18, px + 11, py + 18), fill=(160, 205, 255))
         if 3 <= i and not outro:                              # visible results during the time-lapse
             em, _ = STATUS[who]
-            sz = 54 + (30 * i / 7 if who == 2 else 0)
-            put_emoji(img, em, 880, y - 150, sz)
+            sz = (54 + (30 * i / 7 if who == 2 else 0)) * (0.5 + 0.5 * ease(p / 0.12))
+            put_emoji(img, em, 470, y - 215, sz)
         if st["pose"] in ("lie", "sit", "walk", "scroll"):
             st = dict(st, alpha=st.get("alpha", 1) * dim)
             d2 = ImageDraw.Draw(img, "RGBA")
