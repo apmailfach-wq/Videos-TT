@@ -6,7 +6,7 @@ RATE = "+8%"
 SCENES = [
     {"shot": "hook",   "text": "Achtung, Stau! Aber vorne ist nichts passiert – kein Unfall, keine Baustelle. Wie kann das sein?"},
     {"shot": "brake",  "text": "Ganz einfach: Einer bremst kurz zu stark."},
-    {"shot": "wave",   "text": "Der Hintermann erschrickt und bremst noch stärker. Der nächste noch stärker."},
+    {"shot": "wave",   "text": "Der Hintermann erschreckt sich und bremst noch stärker. Der nächste noch stärker."},
     {"shot": "aerial", "text": "Und ein paar hundert Meter weiter steht plötzlich alles. Das ist der Stau aus dem Nichts."},
     {"shot": "gap",    "text": "Gerade als Fahranfänger kannst du das verhindern. Tipp eins: genug Abstand. Die Faustregel heißt halber Tacho – bei Tempo hundert also fünfzig Meter."},
     {"shot": "posts",  "text": "Und so schätzt du das ganz leicht: Die weißen Pfosten am Straßenrand stehen alle fünfzig Meter. Zwischen dir und deinem Vordermann sollte also mindestens ein Pfosten-Abstand sein."},
