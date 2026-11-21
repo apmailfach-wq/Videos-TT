@@ -67,7 +67,22 @@ async def synth(lid, spk, text, start, latest):
                 pos = a1
                 cut += a1 - a0
     segs.append((pos, speech_end))
-    y = np.concatenate([x[int(p0 * SR):int(p1 * SR)] for p0, p1 in segs])
+    # Teilstücke mit 12-ms-Überblendung verbinden (keine Knackser an den Nähten)
+    xf = int(0.012 * SR)
+    pieces = [x[int(p0 * SR):int(p1 * SR)].copy() for p0, p1 in segs]
+    y = pieces[0]
+    for p in pieces[1:]:
+        if len(y) > xf and len(p) > xf:
+            ramp = np.linspace(0, 1, xf, dtype=np.float32)
+            mix = y[-xf:] * (1 - ramp) + p[:xf] * ramp
+            y = np.concatenate([y[:-xf], mix, p[xf:]])
+            cut += xf / SR   # Überblendung verkürzt minimal
+        else:
+            y = np.concatenate([y, p])
+    fade = int(0.008 * SR)
+    if len(y) > 2 * fade:
+        y[:fade] *= np.linspace(0, 1, fade, dtype=np.float32)
+        y[-fade:] *= np.linspace(1, 0, fade, dtype=np.float32)
     trimmed = OUT / f"{lid}_trim.wav"
     import wave as _wave
     with _wave.open(str(trimmed), "wb") as wf:

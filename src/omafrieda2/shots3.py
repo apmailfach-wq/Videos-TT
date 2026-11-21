@@ -4,7 +4,7 @@ import random
 import sys
 from pathlib import Path
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFilter
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "omafrieda"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -110,6 +110,7 @@ def yard(T, v, acts=(), dixi=None, pre=(), post=(), blur_r=0.0):
         actor(f, v, **{k: val for k, val in a.items() if k != "_dixi"})
     for p in post:
         p(f, v)
+    W3.draw_flies(f, v, T, W3.DIXI[0]["fx"] - 10, W3.DIXI[0]["G"] - 380, n=3, radius=70, seed=3, size=14)
     return f
 
 
@@ -615,27 +616,20 @@ _OLD_SHOTS = [
 
 # ------------------------------------------------------------------ Zusätzliche Gags (Einschübe)
 def stink(f, v, T, i=0, strength=1.0):
-    """Grüne Gestank-Schwaden + Fliegen über dem Dixi."""
+    """Weiche, durchscheinende Geruchsschwaden + Fliegen über dem Dixi."""
     p = W3.DIXI[i]
-    d = ImageDraw.Draw(f, "RGBA")
-    for k in range(3):
-        ph = (T * 0.6 + k / 3) % 1
-        x0 = p["fx"] - 60 + k * 50
+    lay = Image.new("RGBA", f.size, (0, 0, 0, 0))
+    d = ImageDraw.Draw(lay, "RGBA")
+    for k in range(4):
+        ph = (T * 0.45 + k / 4) % 1
+        x0 = p["fx"] - 80 + k * 45
         pts = []
-        for j in range(12):
-            u = j / 11
-            pts.append(v.p(x0 + math.sin(u * 7 + T * 3 + k) * 18, p["G"] - 360 - u * 160 - ph * 60))
-        d.line(pts, fill=(140, 190, 80, int(170 * strength * (1 - ph))), width=int(7 * v.z), joint="curve")
-    r = random.Random(3)
-    for k in range(6):
-        a = T * (3 + k) + k
-        x = p["fx"] + 10 + math.cos(a) * (60 + 15 * k)
-        y = p["G"] - 380 + math.sin(a * 1.3) * 40
-        sx, sy = v.p(x, y)
-        rr = 3.5 * v.z
-        d.ellipse([sx - rr, sy - rr, sx + rr, sy + rr], fill=(20, 20, 20, 230))
-        d.line([(sx - rr * 2, sy - rr), (sx + rr * 2, sy - rr)], fill=(230, 230, 240, 160), width=max(1, int(v.z)))
-
+        for j in range(14):
+            u = j / 13
+            pts.append(v.p(x0 + math.sin(u * 6 + T * 2.2 + k) * 16, p["G"] - 350 - u * 170 - ph * 50))
+        d.line(pts, fill=(150, 175, 95, int(80 * strength * (1 - ph))), width=int(14 * v.z), joint="curve")
+    f.alpha_composite(lay.filter(ImageFilter.GaussianBlur(6 * v.z)))
+    W3.draw_flies(f, v, T, p["fx"] - 20, p["G"] - 400, n=6, radius=90, seed=7 + i, size=16)
 
 def shot_sniff(t, T):
     v = View(1.9, 740, 1210)

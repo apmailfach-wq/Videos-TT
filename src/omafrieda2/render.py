@@ -48,6 +48,61 @@ def WR(x):
     return W(S.R(x))
 
 
+# ---- Kurzfassung: ganze Einstellungen weglassen, Zeitachse ohne Sprünge neu aufbauen
+KURZ_SHOTS = {"shot_sniff", "shot_rollcall", "shot_hand_up", "shot_faust_q", "shot_faust_a", "shot_gulp", "shot_wow",
+              "shot_phone_game", "shot_phone_take", "shot_phone_sock", "shot_phone_cry", "shot_bully2_shock",
+              "shot_danke", "shot_morgen_q", "shot_morgen_a"}
+CUTS = []
+if os.environ.get("KURZ"):
+    for a, b, fn in S.SHOTS:
+        if getattr(fn, "__name__", "") in KURZ_SHOTS:
+            A, B = W(a), W(b)
+            if CUTS and abs(CUTS[-1][1] - A) < 1e-6:
+                CUTS[-1] = (CUTS[-1][0], B)
+            else:
+                CUTS.append((A, B))
+
+
+def Hcut(x):
+    """gedehnte Zeit -> Zeit der Kurzfassung (NaN innerhalb eines Schnitts)."""
+    for a, b in CUTS:
+        if a < x < b:
+            return float("nan")
+    return x - sum(b - a for a, b in CUTS if b <= x)
+
+
+def Hinv(y):
+    x = y
+    for a, b in CUTS:
+        if x >= a:
+            x += b - a
+    return x
+
+
+if CUTS:
+    _W0, _Winv0 = W, Winv
+
+    def W(t):  # noqa: F811
+        return Hcut(_W0(t))
+
+    def Winv(T):  # noqa: F811
+        return _Winv0(Hinv(T))
+
+    _keep = []
+    for l in TL["lines"]:
+        if math.isnan(Hcut(l["start"])):
+            continue
+        sh = Hcut(l["start"]) - l["start"]
+        l["start"] += sh
+        l["end"] += sh
+        for w in l["words"]:
+            w["start"] += sh
+            w["end"] += sh
+        _keep.append(l)
+    TL["lines"] = _keep
+    LINES = {l["id"]: l for l in TL["lines"]}
+    TOTAL = Hcut(TOTAL)
+
 NFRAMES = int(TOTAL * FPS)
 SR = 48000
 GROUP = {"oma": "oma", "omaflott": "oma", "gamer": "gamer", "girl": "girl", "rowdy": "rowdy", "kleiner": "kleiner",
@@ -554,6 +609,8 @@ def build_audio(path):
     mus = np.zeros(n)
 
     def put(buf, x, T, g=1.0):
+        if T is None or (isinstance(T, float) and math.isnan(T)):
+            return
         i = int(T * SR)
         if i >= n or i + len(x) <= 0:
             return
@@ -642,6 +699,20 @@ def build_audio(path):
     put(sfx, fx_pop(), WR(60.55), 0.6)
     put(sfx, fx_riser(2.6), WR(59.8), 0.6)
     put(sfx, fx_scratch(), W(END), 1.0)
+    # Fliegen-Summen
+    def buzz(dur, seed):
+        rr = np.random.default_rng(seed)
+        t = np.arange(int(dur * SR)) / SR
+        f0 = 210 + 25 * np.sin(2 * np.pi * rr.uniform(2, 4) * t) + 15 * np.sin(2 * np.pi * 9 * t)
+        ph = np.cumsum(f0) / SR
+        x = (2 * (ph % 1) - 1) * (0.6 + 0.4 * np.sin(2 * np.pi * rr.uniform(0.5, 1.5) * t) ** 2)
+        x = fast_lp(x, 2200)
+        env_ = np.minimum(1, t / 0.15) * np.minimum(1, (dur - t) / 0.3)
+        return x * env_ * 0.35
+    put(sfx, buzz(2.2, 1), W(S.R_end(S.INS[0][0]) + 0.1), 0.5)
+    put(sfx, buzz(1.2, 2), W(S.R_end(S.INS[3][0])), 0.5)
+    put(sfx, buzz(1.5, 3), W(S.R_end(S.INS[4][0])), 0.5)
+    put(sfx, buzz(2.5, 4), W(S.BONBON_T - 1.0), 0.35)
     # Gags
     ins = [W(S.R_end(p)) for p, _ in S.INS]
     for k in range(6):

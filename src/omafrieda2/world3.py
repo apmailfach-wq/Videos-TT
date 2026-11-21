@@ -361,3 +361,66 @@ def desk3(f, v, x, y, w=300, h=200):
     rrect(f, x0 + 10 * v.z, y0 + 18 * v.z, x1 - 10 * v.z, y0 + h * 0.62 * v.z, 6 * v.z, (150, 156, 164), amb=0.6,
           spec=0.2)
     rrect(f, x0, y0 - 6 * v.z, x1, y0 + 22 * v.z, 6 * v.z, (214, 182, 130), amb=0.65, spec=0.3)
+
+
+# ------------------------------------------------------------------ Stubenfliegen (realistisch)
+@lru_cache(maxsize=64)
+def fly_sprite(px, wing, heading_q):
+    """Stubenfliege von oben/schräg: dunkler, behaarter Körper mit grünlichem Schimmer, rotbraune Facettenaugen,
+    durchsichtige, geäderte Flügel. wing: 0..3 Flügelschlag-Phase (0 = angelegt)."""
+    s = px / 20.0
+    S = int(px * 3)
+    im = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+    cx, cy = S / 2, S / 2
+    # Flügel (hinter dem Körper), Schlagbewegung als mehrere halbtransparente Lagen = Bewegungsunschärfe
+    wl = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+    wd = ImageDraw.Draw(wl)
+    angles = {0: [(32,)], 1: [(55,), (75,)], 2: [(85,), (105,)], 3: [(60,), (40,)]}[wing]
+    for (a,) in angles:
+        for side in (-1, 1):
+            ang = math.radians(90 + side * a)
+            L = 13 * s
+            tx, ty = cx + math.cos(ang) * L * side * 0 + side * math.sin(math.radians(a)) * L, cy - math.cos(math.radians(a)) * L * 0.9
+            wing_poly = [(cx + side * 2 * s, cy - 2 * s), (tx, ty - 3 * s), (tx + side * 3 * s, ty + 2 * s),
+                         (cx + side * 3 * s, cy + 3 * s)]
+            alpha = 70 if wing else 120
+            wd.polygon(wing_poly, fill=(225, 232, 240, alpha))
+            wd.line([wing_poly[0], (tx, ty)], fill=(90, 90, 100, alpha + 40), width=max(1, int(0.6 * s)))
+    im.alpha_composite(wl.filter(ImageFilter.GaussianBlur(0.6 * s if wing else 0.2)))
+    d = ImageDraw.Draw(im)
+    # Beine
+    for k in range(3):
+        for side in (-1, 1):
+            y0 = cy - 1 * s + k * 2.5 * s
+            d.line([(cx + side * 1.5 * s, y0), (cx + side * 5 * s, y0 + 2 * s), (cx + side * 6 * s, y0 + 5 * s)],
+                   fill=(25, 22, 20, 230), width=max(1, int(0.5 * s)))
+    # Hinterleib, Brust, Kopf
+    ell(im, cx, cy + 4.5 * s, 3.6 * s, 5.2 * s, (48, 46, 44), amb=0.45, spec=0.55, shine=40)
+    for k in range(3):
+        d.arc([cx - 3.4 * s, cy + (1.8 + k * 2.2) * s, cx + 3.4 * s, cy + (4.6 + k * 2.2) * s], 20, 160,
+              fill=(110, 105, 95, 140), width=max(1, int(0.5 * s)))
+    ell(im, cx, cy - 0.5 * s, 3.2 * s, 3.0 * s, (62, 66, 58), amb=0.45, spec=0.6, shine=40)
+    d.line([(cx - 1 * s, cy - 2.8 * s), (cx - 1 * s, cy + 1.5 * s)], fill=(30, 30, 30, 180), width=max(1, int(0.5 * s)))
+    d.line([(cx + 1 * s, cy - 2.8 * s), (cx + 1 * s, cy + 1.5 * s)], fill=(30, 30, 30, 180), width=max(1, int(0.5 * s)))
+    ell(im, cx, cy - 4.2 * s, 2.6 * s, 2.0 * s, (40, 38, 36), amb=0.45, spec=0.4)
+    for side in (-1, 1):
+        ell(im, cx + side * 1.9 * s, cy - 4.6 * s, 1.5 * s, 1.7 * s, (150, 50, 35), amb=0.5, spec=0.7, shine=30)
+    im = im.rotate(-heading_q, resample=Image.BICUBIC)
+    return im
+
+
+def draw_flies(f, v, T, cx, cy, n=5, radius=70, seed=1, size=11):
+    """Mehrere Fliegen kreisen unruhig um (cx, cy) in Weltkoordinaten."""
+    for k in range(n):
+        r = random.Random(seed * 100 + k)
+        f1, f2, f3 = r.uniform(0.7, 1.6), r.uniform(1.3, 2.6), r.uniform(3.0, 5.0)
+        p1, p2 = r.uniform(0, 6.28), r.uniform(0, 6.28)
+        x = cx + math.cos(T * f1 + p1) * radius * 0.8 + math.sin(T * f3 + p2) * radius * 0.25
+        y = cy + math.sin(T * f2 + p2) * radius * 0.45 + math.cos(T * f3 * 1.3 + p1) * radius * 0.15
+        dx = -math.sin(T * f1 + p1) * f1 * 0.8 + math.cos(T * f3 + p2) * f3 * 0.25
+        dy = math.cos(T * f2 + p2) * f2 * 0.45
+        heading = (int(math.degrees(math.atan2(dx, -dy))) // 30) * 30
+        wing = 1 + int(T * 60 + k) % 3
+        px = max(6, int(size * v.z))
+        sx, sy = v.p(x, y)
+        paste_c(f, fly_sprite(px, wing, heading), sx, sy)
