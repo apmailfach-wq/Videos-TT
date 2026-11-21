@@ -34,6 +34,7 @@ BLUE = (90, 160, 255)
 ROWS = [("AUSREDE", 960), ("MOTIVATION", 1330), ("DISZIPLIN", 1700)]   # label, platform y
 BED_X = 300                    # pillow / head x
 DOOR_X = 960
+CHAIR_X = 640                  # gaming chair in front of the bed
 
 # ------------------------------------------------------------------ timeline
 INTRO = 2.8                    # hook card
@@ -110,6 +111,19 @@ def base():
         d.rectangle(sc(240, y - 115, 780, y - 90), fill=(70, 74, 122))
         d.rectangle(sc(250, y - 130, 360, y - 100), fill=(106, 110, 156))           # pillow
         d.rectangle(sc(360, y - 125, 770, y - 92), fill=(84, 88, 136))           # blanket
+    for who, (label, y) in enumerate(ROWS):           # gaming chairs
+        cx, acc = CHAIR_X, LABEL_COLS[who]
+        for dx, dy in ((-62, -14), (62, -14), (-32, -6), (32, -6)):
+            d.line(sc(cx, y - 40, cx + dx, y + dy), fill=(20, 20, 32), width=8 * S)
+            d.ellipse(sc(cx + dx - 8, y + dy - 4, cx + dx + 8, y + dy + 12), fill=(14, 14, 24))
+        d.rectangle(sc(cx - 7, y - 120, cx + 7, y - 40), fill=(40, 40, 56))
+        d.rounded_rectangle(sc(cx - 66, y - 345, cx + 66, y - 115), 30 * S, fill=(26, 26, 40))
+        d.rectangle(sc(cx - 44, y - 330, cx - 30, y - 125), fill=acc)
+        d.rectangle(sc(cx + 30, y - 330, cx + 44, y - 125), fill=acc)
+        d.rounded_rectangle(sc(cx - 34, y - 336, cx + 34, y - 300), 12 * S, fill=acc)
+        d.rounded_rectangle(sc(cx - 80, y - 140, cx + 80, y - 105), 14 * S, fill=(34, 34, 50))
+        for sx in (-1, 1):
+            d.rounded_rectangle(sc(cx + sx * 88 - 9, y - 200, cx + sx * 88 + 9, y - 130), 6 * S, fill=(34, 34, 50))
     # door frame (bottom room)
     y = ROWS[2][1]
     d.rectangle(sc(DOOR_X - 60, y - 330, DOOR_X + 60, y), fill=(24, 26, 56))
@@ -151,18 +165,19 @@ def put_emoji(img, ch, x, y, size, scale=S):
     img.alpha_composite(e, (int(x * scale - e.width / 2), int(y * scale - e.height / 2)))
 
 
-def bubble(img, x, y, text, p, gold=False):
+def bubble(img, x, y, text, p, gold=False, left=False):
     """Speech bubble with tail pointing down-left to (x, y)."""
     if p <= 0.02:
         return
     d = ImageDraw.Draw(img, "RGBA")
     f = ImageFont.truetype(F_BOLD, int(36 * S * min(1, p)))
     tw = f.getlength(text) / S
-    x0, y0 = x + 30, y - 110
+    x0, y0 = (x - 30 - tw - 44, y - 110) if left else (x + 30, y - 110)
     x1, y1 = x0 + tw + 44, y0 + 66
     bg = (255, 190, 60) if gold else (245, 245, 250)
     d.rounded_rectangle([x0 * S, y0 * S, x1 * S, y1 * S], 22 * S, fill=bg)
-    d.polygon([(x0 + 24) * S, y1 * S, (x0 + 60) * S, y1 * S, x * S, (y - 20) * S], fill=bg)
+    tx = x1 - 60 if left else x0 + 24
+    d.polygon([tx * S, y1 * S, (tx + 36) * S, y1 * S, x * S, (y - 20) * S], fill=bg)
     d.text(((x0 + 22) * S, (y0 + 33) * S), text, font=f, fill=(20, 18, 40), anchor="lm")
 
 
@@ -206,12 +221,15 @@ def figure(d, pose, y, st, t):
         d.line(sc(hx + 5, hy + 35, BED_X + 30, y - 110), fill=col, width=lw)
         d.ellipse(sc(hx - 32, hy - 32, hx + 32, hy + 32), fill=col)
         d.line(sc(hx + 5, hy + 55, hx + 70, hy + 85), fill=col, width=lw)
-    elif pose == "scroll":                  # sitting up in bed, scrolling on the phone
-        hx, hy = BED_X + 20, y - 256
-        d.line(sc(hx + 5, hy + 35, BED_X + 30, y - 110), fill=col, width=lw)
+    elif pose == "scroll":                  # slumped in the gaming chair, scrolling
+        hx, hy = CHAIR_X, y - 300
+        d.line(sc(hx, hy + 35, hx, y - 125), fill=col, width=lw)                       # torso
+        for k2, dy in enumerate((0, 10)):                                             # legs: bent, clearly sitting
+            d.line(sc(hx, y - 125 + dy, hx + 70, y - 122 + dy, hx + 74 - k2 * 8, y - 25), fill=col, width=lw, joint="curve")
+        d.line(sc(hx - 4, hy + 58, hx - 50, hy + 120, hx - 20, hy + 150), fill=col, width=lw, joint="curve")
         d.ellipse(sc(hx - 32, hy - 32, hx + 32, hy + 32), fill=col)
-        px, py = hx + 82, hy + 14
-        d.line(sc(hx + 8, hy + 58, px - 6, py + 30), fill=col, width=lw)
+        px, py = hx + 82, hy + 40
+        d.line(sc(hx + 6, hy + 58, px - 6, py + 30), fill=col, width=lw)
         d.rounded_rectangle(sc(px - 22, py - 38, px + 22, py + 38), 7 * S, fill=(18, 20, 40))
         d.rectangle(sc(px - 17, py - 32, px + 17, py + 32), fill=(110, 175, 255))
         off = (t * 90) % 22
@@ -298,17 +316,18 @@ def render_frame(n):
         phone_on = st.get("phone", False)
         d.rectangle(sc(150, y - 103, 186, y - 96), fill=(90, 160, 255) if phone_on else (60, 64, 100))
         if st["pose"] == "scroll":
-            put_glow(img, BED_X + 70, y - 245, BLUE, 120, 0.95 * dim)
+            put_glow(img, CHAIR_X + 40, y - 270, BLUE, 130, 0.95 * dim)
         lab_col = LABEL_COLS[who]
         if who == 2 and st["pose"] != "gone":
-            put_glow(img, BED_X if st["pose"] != "walk" else st["x"], y - 160, RED, 110, 0.55)
-        hx = BED_X if st["pose"] != "walk" else st["x"]
+            gx, gy = (CHAIR_X, y - 260) if st["pose"] == "scroll" else (BED_X if st["pose"] != "walk" else st["x"], y - 160)
+            put_glow(img, gx, gy, RED, 110, 0.55)
+        hx = CHAIR_X + 20 if st["pose"] == "scroll" else (BED_X if st["pose"] != "walk" else st["x"])
         if st["pose"] != "gone":
-            ly = y - 210 if st["pose"] == "lie" else y - 330
-            text_spaced(d, hx - 20, ly, label, 36, lab_col + (int(255 * dim),))
+            pass
+        text_spaced(d, 300, y + 41, label, 34, lab_col + (int(255 * dim),))     # name plate on the room's front
         if not outro and i <= 2:
             if 0.02 < p < 0.2 and who != 2:
-                bubble(img, BED_X + 130, y - (200 if st["pose"] == "scroll" else 160), SAY_NIGHT[who], ease((p - 0.02) / 0.04), gold=who == 2)
+                bubble(img, *((CHAIR_X - 60, y - 190) if st["pose"] == "scroll" else (BED_X + 130, y - 160)), SAY_NIGHT[who], ease((p - 0.02) / 0.04), gold=who == 2, left=st["pose"] == "scroll")
             if 0.55 < p < 0.8 and who in SAY_MORNING:
                 txt = SAY_MORNING[0] if who == 0 else SAY_MORNING[1][day]
                 hy = y - 160 if st["pose"] == "lie" else y - 280
@@ -317,7 +336,7 @@ def render_frame(n):
             k = ease((p - 0.22) / 0.09)
             dr = 1 - abs(2 * ease((p - 0.21) / 0.15) - 1)       # drawer opens then closes
             d.rectangle(sc(132, y - 70, 208 + 40 * dr, y - 40), fill=(70, 74, 120))
-            px, py = BED_X + 102 + (170 - BED_X - 102) * k, y - 242 + 187 * k
+            px, py = CHAIR_X + 82 + (170 - CHAIR_X - 82) * k, y - 260 + 205 * k
             if k < 0.98:
                 d.rectangle(sc(px - 11, py - 18, px + 11, py + 18), fill=(160, 205, 255))
         if 3 <= i and not outro:                              # visible results during the time-lapse
@@ -342,7 +361,7 @@ def render_frame(n):
         z = ease((p - 0.2) / 0.05) * (1 - ease((p - 0.38) / 0.05))
         if z > 0:
             zz = 1 + 0.5 * z
-            cx, cy = 540 + (400 - 540) * z, 960 + (1460 - 960) * z
+            cx, cy = 540 + (470 - 540) * z, 960 + (1460 - 960) * z
             cw, ch = W / zz, H / zz
             x0 = min(max(cx - cw / 2, 0), W - cw)
             y0 = min(max(cy - ch / 2, 0), H - ch)
