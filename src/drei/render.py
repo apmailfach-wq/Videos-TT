@@ -111,14 +111,16 @@ def base():
         d.rectangle(sc(240, y - 115, 620, y - 90), fill=(70, 74, 122))
         d.rectangle(sc(250, y - 130, 360, y - 100), fill=(106, 110, 156))           # pillow
         d.rectangle(sc(360, y - 125, 610, y - 92), fill=(84, 88, 136))           # blanket
-    for who, (label, y) in enumerate(ROWS):           # bean bags (Sitzsack) in the room's colour
+    for who, (label, y) in enumerate(ROWS):           # bar stool (Hocker), seat in the room's colour
         cx, acc = CHAIR_X, LABEL_COLS[who]
-        dark = tuple(int(v * 0.55) for v in acc)
-        mid = tuple(int(v * 0.75) for v in acc)
-        d.ellipse(sc(cx - 125, y - 60, cx + 125, y + 6), fill=(12, 12, 26))           # shadow
-        d.ellipse(sc(cx - 120, y - 150, cx + 115, y - 5), fill=dark)
-        d.ellipse(sc(cx - 105, y - 205, cx + 40, y - 70), fill=mid)                 # raised back part
-        d.ellipse(sc(cx - 80, y - 190, cx - 20, y - 150), fill=tuple(min(255, int(v * 0.95)) for v in acc))
+        leg = (70, 74, 118)
+        d.ellipse(sc(cx - 75, y - 28, cx + 75, y + 2), fill=(12, 12, 26))             # shadow
+        d.line(sc(cx, y - 110, cx, y - 15), fill=(50, 54, 92), width=9 * S)           # back leg
+        d.line(sc(cx - 40, y - 110, cx - 58, y - 8), fill=leg, width=10 * S)
+        d.line(sc(cx + 40, y - 110, cx + 58, y - 8), fill=leg, width=10 * S)
+        d.line(sc(cx - 50, y - 50, cx + 50, y - 50), fill=leg, width=7 * S)           # foot ring
+        d.rounded_rectangle(sc(cx - 62, y - 130, cx + 62, y - 106), 10 * S, fill=tuple(int(v * 0.7) for v in acc))
+        d.ellipse(sc(cx - 62, y - 146, cx + 62, y - 116), fill=acc)                   # cushion
     # door frame (bottom room)
     y = ROWS[2][1]
     d.rectangle(sc(DOOR_X - 60, y - 330, DOOR_X + 60, y), fill=(24, 26, 56))
@@ -255,22 +257,23 @@ def figure(d, pose, y, st, t):
         limb(d, [(hx + 4, hy + 48), (hx + 50, hy + 30 - 40 * k), (hx + 40, hy - 30 * k)], col, lw - 2)
         hand(d, hx + 40, hy - 30 * k, col)
         head(d, hx, hy, col)
-    elif pose == "scroll":                  # sunk into the bean bag, both hands on the phone, knees up
+    elif pose == "scroll":                  # sitting on the stool, hunched over the phone
         cx = CHAIR_X
-        hip, sh = (cx - 20, y - 95), (cx - 60, y - 205)
-        hd = (cx - 38, y - 252)
-        for dk in (0, 12):                                      # legs: knee up, foot on the floor
-            limb(d, [(hip[0] + dk, hip[1]), (cx + 55 + dk, y - 150), (cx + 105 + dk, y - 30)], col, lw)
-            foot(d, cx + 105 + dk, y - 22, col)
-        limb(d, [hip, sh], col, lw + 2)                           # torso leaning back
-        px, py = cx + 30, y - 205 + 4 * math.sin(t * 2)
-        for dk in (0, 14):                                      # both arms to the phone
-            limb(d, [(sh[0] + 6, sh[1] + 14), (cx - 10 + dk, y - 145), (px - 8 + dk, py + 22)], col, lw - 2)
-        phone_screen(d, px, py, t)
-        th = py + 16 - 16 * abs(math.sin(t * 6))               # thumb swiping
-        hand(d, px - 6, py + 26, col)
-        hand(d, px + 12, th, col)
-        head(d, hd[0], hd[1], col)
+        hip, sh = (cx - 12, y - 142), (cx + 8, y - 255)
+        for dk in (12, 0):                                      # legs: thigh horizontal, shin down, foot forward
+            knee = (cx + 62 + dk, y - 140)
+            ft = (cx + 64 + dk, y - 28)
+            limb(d, [(hip[0] + dk, hip[1]), knee, ft], col, lw)
+            foot(d, ft[0], ft[1] + 6, col)
+        limb(d, [hip, (cx - 6, y - 200), sh], col, lw + 2)        # back, slightly rounded
+        px, py = cx + 78, y - 222 + 3 * math.sin(t * 2)
+        for dk in (0, 12):                                      # both arms to the phone
+            limb(d, [(sh[0] + 2, sh[1] + 12), (cx + 22 + dk, y - 175), (px - 10 + dk, py + 20)], col, lw - 2)
+        phone_screen(d, px, py, t, 0.95)
+        th = py + 14 - 16 * abs(math.sin(t * 6))               # thumb swiping
+        hand(d, px - 6, py + 24, col)
+        hand(d, px + 10, th, col)
+        head(d, cx + 36, y - 292, col)                          # head bowed towards the screen
     elif pose == "walk":
         x, k = st["x"], st["k"]
         ph = k * 18
@@ -357,10 +360,10 @@ def render_frame(n):
         phone_on = st.get("phone", False)
         d.rectangle(sc(150, y - 103, 186, y - 96), fill=(90, 160, 255) if phone_on else (60, 64, 100))
         if st["pose"] == "scroll":
-            put_glow(img, CHAIR_X + 20, y - 215, BLUE, 130, 0.95 * dim)
+            put_glow(img, CHAIR_X + 55, y - 245, BLUE, 130, 0.95 * dim)
         lab_col = LABEL_COLS[who]
         if who == 2 and st["pose"] != "gone":
-            gx, gy = (CHAIR_X - 30, y - 200) if st["pose"] == "scroll" else (BED_X if st["pose"] != "walk" else st["x"], y - 160)
+            gx, gy = (CHAIR_X + 10, y - 220) if st["pose"] == "scroll" else (BED_X if st["pose"] != "walk" else st["x"], y - 160)
             put_glow(img, gx, gy, RED, 110, 0.55)
         hx = CHAIR_X + 20 if st["pose"] == "scroll" else (BED_X if st["pose"] != "walk" else st["x"])
         if st["pose"] != "gone":
@@ -368,7 +371,7 @@ def render_frame(n):
         text_spaced(d, 300, y + 41, label, 34, lab_col + (int(255 * dim),))     # name plate on the room's front
         if not outro and i <= 2:
             if 0.02 < p < 0.2 and who != 2:
-                bubble(img, *((CHAIR_X - 80, y - 240) if st["pose"] == "scroll" else (BED_X + 130, y - 160)), SAY_NIGHT[who], ease((p - 0.02) / 0.04), gold=who == 2, left=st["pose"] == "scroll")
+                bubble(img, *((CHAIR_X - 10, y - 305) if st["pose"] == "scroll" else (BED_X + 130, y - 160)), SAY_NIGHT[who], ease((p - 0.02) / 0.04), gold=who == 2, left=st["pose"] == "scroll")
             if 0.55 < p < 0.8 and who in SAY_MORNING:
                 txt = SAY_MORNING[0] if who == 0 else SAY_MORNING[1][day]
                 hy = y - 160 if st["pose"] == "lie" else y - 280
@@ -377,7 +380,7 @@ def render_frame(n):
             k = ease((p - 0.22) / 0.09)
             dr = 1 - abs(2 * ease((p - 0.21) / 0.15) - 1)       # drawer opens then closes
             d.rectangle(sc(132, y - 70, 208 + 40 * dr, y - 40), fill=(70, 74, 120))
-            px, py = CHAIR_X + 30 + (170 - CHAIR_X - 30) * k, y - 205 + 150 * k
+            px, py = CHAIR_X + 78 + (170 - CHAIR_X - 78) * k, y - 222 + 167 * k
             if k < 0.98:
                 d.rectangle(sc(px - 11, py - 18, px + 11, py + 18), fill=(160, 205, 255))
         if 3 <= i and not outro:                              # visible results during the time-lapse
@@ -420,7 +423,7 @@ def render_frame(n):
         fade = 1 - ease((t - INTRO + 0.4) / 0.4)
         dd.rectangle([0, 0, W, H], fill=(8, 10, 28, int(225 * fade)))
         fb = ImageFont.truetype(F_BIG, 104)
-        for k, (txt, col, t0) in enumerate((("3 TEENS.", (255, 255, 255), 0.1), ("1 HANDY.", (120, 180, 255), 0.6),
+        for k, (txt, col, t0) in enumerate((("3 MENSCHEN.", (255, 255, 255), 0.1), ("1 HANDY.", (120, 180, 255), 0.6),
                                              ("NUR EINER", (255, 190, 60), 1.2), ("SCHAFFT'S.", (255, 190, 60), 1.4))):
             a = int(255 * c01((t - t0) / 0.15) * fade)
             if a > 0:
