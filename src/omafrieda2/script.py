@@ -39,7 +39,7 @@ _LINES_OLD = [
     ("erz2",  "erz",      "Heute ist sie Vertretungslehrerin.",                              6.00, 8.10),
     ("girl1", "girl",     "Ey, die Oma ist unsere Lehrerin?",                                8.40, 10.35),
     ("lach1", "gamer",    "Hahaha!",                                                         10.45, 10.95),
-    ("oma2",  "omaflott", "Und ihr seid heute meine Enkel. Pech gehabt.",                    11.20, 13.85),
+    ("oma2",  "omaflott", "Lacht ruhig. Ich hab schon eure Eltern unterrichtet.",                    11.20, 13.85),
     ("oma3",  "oma",      "Zielen üben wir in Sport.",                                       15.00, 16.60),
     ("girl2", "girl",     "Wooow!",                                                          16.70, 17.20),
     ("oma4",  "omaflott", "Handy weg. Ich hab achtzig Jahre ohne geschafft.",                18.00, 20.95),

@@ -118,7 +118,7 @@ realistischer Schulhof (Betonbau, Asphalt mit Rissen, Graffiti, Fahrradständer,
 |---|---|
 | 0–2 s | Hook: Achtklässler kippt nach Omas Fußfeger rückwärts ins Dixi, „Er hat sich mit der FALSCHEN Oma angelegt 😳“ |
 | 2–8 s | „Heute Morgen …“: Oma kommt zur Schule (Dixis, Zettel), „Frau Faust“ an der Tafel – Vertretungslehrerin |
-| 8–17 s | „Ey, die Oma ist unsere Lehrerin?“ – „Und ihr seid heute meine Enkel. Pech gehabt.“ – Papierkügelchen auf der Stricknadel: „Zielen üben wir in Sport.“ |
+| 8–17 s | „Ey, die Oma ist unsere Lehrerin?“ – „Lacht ruhig. Ich hab schon eure Eltern unterrichtet.“ – Papierkügelchen auf der Stricknadel: „Zielen üben wir in Sport.“ |
 | 17–27 s | „Handy weg. Ich hab achtzig Jahre ohne geschafft.“ – „Die Klos sind schon wieder kaputt!“ – „Kaputt gemacht, Kind. Das ist ein Unterschied.“ |
 | 27–41 s | Große Pause: zwei Achtklässler nehmen einem Fünftklässler den Rucksack weg, „Ab ins Dixi mit dir!“ – Oma: „Zwei Große gegen einen Kleinen. Wie mutig.“ – „Ich bin achtzig. Ich halt mich aus gar nichts mehr raus.“ |
 | 41–47 s | Griff → Schritt → Fußfeger (sichtbar, Zeitlupe) → er kippt ins Dixi, Tür knallt, BESETZT. „Du auch?“ – „Ich geh schon!“ (zweiter verschwindet selbst im Dixi) |
