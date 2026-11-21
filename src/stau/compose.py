@@ -64,7 +64,7 @@ def text_stroke(d, xy, txt, f, fill, stroke=9, anchor="mm"):
     d.text(xy, txt, font=f, fill=fill, anchor=anchor, stroke_width=stroke, stroke_fill=(0, 0, 0))
 
 
-def draw_caption(img, txt, age):
+def draw_caption(img, txt, age, ypos=0.50):
     pop = 1.0 + 0.18 * max(0.0, 1 - age / 0.12)
     size = int(84 * pop)
     f = font(F_SUB, size)
@@ -74,7 +74,7 @@ def draw_caption(img, txt, age):
     widths = [d.textlength(w + " ", font=f) for w in words]
     total = sum(widths) - d.textlength(" ", font=f)
     x = W / 2 - total / 2
-    y = int(H * 0.50)
+    y = int(H * ypos)
     # soft shadow
     sh = Image.new("RGBA", img.size, (0, 0, 0, 0))
     sd = ImageDraw.Draw(sh)
@@ -181,7 +181,7 @@ def frame_image(gf):
     overlays(img, row, lf, t)
     txt, age = caption_at(row, t)
     if txt:
-        draw_caption(img, txt, age)
+        draw_caption(img, txt, age, 0.74 if row["shot"] == "roll" else 0.50)
     return img.convert("RGB")
 
 

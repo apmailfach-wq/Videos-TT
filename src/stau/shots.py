@@ -95,7 +95,7 @@ def build_props():
     pb = clear_glass.node_tree.nodes["Principled BSDF"]
     pb.inputs["Base Color"].default_value = (0.7, 0.8, 0.85, 1)
     pb.inputs["Roughness"].default_value = 0.0
-    pb.inputs["Alpha"].default_value = 0.18
+    pb.inputs["Alpha"].default_value = 0.04
     for i, m in enumerate(hero_me.materials):
         if m.name.startswith("glass"):
             hero_me.materials[i] = clear_glass
@@ -113,7 +113,7 @@ def build_props():
     pb.inputs["Roughness"].default_value = 0.8
     pb.inputs["Emission Color"].default_value = (1, 1, 1, 1)
     nt.links.new(tex.outputs["Color"], pb.inputs["Emission Color"])
-    pb.inputs["Emission Strength"].default_value = 0.35
+    pb.inputs["Emission Strength"].default_value = 0.8
     h = 0.86
     w = h * 600 / 760
     me = bpy.data.meshes.new("driverplane")
