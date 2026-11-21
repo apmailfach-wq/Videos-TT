@@ -125,6 +125,9 @@ realistischer Schulhof (Betonbau, Asphalt mit Rissen, Graffiti, Fahrradständer,
 | 47–56 s | Hustenbonbon unter der Tür durch: „Riecht ja streng da drin.“ – Rucksack zurück: „Das ist nicht petzen. Das ist mutig.“ + Tipp gegen Mobbing |
 | 56–63 s | „Mit Frieda Faust legt man sich nicht an!“ → Abstimmung 1️⃣ Supermarkt 2️⃣ Disco 3️⃣ Arztpraxis → Loop |
 
+**Kurzfassung:** `oma-frieda-faust-folge-2-kurz.mp4` (75 s) – ohne Anwesenheit, „Faust? Wie die Hand?“, Handy-Szene,
+„Duft der Bildung“, „Danke, Frau Faust!“ und „Sind Sie morgen wieder da?“; Schnitte nur zwischen ganzen Sätzen.
+
 ```bash
 cd src/omafrieda2
 python3 tts.py && python3 render.py      # -> ../../oma-frieda-faust-folge-2.mp4
