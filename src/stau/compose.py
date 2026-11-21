@@ -30,12 +30,29 @@ TIPS = {"gap": ("TIPP 1", "ABSTAND HALTEN"), "roll": ("TIPP 2", "ROLLEN STATT BR
 tim = json.loads((BUILD / "timings.json").read_text())
 
 
+def punctuate(words, text):
+    """edge-tts word boundaries carry no punctuation – take it from the script text."""
+    import re
+    toks = [t for t in re.split(r"\s+", text.replace("–", " ")) if t.strip()]
+    out, j = [], 0
+    for w in words:
+        w = dict(w)
+        core = w["text"].strip(".,:;!?")
+        for k in range(j, min(j + 4, len(toks))):
+            if toks[k].strip(".,:;!?\"'").lower() == core.lower():
+                w["text"] = core + re.sub(r"^.*?([.,:;!?]*)$", r"\1", toks[k])
+                j = k + 1
+                break
+        out.append(w)
+    return out
+
+
 def scene_table():
     rows, start = [], 0
     for i, s in enumerate(SCENES):
         pad = 1.6 if i == len(SCENES) - 1 else 0.3
         n = int(round((tim[i]["duration"] + pad) * FPS))
-        rows.append({"shot": s["shot"], "start": start, "n": n, "words": tim[i]["words"],
+        rows.append({"shot": s["shot"], "start": start, "n": n, "words": punctuate(tim[i]["words"], s["text"]),
                      "audio": tim[i]["audio"], "dur": tim[i]["duration"]})
         start += n
     return rows
@@ -80,7 +97,7 @@ def draw_caption(img, txt, age, ypos=0.50):
     sd = ImageDraw.Draw(sh)
     for w, wd in zip(words, widths):
         sd.text((x + 4, y + 8), w, font=f, fill=(0, 0, 0, 160), anchor="lm", stroke_width=10, stroke_fill=(0, 0, 0, 160))
-        col = YELLOW if w.lower().strip("–") in HILITE else (255, 255, 255)
+        col = YELLOW if w.lower().strip("–.,:;!?") in HILITE else (255, 255, 255)
         d.text((x, y), w, font=f, fill=col, anchor="lm", stroke_width=10, stroke_fill=(0, 0, 0))
         x += wd
     img.alpha_composite(sh.filter(ImageFilter.GaussianBlur(8)))
@@ -181,7 +198,7 @@ def frame_image(gf):
     overlays(img, row, lf, t)
     txt, age = caption_at(row, t)
     if txt:
-        draw_caption(img, txt, age, 0.74 if row["shot"] == "roll" else 0.50)
+        draw_caption(img, txt, age, {"roll": 0.74, "gap": 0.36}.get(row["shot"], 0.50))
     return img.convert("RGB")
 
 
