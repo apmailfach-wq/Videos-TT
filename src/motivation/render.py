@@ -153,6 +153,7 @@ def background(top, bottom):
 
 
 def sunburst(c, cx, cy, color, rot, n=18, alpha=40):
+    c = BGC or c
     R = 2600
     for i in range(n):
         a0 = math.radians(rot + i * 360 / n)
@@ -161,17 +162,20 @@ def sunburst(c, cx, cy, color, rot, n=18, alpha=40):
                 (cx + R * math.cos(a1), cy + R * math.sin(a1))], color + (alpha,))
 
 
+BGC = None
 STARS = [(random.Random(i).uniform(0, W), random.Random(i + 999).uniform(0, H),
           random.Random(i + 77).uniform(1.5, 4)) for i in range(120)]
 
 
 def stars(c, t, alpha=200):
+    c = BGC or c
     for i, (x, y, r) in enumerate(STARS):
         tw = 0.55 + 0.45 * math.sin(t * 2.3 + i)
         c.circle(x, y, r, (255, 255, 255, int(alpha * tw)))
 
 
 def glow(c, cx, cy, r, color, steps=8, a=26):
+    c = BGC or c
     for k in range(steps, 0, -1):
         c.circle(cx, cy, r * k / steps, color + (a,))
 
@@ -385,7 +389,7 @@ def sc_hook(c, t, lt):
     hh, mm = divmod(secs // 60, 60)
     pop = ease_back((lt - 0.7) / 0.3)
     if pop > 0:
-        c.rect(W / 2 - 300 * pop, 690 - 70 * pop, W / 2 + 300 * pop, 690 + 70 * pop, (20, 12, 40, 210), r=36)
+        c.rect(W / 2 - 300 * pop, 690 - 70 * pop, W / 2 + 300 * pop, 690 + 70 * pop, (20, 12, 40), r=36)
         if pop > 0.6:
             c.text(W / 2, 668, "BILDSCHIRMZEIT HEUTE", 28, (255, 180, 210), f=F_BODY)
             c.text(W / 2, 718, f"{hh} Std. {mm:02d} Min.", 54, YELLOW if hh >= 3 else WHITE)
@@ -403,7 +407,7 @@ def sc_scroll(c, t, lt):
     c.ellipse(W / 2 + 140, ty, 70, 90, SKIN)
     c.ellipse(W / 2 + 140, ty - 50, 44, 30, (255, 225, 210))
     # "?" bubbles when he forgets what he saw
-    if lt > 4.3:
+    if lt > 99:
         for k, (x, y) in enumerate([(220, 860), (860, 980), (180, 1420), (880, 1560)]):
             p = ease_back((lt - 4.4 - k * 0.25) / 0.3)
             if p > 0:
@@ -438,7 +442,7 @@ def sc_others(c, t, lt):
     for i, (x, w) in enumerate(zip(xs, ["TRAINIEREN", "LERNEN", "BAUEN"])):
         p = ease_out((lt - [0.7, 1.75, 2.35][i]) / 0.3)
         if p > 0:
-            c.text(x, 1760, w, 34, (255, 255, 255, int(255 * p)), f=F_HEAD)
+            c.text(x, 1760, w, 34, WHITE, f=F_HEAD)
 
 
 def sc_clock(c, t, lt):
@@ -465,8 +469,9 @@ def sc_clock(c, t, lt):
 
 def sc_turn(c, t, lt):
     sunburst(c, W / 2, 1250, (255, 255, 255), lt * 25, alpha=40)
-    up = ease_back((lt - 1.7) / 0.5)
-    if lt < 1.8:   # sitting, holding phone, looking up
+    st = at("turn", "Steh") - s0("turn")
+    up = ease_back((lt - st + 0.1) / 0.5)
+    if lt < st:   # sitting, holding phone, looking up
         c.rect(220, 1520, 860, 1640, (120, 70, 200), r=40)
         c.rect(200, 1440, 880, 1540, (140, 90, 220), r=40)
         kid(c, 440, 1640, s=1.25, la=10, ra=-150, rel=-115, legs="sit", mood="shock",
@@ -476,7 +481,7 @@ def sc_turn(c, t, lt):
         c.rect(200, 1440, 880, 1540, (140, 90, 220), r=40)
         kid(c, W / 2, lerp(1640, 1780, up), s=lerp(1.25, 1.4, up), la=30, ra=-lerp(150, 170, up),
             mood="determined")
-        ft = lt - 1.8
+        ft = lt - st
         phone(c, W / 2 + 120 + ft * 600, 700 - ft * 500 + ft * ft * 500, 90, 160, ang=-ft * 540)
 
 
@@ -494,7 +499,7 @@ def sc_steps(c, t, lt):
         c.text(W / 2, 1500, "HANDY", 60, (110, 60, 30))
     elif lt < T("Sport") - 0.1:   # one hour timer + "nur für dich"
         prog = c01((lt - T("Eine")) / (T("Sport") - T("Eine")))
-        c.circle(W / 2, 1200, 290, (255, 255, 255, 60))
+        c.circle(W / 2, 1200, 290, (70, 120, 245))
         c.arc(W / 2, 1200, 270, -90, -90 + 360 * prog, WHITE, 40)
         rem = max(0, 3600 - int(prog * 900))
         c.text(W / 2, 1180, f"{rem // 60:02d}:{rem % 60:02d}", 120, WHITE, stroke=4, sfill=INK)
@@ -508,7 +513,7 @@ def sc_steps(c, t, lt):
             p = ease_back((lt - T(w)) / 0.35)
             if p > 0:
                 wob = math.sin(lt * 3 + x) * 6
-                c.circle(x, y + wob, 175 * p, (255, 255, 255, 235))
+                c.circle(x, y + wob, 175 * p, WHITE)
                 fn(c, x, y + wob, 1.7 * p)
         if lt > T("Egal"):
             p = ease_back((lt - T("Egal")) / 0.3)
@@ -555,7 +560,7 @@ def sc_cta(c, t, lt):
         phone(c, W / 2, 1180, 380, 680, ang=lerp(-6, 0, off), content=screen, t=lt)
         if off > 0.3:
             p = ease_back((lt - T("weg") - 0.1) / 0.4)
-            c.circle(W / 2, 1180, 120 * p, (255, 255, 255, 40))
+            c.circle(W / 2, 1180, 120 * p, (50, 50, 62))
             c.text(W / 2, 1180, "OFF", 80 * p, WHITE)
         if lt > T("Ja"):
             p = ease_back((lt - T("Ja")) / 0.3)
@@ -564,7 +569,7 @@ def sc_cta(c, t, lt):
     else:            # comment prompt
         p = ease_back((lt - T("Und")) / 0.45)
         y = 1240
-        c.rect(110, y - 210 * p, 970, y + 210 * p, (255, 255, 255, 245), r=50)
+        c.rect(110, y - 210 * p, 970, y + 210 * p, WHITE, r=50)
         if p > 0.7:
             c.circle(210, y - 90, 50, HOOD)
             c.text(210, y - 92, "DU", 34, WHITE)
@@ -595,7 +600,7 @@ SCENE_DEF = {
 }
 
 # ------------------------------------------------------------------ captions
-HIGHLIGHT = {"drei", "stunden", "nicht", "andere", "vierundzwanzig", "app", "jetzt", "ändern",
+HIGHLIGHT = {"screen", "time", "swipe", "cardio", "tiktok", "glow-up", "reels", "like", "scrolling", "schluss", "pause", "daumen", "namen", "drei", "stunden", "nicht", "andere", "vierundzwanzig", "app", "jetzt", "ändern",
              "weg", "stunde", "dich", "sport", "lernen", "malen", "rausgehen", "jahr", "danken",
              "kommentare", "geschafft", "video", "wischen", "trainieren", "bauen", "leben", "genau"}
 
@@ -640,6 +645,70 @@ def draw_caption(frame, t):
             return
 
 
+# ------------------------------------------------------------------ sticker look
+_OFFS = [(int(round(r * math.cos(a))), int(round(r * math.sin(a))))
+         for r in (3, 6) for a in np.linspace(0, 2 * math.pi, 16, endpoint=False)]
+
+
+def _dilate(a):
+    out = a.copy()
+    h, w = a.shape
+    for dx, dy in _OFFS:
+        sh = np.zeros_like(a)
+        ys, yd = (slice(dy, h), slice(0, h - dy)) if dy >= 0 else (slice(0, h + dy), slice(-dy, h))
+        xs, xd = (slice(dx, w), slice(0, w - dx)) if dx >= 0 else (slice(0, w + dx), slice(-dx, w))
+        sh[ys, xs] = a[yd, xd]
+        np.maximum(out, sh, out=out)
+    return out
+
+
+def sticker(frame, layer):
+    """Thick black outline + hard offset shadow around everything on the layer."""
+    d = Image.fromarray(_dilate(np.asarray(layer.split()[3])))
+    sh = Image.new("RGBA", (W, H), (10, 8, 30, 0))
+    sh.putalpha(d.point(lambda v: v * 120 // 255))
+    frame.alpha_composite(sh, (16, 16))
+    ol = Image.new("RGBA", (W, H), INK + (255,))
+    ol.putalpha(d)
+    frame.alpha_composite(ol)
+    frame.alpha_composite(layer)
+
+
+F_EMOJI = "/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf"
+
+
+@lru_cache(maxsize=32)
+def emoji(ch, size):
+    im = Image.new("RGBA", (150, 150), (0, 0, 0, 0))
+    ImageDraw.Draw(im).text((75, 75), ch, font=font(F_EMOJI, 109), embedded_color=True, anchor="mm")
+    im = im.crop(im.getbbox())
+    k = size / max(im.size)
+    return im.resize((max(1, int(im.width * k)), max(1, int(im.height * k))), Image.LANCZOS)
+
+
+# (scene, word, emoji, x, y, size, rot)
+GAGS = [("hook", "Pause", "⏸️", 860, 760, 150, 0), ("scroll", "Cardio", "💀", 850, 1650, 190, -10),
+        ("scroll", "Daumen", "👍", 220, 1650, 160, 15), ("others", "TikTok", "🤡", 870, 1100, 170, 10),
+        ("clock", "Namen", "🤨", 220, 780, 150, -8), ("turn", "du", "👉", 180, 900, 170, 0),
+        ("steps", "Scrolling", "🚫", W / 2, 1290, 200, 0), ("future", "Glow", "😎", 230, 1080, 170, -10),
+        ("future", "Reels", "✨", 860, 1060, 140, 0), ("cta", "Like", "❤️", 830, 1500, 180, 12)]
+
+
+def draw_gags(frame, t):
+    for k, w, e, x, y, sz, rot in GAGS:
+        try:
+            t0 = at(k, w)
+        except KeyError:
+            continue
+        i = KEYS.index(k)
+        if t0 <= t < OFF[i] + TIM[i]["duration"]:
+            p = ease_back((t - t0) / 0.3, 2.2)
+            if p > 0.05:
+                im = emoji(e, int(sz * p))
+                im = im.rotate(rot + 6 * math.sin(t * 6), resample=Image.BICUBIC, expand=True)
+                frame.alpha_composite(im, (int(x - im.width / 2), int(y - im.height / 2)))
+
+
 # ------------------------------------------------------------------ frame
 def scene_at(t):
     idx = 0
@@ -655,10 +724,14 @@ def render_frame(n):
     key = KEYS[i]
     lt = t - OFF[i]
     fn, top, bot = SCENE_DEF[key]
+    global BGC
     img = background(top, bot)
-    c = C(img)
-    fn(c, t, lt)
-    frame = img.resize((W, H), Image.LANCZOS).convert("RGBA")
+    BGC = C(img)
+    layer = Image.new("RGBA", (W * S, H * S), (0, 0, 0, 0))
+    fn(C(layer), t, lt)
+    frame = img.resize((W, H), Image.BILINEAR).convert("RGBA")
+    sticker(frame, layer.resize((W, H), Image.LANCZOS))
+    draw_gags(frame, t)
     # scene-in punch: quick zoom + white flash
     if lt < 0.18 and i > 0:
         k = 1 - lt / 0.18
