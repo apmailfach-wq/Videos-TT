@@ -31,7 +31,7 @@ LABEL_COLS = [(150, 140, 200), (80, 210, 200), (255, 184, 48)]   # Ausrede viole
 WHITE = (245, 245, 245)
 BLUE = (90, 160, 255)
 
-ROWS = [("AUSREDE", 860), ("MOTIVATION", 1260), ("DISZIPLIN", 1660)]   # label, platform y
+ROWS = [("AUSREDE", 960), ("MOTIVATION", 1330), ("DISZIPLIN", 1700)]   # label, platform y
 BED_X = 300                    # pillow / head x
 DOOR_X = 960
 
@@ -206,6 +206,21 @@ def figure(d, pose, y, st, t):
         d.line(sc(hx + 5, hy + 35, BED_X + 30, y - 110), fill=col, width=lw)
         d.ellipse(sc(hx - 32, hy - 32, hx + 32, hy + 32), fill=col)
         d.line(sc(hx + 5, hy + 55, hx + 70, hy + 85), fill=col, width=lw)
+    elif pose == "scroll":                  # sitting up in bed, scrolling on the phone
+        hx, hy = BED_X + 20, y - 256
+        d.line(sc(hx + 5, hy + 35, BED_X + 30, y - 110), fill=col, width=lw)
+        d.ellipse(sc(hx - 32, hy - 32, hx + 32, hy + 32), fill=col)
+        px, py = hx + 82, hy + 14
+        d.line(sc(hx + 8, hy + 58, px - 6, py + 30), fill=col, width=lw)
+        d.rounded_rectangle(sc(px - 22, py - 38, px + 22, py + 38), 7 * S, fill=(18, 20, 40))
+        d.rectangle(sc(px - 17, py - 32, px + 17, py + 32), fill=(110, 175, 255))
+        off = (t * 90) % 22
+        for k in range(4):
+            yy = py - 32 + ((k * 22 + off) % 64)
+            if yy < py + 26:
+                d.rectangle(sc(px - 12, yy, px + 12, yy + 7), fill=(225, 238, 255))
+        ty = py + 18 - 14 * abs(math.sin(t * 6))              # thumb swiping
+        d.ellipse(sc(px + 6, ty - 8, px + 22, ty + 8), fill=col)
     elif pose == "walk":
         x, k = st["x"], st["k"]
         sw = math.sin(k * 18) * 26
@@ -275,15 +290,15 @@ def render_frame(n):
     # rooms: labels, clocks, phones, people
     for who, (label, y) in enumerate(ROWS):
         st = state(who, t)
+        if st["pose"] == "lie" and st.get("phone"):
+            st = dict(st, pose="scroll")
         dim = 0.35 if outro and who != 2 else 1.0
         ring = (not outro) and 0.5 < p < 0.62
         clock_icon(d, 170, y - 140, (t * 7) % 1 if ring else 0)
         phone_on = st.get("phone", False)
         d.rectangle(sc(150, y - 103, 186, y - 96), fill=(90, 160, 255) if phone_on else (60, 64, 100))
-        if phone_on and st["pose"] == "lie":
-            put_glow(img, BED_X + 10, y - 150, BLUE, 90, 0.9 * dim)
-            d.polygon(sc(BED_X + 40, y - 150, BED_X + 120, y - 190, BED_X + 120, y - 120), fill=(140, 190, 255, 70))
-            d.rectangle(sc(BED_X + 40, y - 170, BED_X + 62, y - 132), fill=(160, 205, 255))   # phone in hand
+        if st["pose"] == "scroll":
+            put_glow(img, BED_X + 70, y - 245, BLUE, 120, 0.95 * dim)
         lab_col = LABEL_COLS[who]
         if who == 2 and st["pose"] != "gone":
             put_glow(img, BED_X if st["pose"] != "walk" else st["x"], y - 160, RED, 110, 0.55)
@@ -293,7 +308,7 @@ def render_frame(n):
             text_spaced(d, hx - 20, ly, label, 36, lab_col + (int(255 * dim),))
         if not outro and i <= 2:
             if 0.02 < p < 0.2 and who != 2:
-                bubble(img, BED_X + 110, y - 160, SAY_NIGHT[who], ease((p - 0.02) / 0.04), gold=who == 2)
+                bubble(img, BED_X + 130, y - (200 if st["pose"] == "scroll" else 160), SAY_NIGHT[who], ease((p - 0.02) / 0.04), gold=who == 2)
             if 0.55 < p < 0.8 and who in SAY_MORNING:
                 txt = SAY_MORNING[0] if who == 0 else SAY_MORNING[1][day]
                 hy = y - 160 if st["pose"] == "lie" else y - 280
@@ -302,14 +317,14 @@ def render_frame(n):
             k = ease((p - 0.22) / 0.09)
             dr = 1 - abs(2 * ease((p - 0.21) / 0.15) - 1)       # drawer opens then closes
             d.rectangle(sc(132, y - 70, 208 + 40 * dr, y - 40), fill=(70, 74, 120))
-            px, py = BED_X + 50 + (170 - BED_X - 50) * k, y - 150 + 95 * k
+            px, py = BED_X + 102 + (170 - BED_X - 102) * k, y - 242 + 187 * k
             if k < 0.98:
                 d.rectangle(sc(px - 11, py - 18, px + 11, py + 18), fill=(160, 205, 255))
         if 3 <= i and not outro:                              # visible results during the time-lapse
             em, _ = STATUS[who]
             sz = 54 + (30 * i / 7 if who == 2 else 0)
             put_emoji(img, em, 880, y - 150, sz)
-        if st["pose"] in ("lie", "sit", "walk"):
+        if st["pose"] in ("lie", "sit", "walk", "scroll"):
             st = dict(st, alpha=st.get("alpha", 1) * dim)
             d2 = ImageDraw.Draw(img, "RGBA")
             figure(d2, st["pose"], y, st, t)
@@ -327,7 +342,7 @@ def render_frame(n):
         z = ease((p - 0.2) / 0.05) * (1 - ease((p - 0.38) / 0.05))
         if z > 0:
             zz = 1 + 0.5 * z
-            cx, cy = 540 + (400 - 540) * z, 960 + (1420 - 960) * z
+            cx, cy = 540 + (400 - 540) * z, 960 + (1460 - 960) * z
             cw, ch = W / zz, H / zz
             x0 = min(max(cx - cw / 2, 0), W - cw)
             y0 = min(max(cy - ch / 2, 0), H - ch)
