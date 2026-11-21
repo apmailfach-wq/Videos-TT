@@ -211,11 +211,11 @@ def render_frame(n):
     if morning > 0:
         put_glow(img, 540, 545, (255, 190, 110), 170, 0.6 * morning)
     # day counter + clock time
-    text_spaced(d, 740, 510, f"TAG {day}", 26, (200, 204, 235), anchor="lm")
+    text_spaced(d, 740, 510, f"TAG {day}", 44, (200, 204, 235), anchor="lm")
     # signature: golden year bar (day / 365)
-    d.rounded_rectangle(sc(740, 590, 960, 598), 4 * S, fill=(40, 44, 86))
-    d.rounded_rectangle(sc(740, 590, 740 + max(8, 220 * day / 365), 598), 4 * S, fill=RED)
-    text_spaced(d, 740, 550, "06:30" if morning > 0.5 else "22:00", 22, (130, 136, 180), anchor="lm")
+    d.rounded_rectangle(sc(740, 600, 1000, 610), 4 * S, fill=(40, 44, 86))
+    d.rounded_rectangle(sc(740, 600, 740 + max(8, 260 * day / 365), 610), 4 * S, fill=RED)
+    text_spaced(d, 740, 550, "06:30" if morning > 0.5 else "22:00", 32, (130, 136, 180), anchor="lm")
     # door light (bottom room)
     y2 = ROWS[2][1]
     door = 0.0
@@ -246,17 +246,20 @@ def render_frame(n):
         hx = BED_X if st["pose"] != "walk" else st["x"]
         if st["pose"] != "gone":
             ly = y - 210 if st["pose"] == "lie" else y - 330
-            text_spaced(d, hx, ly, label, 22, lab_col + (int(255 * dim),))
+            text_spaced(d, hx + 40, ly, label, 36, lab_col + (int(255 * dim),))
         if st["pose"] in ("lie", "sit", "walk"):
             st = dict(st, alpha=st.get("alpha", 1) * dim)
             d2 = ImageDraw.Draw(img, "RGBA")
             figure(d2, st["pose"], y, st, t)
     # captions
     line1 = "UM 22 UHR LEUCHTETE BEI ALLEN DREIEN DAS HANDY."
-    text_spaced(d, W / 2, 300, line1, 26, (225, 225, 228, int(255 * c01(t / 0.8))), spacing=0.08)
+    a0 = int(255 * c01(t / 0.8))
+    text_spaced(d, W / 2, 215, "UM 22 UHR LEUCHTETE", 46, (235, 235, 240, a0), spacing=0.06)
+    text_spaced(d, W / 2, 275, "BEI ALLEN DREIEN DAS HANDY.", 46, (235, 235, 240, a0), spacing=0.06)
     if t > DSTART[-1] + 0.5:
         a = int(255 * c01((t - DSTART[-1] - 0.5) / 0.8))
-        text_spaced(d, W / 2, 350, "NUR EINER LEGTE ES JEDEN ABEND WEG.", 26, (255, 200, 90, a), spacing=0.08)
+        text_spaced(d, W / 2, 350, "NUR EINER LEGTE ES", 46, (255, 200, 90, a), spacing=0.06)
+        text_spaced(d, W / 2, 405, "JEDEN ABEND WEG.", 46, (255, 200, 90, a), spacing=0.06)
     frame = img.resize((W, H), Image.LANCZOS)
     if outro:
         lt = t - OUTRO0
@@ -264,14 +267,14 @@ def render_frame(n):
         a1 = int(230 * ease((lt - 1.2) / 0.8))
         dd.rectangle([0, 0, W, H], fill=(8, 10, 28, int(a1 * 0.8)))
         if lt > 1.4:
-            f = ImageFont.truetype(F_BIG, 120)
-            dd.text((W / 2, 840), "SEI DER", font=f, fill=(255, 255, 255, a1), anchor="mm")
-            dd.text((W / 2, 990), "EINE.", font=f, fill=RED + (a1,), anchor="mm")
+            f = ImageFont.truetype(F_BIG, 150)
+            dd.text((W / 2, 820), "SEI DER", font=f, fill=(255, 255, 255, a1), anchor="mm")
+            dd.text((W / 2, 1000), "EINE.", font=f, fill=RED + (a1,), anchor="mm")
         if lt > 3.0:
             a2 = int(255 * ease((lt - 3.0) / 0.6))
-            ft = ImageFont.truetype(F_TXT, 40)
-            dd.text((W / 2, 1180), "Wer bist du – 1, 2 oder 3?", font=ft, fill=(230, 230, 232, a2), anchor="mm")
-            dd.text((W / 2, 1240), "Schreib's in die Kommentare.", font=ft, fill=(160, 160, 165, a2), anchor="mm")
+            ft = ImageFont.truetype(F_TXT, 56)
+            dd.text((W / 2, 1210), "Wer bist du – 1, 2 oder 3?", font=ft, fill=(230, 230, 232, a2), anchor="mm")
+            dd.text((W / 2, 1290), "Schreib's in die Kommentare.", font=ft, fill=(160, 160, 165, a2), anchor="mm")
     if t < 0.6:
         frame.alpha_composite(Image.new("RGBA", (W, H), (0, 0, 0, int(255 * (1 - t / 0.6)))))
     if t > TOTAL - 0.6:
