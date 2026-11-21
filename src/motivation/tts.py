@@ -12,7 +12,7 @@ _ca = os.environ.get("SSL_CERT_FILE") or "/root/.ccr/ca-bundle.crt"
 if os.path.exists(_ca):
     _ec._SSL_CTX = ssl.create_default_context(cafile=_ca)
 
-from script import SCENES, VOICE, RATE
+from script import SCENES, VOICE, RATE, PITCH
 
 OUT = Path(__file__).resolve().parent.parent.parent / "build" / "motivation"
 OUT.mkdir(parents=True, exist_ok=True)
@@ -20,7 +20,7 @@ SR = 24000
 
 
 async def seg(text, path):
-    comm = edge_tts.Communicate(text, VOICE, rate=RATE, boundary="WordBoundary", proxy=PROXY)
+    comm = edge_tts.Communicate(text, VOICE, rate=RATE, pitch=PITCH, boundary="WordBoundary", proxy=PROXY)
     words = []
     with open(path, "wb") as f:
         async for ch in comm.stream():

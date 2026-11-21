@@ -153,7 +153,7 @@ def background(top, bottom):
 
 
 def sunburst(c, cx, cy, color, rot, n=18, alpha=40):
-    c = BGC or c
+    return  # replaced by natural painted backgrounds
     R = 2600
     for i in range(n):
         a0 = math.radians(rot + i * 360 / n)
@@ -261,6 +261,15 @@ def bricks(c, cx, by, n, s=1.0):
         c.rect(x, y, x + 46 * s, y + 25 * s, cols[(row + i) % 2], r=3 * s)
 
 
+def football(c, cx, cy, r):
+    c.circle(cx, cy, r, WHITE)
+    pent = lambda x, y, rr, a0: [(x + rr * math.cos(a0 + k * 2 * math.pi / 5), y + rr * math.sin(a0 + k * 2 * math.pi / 5)) for k in range(5)]
+    c.poly(pent(cx, cy, r * 0.38, -math.pi / 2), INK)
+    for k in range(5):
+        a = -math.pi / 2 + k * 2 * math.pi / 5
+        c.poly(pent(cx + r * 0.82 * math.cos(a), cy + r * 0.82 * math.sin(a), r * 0.2, a), INK)
+
+
 def clock(c, cx, cy, r, t_hand):
     c.circle(cx, cy + 10, r, (0, 0, 0, 60))
     c.circle(cx, cy, r, (255, 255, 255))
@@ -325,7 +334,7 @@ def kid(c, x, y, s=1.0, la=20, ra=-20, lel=0, rel=0, mood="neutral", look=0,
     # head
     hx0, hy0 = P(look * 6, -390)
     c.rect(hx0 - 22 * s, hy0 + 40 * s, hx0 + 22 * s, hy0 + 100 * s, SKIN_D, r=10 * s)  # neck
-    c.circle(hx0, hy0, 92 * s, SKIN)
+    c.circle(hx0, hy0, 86 * s, SKIN)
     c.circle(hx0 - 90 * s, hy0 + 8 * s, 18 * s, SKIN)
     c.circle(hx0 + 90 * s, hy0 + 8 * s, 18 * s, SKIN)
     # hair
@@ -333,6 +342,9 @@ def kid(c, x, y, s=1.0, la=20, ra=-20, lel=0, rel=0, mood="neutral", look=0,
             (hx0 + 10 * s, hy0 - 132 * s), (hx0 + 20 * s, hy0 - 104 * s), (hx0 + 80 * s, hy0 - 86 * s),
             (hx0 + 98 * s, hy0 - 20 * s), (hx0 + 70 * s, hy0 - 50 * s), (hx0 + 20 * s, hy0 - 40 * s),
             (hx0 - 30 * s, hy0 - 56 * s), (hx0 - 70 * s, hy0 - 40 * s)], HAIR)
+    c.line([(hx0 - 50 * s, hy0 - 84 * s), (hx0 - 10 * s, hy0 - 104 * s)], (110, 80, 70), 7 * s)
+    for sx in (-1, 1):
+        c.ellipse(hx0 + sx * 56 * s, hy0 + 40 * s, 16 * s, 9 * s, (245, 160, 150))
     # face
     ex = look * 10
     for sx in (-1, 1):
@@ -417,7 +429,6 @@ def sc_scroll(c, t, lt):
 
 def sc_others(c, t, lt):
     sunburst(c, W / 2, 1300, (255, 255, 255), -lt * 10, alpha=22)
-    c.rect(-50, 1640, W + 50, H + 50, (40, 150, 110))
     xs = [200, 540, 880]
     for i, x in enumerate(xs):
         p = ease_back((lt - [0.6, 1.6, 2.2][i]) / 0.35)
@@ -434,12 +445,12 @@ def sc_others(c, t, lt):
         elif i == 1:  # learning
             hands = kid(c, x, 1660, s=s, la=40, ra=-40, lel=-95, rel=-95, mood="neutral", look=0)
             book(c, x, hands[0][1] - 26 * s, 1.0 * s)
-        else:         # building
-            n = int(c01((lt - 2.3) / 1.6) * 12)
-            bricks(c, x + 70, 1660, n, 0.9)
-            kid(c, x - 70, 1660, s=s, la=30, ra=-80 + 20 * math.sin(lt * 5), mood="happy")
+        else:         # football with friends: juggling the ball
+            kid(c, x, 1660, s=s, la=50, ra=-50, mood="happy")
+            by = 1640 - abs(math.sin(lt * 4.5)) * 260 * s
+            football(c, x + 70 * s, by, 36 * s)
     # labels
-    for i, (x, w) in enumerate(zip(xs, ["TRAINIEREN", "LERNEN", "BAUEN"])):
+    for i, (x, w) in enumerate(zip(xs, ["TRAINIEREN", "LERNEN", "FUSSBALL"])):
         p = ease_out((lt - [0.7, 1.75, 2.35][i]) / 0.3)
         if p > 0:
             c.text(x, 1760, w, 34, WHITE, f=F_HEAD)
@@ -600,7 +611,7 @@ SCENE_DEF = {
 }
 
 # ------------------------------------------------------------------ captions
-HIGHLIGHT = {"screen", "time", "swipe", "cardio", "tiktok", "glow-up", "reels", "like", "scrolling", "schluss", "pause", "daumen", "namen", "drei", "stunden", "nicht", "andere", "vierundzwanzig", "app", "jetzt", "ändern",
+HIGHLIGHT = {"kicken", "freunden", "screen", "time", "swipe", "cardio", "tiktok", "glow-up", "reels", "like", "scrolling", "schluss", "pause", "daumen", "namen", "drei", "stunden", "nicht", "andere", "vierundzwanzig", "app", "jetzt", "ändern",
              "weg", "stunde", "dich", "sport", "lernen", "malen", "rausgehen", "jahr", "danken",
              "kommentare", "geschafft", "video", "wischen", "trainieren", "bauen", "leben", "genau"}
 
@@ -645,9 +656,115 @@ def draw_caption(frame, t):
             return
 
 
+# ------------------------------------------------------------------ natural backgrounds
+def _grad(im, y0, y1, a, b):
+    d = ImageDraw.Draw(im)
+    for y in range(y0, y1):
+        d.line([(0, y), (W, y)], fill=lcol(a, b, (y - y0) / max(1, y1 - y0 - 1)))
+
+
+def _glow(im, x, y, r, col, a=150):
+    g = Image.new("RGBA", (W, H), col + (0,))
+    ImageDraw.Draw(g).ellipse([x - r, y - r, x + r, y + r], fill=col + (a,))
+    im.alpha_composite(g.filter(ImageFilter.GaussianBlur(r * 0.45)))
+
+
+def _clouds(d, seed, y0, y1, col):
+    r = random.Random(seed)
+    for _ in range(5):
+        x, y, w = r.uniform(-100, W), r.uniform(y0, y1), r.uniform(160, 300)
+        for k in range(4):
+            d.ellipse([x + k * w * 0.3 - w * 0.4, y - w * 0.25 + (k % 2) * 20, x + k * w * 0.3 + w * 0.4, y + w * 0.2], fill=col)
+
+
+def _skyline(d, y, col, seed, width=W):
+    r = random.Random(seed)
+    x = -20
+    while x < width:
+        w, h = r.uniform(60, 140), r.uniform(80, 330)
+        d.rectangle([x, y - h, x + w, H], fill=col)
+        x += w + r.uniform(0, 12)
+
+
+@lru_cache(maxsize=8)
+def scene_bg(kind):
+    im = Image.new("RGBA", (W, H))
+    d = ImageDraw.Draw(im, "RGBA")
+    if kind in ("room_night", "room_day"):
+        night = kind == "room_night"
+        _grad(im, 0, 1560, (40, 46, 86) if night else (238, 226, 210), (26, 26, 54) if night else (214, 198, 182))
+        _grad(im, 1560, H, (70, 46, 48) if night else (176, 124, 84), (44, 30, 34) if night else (140, 96, 64))
+        wx0, wy0, wx1, wy1 = 600, 280, 1000, 860
+        _grad_im = Image.new("RGBA", (wx1 - wx0, wy1 - wy0))
+        _grad(_grad_im, 0, wy1 - wy0, (14, 18, 48) if night else (120, 190, 255), (40, 40, 90) if night else (210, 235, 255))
+        if night:
+            wd = ImageDraw.Draw(_grad_im)
+            ww, wh = wx1 - wx0, wy1 - wy0
+            wd.ellipse([280, 50, 350, 120], fill=(250, 245, 220))
+            for i in range(30):
+                rr = random.Random(i)
+                x, y = rr.uniform(0, ww), rr.uniform(0, 300)
+                wd.ellipse([x - 2, y - 2, x + 2, y + 2], fill=(255, 255, 255))
+            r = random.Random(3)
+            x = -10
+            while x < ww:
+                bw, bh = r.uniform(50, 110), r.uniform(80, 300)
+                wd.rectangle([x, wh - bh, x + bw, wh], fill=(18, 20, 40))
+                for _ in range(6):
+                    lx, ly = r.uniform(x + 6, x + bw - 14), r.uniform(wh - bh + 10, wh - 20)
+                    wd.rectangle([lx, ly, lx + 8, ly + 12], fill=(255, 210, 120))
+                x += bw + r.uniform(0, 10)
+        im.alpha_composite(_grad_im, (wx0, wy0))
+        if not night:
+            _clouds(d, 2, wy0 + 40, wy0 + 260, (255, 255, 255, 230))
+        d.rectangle([wx0 - 20, wy0 - 20, wx1 + 20, wy1 + 20], outline=(90, 70, 60) if not night else (20, 20, 36), width=22)
+        d.line([((wx0 + wx1) / 2, wy0), ((wx0 + wx1) / 2, wy1)], fill=(90, 70, 60) if not night else (20, 20, 36), width=14)
+        d.rectangle([90, 420, 430, 840], fill=(255, 120, 150) if not night else (90, 60, 110))           # poster
+        d.ellipse([170, 520, 350, 700], fill=(255, 220, 90) if not night else (140, 110, 150))
+        if night:
+            _glow(im, 150, 1200, 380, (255, 190, 110), 110)       # desk lamp
+        else:
+            _glow(im, 800, 560, 420, (255, 250, 220), 90)          # daylight
+    elif kind in ("park", "sunrise", "sunset", "night_sky"):
+        top, hor = {"park": ((90, 170, 250), (205, 232, 255)), "sunrise": ((110, 110, 200), (255, 196, 140)),
+                    "sunset": ((70, 40, 120), (255, 140, 90)), "night_sky": ((10, 12, 40), (50, 36, 96))}[kind]
+        _grad(im, 0, 1350, top, hor)
+        if kind == "park":
+            _clouds(d, 7, 250, 900, (255, 255, 255, 235))
+        if kind in ("sunrise", "sunset"):
+            _glow(im, W / 2, 1300, 520, (255, 220, 150), 170)
+        if kind == "night_sky":
+            for i in range(120):
+                rr = random.Random(i)
+                x, y = rr.uniform(0, W), rr.uniform(0, 1200)
+                d.ellipse([x - 2, y - 2, x + 2, y + 2], fill=(255, 255, 255, 170))
+            _skyline(d, 1700, (16, 14, 36), 9)
+        else:
+            hill = (120, 200, 120) if kind == "park" else (90, 70, 140) if kind == "sunset" else (130, 120, 170)
+            d.ellipse([-300, 1180, 700, 1700], fill=hill)
+            d.ellipse([400, 1220, 1400, 1700], fill=tuple(int(v * 0.9) for v in hill))
+            grass = (86, 170, 92) if kind == "park" else (60, 46, 100) if kind == "sunset" else (100, 140, 110)
+            _grad(im, 1400, H, grass, tuple(int(v * 0.75) for v in grass))
+            if kind == "park":
+                for x in (90, 300, 980):
+                    d.rectangle([x - 12, 1250, x + 12, 1400], fill=(110, 80, 60))
+                    d.ellipse([x - 90, 1110, x + 90, 1300], fill=(60, 150, 80))
+    im = im.filter(ImageFilter.GaussianBlur(3))           # soft depth of field: characters pop
+    vig = Image.new("L", (W, H), 0)
+    ImageDraw.Draw(vig).ellipse([-300, -200, W + 300, H + 200], fill=255)
+    vig = vig.filter(ImageFilter.GaussianBlur(220))
+    dark = Image.new("RGBA", (W, H), (0, 0, 0, 255))
+    out = Image.composite(im, Image.blend(im, dark, 0.45), vig)
+    return out.convert("RGB").resize((W * S, H * S), Image.BILINEAR)
+
+
+SCENE_BG = {"hook": "room_night", "scroll": "room_night", "others": "park", "clock": "night_sky",
+            "turn": "room_day", "steps": "sunrise", "future": "sunset", "cta": "room_day"}
+
+
 # ------------------------------------------------------------------ sticker look
 _OFFS = [(int(round(r * math.cos(a))), int(round(r * math.sin(a))))
-         for r in (3, 6) for a in np.linspace(0, 2 * math.pi, 16, endpoint=False)]
+         for r in (2, 4) for a in np.linspace(0, 2 * math.pi, 16, endpoint=False)]
 
 
 def _dilate(a):
@@ -666,8 +783,8 @@ def sticker(frame, layer):
     """Thick black outline + hard offset shadow around everything on the layer."""
     d = Image.fromarray(_dilate(np.asarray(layer.split()[3])))
     sh = Image.new("RGBA", (W, H), (10, 8, 30, 0))
-    sh.putalpha(d.point(lambda v: v * 120 // 255))
-    frame.alpha_composite(sh, (16, 16))
+    sh.putalpha(d.point(lambda v: v * 80 // 255))
+    frame.alpha_composite(sh, (9, 12))
     ol = Image.new("RGBA", (W, H), INK + (255,))
     ol.putalpha(d)
     frame.alpha_composite(ol)
@@ -725,7 +842,7 @@ def render_frame(n):
     lt = t - OFF[i]
     fn, top, bot = SCENE_DEF[key]
     global BGC
-    img = background(top, bot)
+    img = scene_bg(SCENE_BG[key]).copy()
     BGC = C(img)
     layer = Image.new("RGBA", (W * S, H * S), (0, 0, 0, 0))
     fn(C(layer), t, lt)
@@ -833,6 +950,8 @@ def make_voice():
     lst.write_text("".join(f"file '{s['audio']}'\n" for s in TIM))
     p = BUILD / "voice.wav"
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", str(lst),
+                    "-af", "bass=g=6:f=110,treble=g=2:f=5000,acompressor=threshold=0.08:ratio=4:attack=5:release=90:makeup=3,"
+                           "aecho=0.8:0.6:45:0.10,loudnorm=I=-14:TP=-1.5",
                     "-ar", str(SR), "-ac", "1", str(p)], check=True)
     return p
 
@@ -855,7 +974,7 @@ def main():
         "[1:a]apad,volume=1.6,asplit=2[v][vs];[2:a]volume=0.32[m];[m][vs]sidechaincompress=threshold=0.05:ratio=6:attack=20:release=300[md];"
         "[v][md]amix=inputs=2:normalize=0:duration=shortest,alimiter=limit=0.95[a]",
         "-map", "0:v", "-map", "[a]", "-t", f"{TOTAL:.2f}",
-        "-c:v", "libx264", "-preset", "medium", "-crf", "19", "-pix_fmt", "yuv420p",
+        "-c:v", "libx264", "-preset", "medium", "-crf", "17", "-pix_fmt", "yuv420p",
         "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", str(OUT)], stdin=subprocess.PIPE)
     with Pool() as pool:
         for k, fr in enumerate(pool.imap(render_frame, range(NFRAMES), chunksize=8)):
