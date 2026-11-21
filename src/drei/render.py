@@ -1,0 +1,357 @@
+"""Render drei-handys.mp4 – dark minimal 'three people' format (no voice, text + ambient score).
+
+Three stacked rooms: AUSREDE, MOTIVATION, DISZIPLIN (red). Every night at 22:00 all three
+phones light up; only DISZIPLIN puts it away every night and gets up every morning.
+Day counter 1 -> 365, window shows night/morning, door opens into light.
+
+    python3 render.py            # -> ../../drei-handys.mp4
+    python3 render.py preview 3 12 30
+"""
+import math
+import random
+import subprocess
+import sys
+import wave
+from functools import lru_cache
+from multiprocessing import Pool
+from pathlib import Path
+
+import numpy as np
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
+
+ROOT = Path(__file__).resolve().parent.parent.parent
+BUILD = ROOT / "build" / "drei"
+BUILD.mkdir(parents=True, exist_ok=True)
+OUT = ROOT / "drei-handys.mp4"
+W, H, FPS, S = 1080, 1920, 30, 2
+F_TXT = "/usr/share/fonts/opentype/inter/Inter-SemiBold.otf"
+F_BIG = str(ROOT / "fonts" / "Unbounded_900Black.ttf")
+RED = (235, 40, 50)
+WHITE = (245, 245, 245)
+BLUE = (90, 160, 255)
+
+ROWS = [("AUSREDE", 860), ("MOTIVATION", 1260), ("DISZIPLIN", 1660)]   # label, platform y
+BED_X = 300                    # pillow / head x
+DOOR_X = 960
+
+# ------------------------------------------------------------------ timeline
+INTRO = 1.5
+DAYS = [(1, 6.5), (2, 5.0), (3, 5.0), (7, 1.7), (21, 1.7), (66, 1.7), (150, 1.7), (365, 6.5)]
+DSTART = []
+_t = INTRO
+for d, L in DAYS:
+    DSTART.append(_t)
+    _t += L
+OUTRO0 = _t
+TOTAL = OUTRO0 + 7.0
+NFRAMES = int(math.ceil(TOTAL * FPS))
+
+
+def c01(x):
+    return min(max(x, 0.0), 1.0)
+
+
+def ease(x):
+    x = c01(x)
+    return x * x * (3 - 2 * x)
+
+
+def day_at(t):
+    """(index, day number, phase 0..1) – before intro end: day 1 phase 0."""
+    for i in range(len(DAYS) - 1, -1, -1):
+        if t >= DSTART[i]:
+            return i, DAYS[i][0], c01((t - DSTART[i]) / DAYS[i][1])
+    return 0, 1, 0.0
+
+
+def mot_gets_up(day):
+    return day in (1, 2)
+
+
+def state(who, t):
+    """Pose of a person: dict(pose, x, k (transition 0..1), phone (bool), alpha)."""
+    if t >= OUTRO0:
+        if who == 2:
+            return dict(pose="gone")
+        return dict(pose="lie", phone=True, alpha=0.55 if who == 0 else 0.8)
+    i, day, p = day_at(t)
+    night_off = 0.18                       # when phones are put away
+    alpha = 1.0 - (0.45 * i / (len(DAYS) - 1) if who == 0 else 0)   # AUSREDE fades over the year
+    if who == 2 or (who == 1 and mot_gets_up(day)):
+        if p < 0.5:
+            return dict(pose="lie", phone=p < night_off + (0.05 if who == 1 else 0), alpha=alpha)
+        if p < 0.6:
+            return dict(pose="sit", k=ease((p - 0.5) / 0.1), alpha=alpha)
+        k = (p - 0.6) / 0.28
+        if k < 1:
+            return dict(pose="walk", x=BED_X + 150 + (DOOR_X - BED_X - 150) * ease(k), k=k, alpha=alpha)
+        return dict(pose="gone")
+    if who == 1:                            # MOTIVATION: sits up, then falls back + scrolls
+        if 0.55 < p < 0.75 and day == 3:
+            return dict(pose="sit", k=1.0, alpha=alpha)
+        return dict(pose="lie", phone=not (night_off < p < 0.3), alpha=alpha)
+    return dict(pose="lie", phone=True, alpha=alpha)       # AUSREDE: always scrolling
+
+
+# ------------------------------------------------------------------ static scene
+@lru_cache(maxsize=1)
+def base():
+    im = Image.new("RGB", (W * S, H * S), (8, 8, 10))
+    d = ImageDraw.Draw(im)
+    sc = lambda *v: [x * S for x in v]
+    for label, y in ROWS:
+        # platform: top face (perspective) + front face
+        d.polygon(sc(90, y + 10, 990, y + 10, 950, y - 150, 130, y - 150), fill=(30, 30, 34))
+        d.rectangle(sc(90, y + 10, 990, y + 70), fill=(18, 18, 21))
+        # nightstand + bed
+        d.rectangle(sc(130, y - 110, 210, y - 10), fill=(44, 44, 50))
+        d.rectangle(sc(240, y - 90, 780, y - 10), fill=(52, 52, 58))
+        d.rectangle(sc(240, y - 115, 780, y - 90), fill=(66, 66, 72))
+        d.rectangle(sc(250, y - 130, 360, y - 100), fill=(92, 92, 98))           # pillow
+        d.rectangle(sc(360, y - 125, 770, y - 92), fill=(74, 74, 80))           # blanket
+    # door frame (bottom room)
+    y = ROWS[2][1]
+    d.rectangle(sc(DOOR_X - 60, y - 330, DOOR_X + 60, y), fill=(22, 22, 26))
+    # window
+    d.rectangle(sc(380, 440, 700, 650), fill=(16, 16, 20))
+    im = im.filter(ImageFilter.GaussianBlur(1.2 * S))
+    # top light cone + vignette
+    lay = Image.new("L", im.size, 0)
+    ImageDraw.Draw(lay).ellipse(sc(-150, -300, W + 150, 1900), fill=60)
+    lay = lay.filter(ImageFilter.GaussianBlur(200 * S))
+    im = Image.composite(Image.new("RGB", im.size, (60, 60, 66)), im, lay)
+    return im
+
+
+@lru_cache(maxsize=8)
+def glow_sprite(col, r):
+    g = Image.new("RGBA", (4 * r, 4 * r), col + (0,))
+    ImageDraw.Draw(g).ellipse([r, r, 3 * r, 3 * r], fill=col + (170,))
+    return g.filter(ImageFilter.GaussianBlur(r * 0.6))
+
+
+def put_glow(img, x, y, col, r, a=1.0):
+    g = glow_sprite(col, r)
+    if a < 1:
+        g = g.copy()
+        g.putalpha(g.split()[3].point(lambda v: int(v * a)))
+    img.alpha_composite(g, (int(x * S - g.width / 2), int(y * S - g.height / 2)))
+
+
+# ------------------------------------------------------------------ drawing
+def text_spaced(d, x, y, s, size, fill, spacing=0.18, anchor="mm", f=F_TXT):
+    fo = ImageFont.truetype(f, int(size * S))
+    widths = [fo.getlength(ch) + size * S * spacing for ch in s]
+    tw = sum(widths) - size * S * spacing
+    cx = x * S - (tw / 2 if anchor == "mm" else 0)
+    for ch, w in zip(s, widths):
+        d.text((cx, y * S), ch, font=fo, fill=fill, anchor="lm")
+        cx += w
+
+
+def figure(d, pose, y, st, t):
+    a = int(255 * st.get("alpha", 1.0))
+    col = (WHITE[0], WHITE[1], WHITE[2], a)
+    sc = lambda *v: [x * S for x in v]
+    lw = 13 * S
+    if pose == "lie":
+        d.ellipse(sc(BED_X - 32, y - 168, BED_X + 32, y - 104), fill=col)
+        d.rectangle(sc(330, y - 140, 560, y - 100), fill=(84, 84, 90))          # body under blanket
+    elif pose == "sit":
+        k = st["k"]
+        hx, hy = BED_X + 20 * k, y - 136 - 120 * k
+        d.line(sc(hx + 5, hy + 35, BED_X + 30, y - 110), fill=col, width=lw)
+        d.ellipse(sc(hx - 32, hy - 32, hx + 32, hy + 32), fill=col)
+        d.line(sc(hx + 5, hy + 55, hx + 70, hy + 85), fill=col, width=lw)
+    elif pose == "walk":
+        x, k = st["x"], st["k"]
+        sw = math.sin(k * 18) * 26
+        fy = y - 20
+        d.line(sc(x, fy - 120, x - sw, fy), fill=col, width=lw)
+        d.line(sc(x, fy - 120, x + sw, fy), fill=col, width=lw)
+        d.line(sc(x, fy - 120, x + 4, fy - 230), fill=col, width=lw)
+        d.line(sc(x + 2, fy - 210, x - sw * 0.8, fy - 135), fill=col, width=lw)
+        d.line(sc(x + 2, fy - 210, x + sw * 0.8, fy - 135), fill=col, width=lw)
+        d.ellipse(sc(x - 32, fy - 300, x + 32, fy - 236), fill=col)
+
+
+def clock_icon(d, x, y, shake):
+    sc = lambda *v: [q * S for q in v]
+    x += math.sin(shake * 60) * 5 * (shake > 0)
+    d.ellipse(sc(x - 22, y - 22, x + 22, y + 22), outline=(200, 200, 205), width=4 * S)
+    d.ellipse(sc(x - 28, y - 32, x - 12, y - 18), fill=(200, 200, 205))
+    d.ellipse(sc(x + 12, y - 32, x + 28, y - 18), fill=(200, 200, 205))
+    d.line(sc(x, y, x, y - 12), fill=(200, 200, 205), width=3 * S)
+    d.line(sc(x, y, x + 9, y + 4), fill=(200, 200, 205), width=3 * S)
+
+
+def render_frame(n):
+    t = n / FPS
+    img = base().copy().convert("RGBA")
+    d = ImageDraw.Draw(img, "RGBA")
+    sc = lambda *v: [q * S for q in v]
+    i, day, p = day_at(t)
+    outro = t >= OUTRO0
+    morning = ease((p - 0.45) / 0.12) if not outro else 0.0
+    # window: night (moon) -> morning
+    sky = tuple(int(20 + (215 - 20) * morning) for _ in range(3))
+    d.rectangle(sc(392, 452, 688, 638), fill=sky)
+    d.line(sc(540, 452, 540, 638), fill=(30, 30, 34), width=8 * S)
+    if morning < 0.5:
+        d.ellipse(sc(610, 480, 660, 530), fill=(230, 230, 230, int(255 * (1 - 2 * morning))))
+        for k in range(12):
+            r = random.Random(k)
+            sx, sy = r.uniform(400, 680), r.uniform(460, 620)
+            d.ellipse(sc(sx - 2, sy - 2, sx + 2, sy + 2), fill=(200, 200, 200))
+    if morning > 0:
+        put_glow(img, 540, 545, (255, 255, 255), 160, 0.6 * morning)
+    # day counter + clock time
+    text_spaced(d, 740, 510, f"TAG {day}", 26, (170, 170, 175), anchor="lm")
+    text_spaced(d, 740, 550, "06:30" if morning > 0.5 else "22:00", 22, (110, 110, 115), anchor="lm")
+    # door light (bottom room)
+    y2 = ROWS[2][1]
+    door = 0.0
+    if not outro and p > 0.6 and DAYS[i][1] > 0:
+        door = ease((p - 0.6) / 0.08) * (1 - ease((p - 0.9) / 0.08))
+    if outro:
+        door = ease((t - OUTRO0) / 0.8)
+    if door > 0:
+        d.rectangle(sc(DOOR_X - 52, y2 - 322, DOOR_X - 52 + 104 * door, y2), fill=(250, 250, 250))
+        d.polygon(sc(DOOR_X - 52, y2, DOOR_X + 52, y2, DOOR_X + 60, y2 + 60, DOOR_X - 240 * door, y2 + 60),
+                  fill=(255, 255, 255, int(70 * door)))
+        put_glow(img, DOOR_X, y2 - 160, (255, 255, 255), 230, 0.7 * door)
+    # rooms: labels, clocks, phones, people
+    for who, (label, y) in enumerate(ROWS):
+        st = state(who, t)
+        dim = 0.35 if outro and who != 2 else 1.0
+        ring = (not outro) and 0.5 < p < 0.62
+        clock_icon(d, 170, y - 140, (t * 7) % 1 if ring else 0)
+        phone_on = st.get("phone", False)
+        d.rectangle(sc(150, y - 103, 186, y - 96), fill=(90, 160, 255) if phone_on else (60, 60, 64))
+        if phone_on and st["pose"] == "lie":
+            put_glow(img, BED_X + 10, y - 150, BLUE, 90, 0.9 * dim)
+            d.polygon(sc(BED_X + 40, y - 150, BED_X + 120, y - 190, BED_X + 120, y - 120), fill=(140, 190, 255, 70))
+            d.rectangle(sc(BED_X + 40, y - 170, BED_X + 62, y - 132), fill=(160, 205, 255))   # phone in hand
+        lab_col = RED if who == 2 else (170, 170, 175)
+        if who == 2 and st["pose"] != "gone":
+            put_glow(img, BED_X if st["pose"] != "walk" else st["x"], y - 160, RED, 110, 0.55)
+        hx = BED_X if st["pose"] != "walk" else st["x"]
+        if st["pose"] != "gone":
+            ly = y - 210 if st["pose"] == "lie" else y - 330
+            text_spaced(d, hx, ly, label, 22, lab_col + (int(255 * dim),))
+        if st["pose"] in ("lie", "sit", "walk"):
+            st = dict(st, alpha=st.get("alpha", 1) * dim)
+            d2 = ImageDraw.Draw(img, "RGBA")
+            figure(d2, st["pose"], y, st, t)
+    # captions
+    line1 = "UM 22 UHR LEUCHTETE BEI ALLEN DREIEN DAS HANDY."
+    text_spaced(d, W / 2, 300, line1, 26, (225, 225, 228, int(255 * c01(t / 0.8))), spacing=0.08)
+    if t > DSTART[-1] + 0.5:
+        a = int(255 * c01((t - DSTART[-1] - 0.5) / 0.8))
+        text_spaced(d, W / 2, 350, "NUR EINER LEGTE ES JEDEN ABEND WEG.", 26, (255, 90, 95, a), spacing=0.08)
+    frame = img.resize((W, H), Image.LANCZOS)
+    if outro:
+        lt = t - OUTRO0
+        dd = ImageDraw.Draw(frame, "RGBA")
+        a1 = int(230 * ease((lt - 1.2) / 0.8))
+        dd.rectangle([0, 0, W, H], fill=(5, 5, 7, int(a1 * 0.75)))
+        if lt > 1.4:
+            f = ImageFont.truetype(F_BIG, 120)
+            dd.text((W / 2, 840), "SEI DER", font=f, fill=(255, 255, 255, a1), anchor="mm")
+            dd.text((W / 2, 990), "EINE.", font=f, fill=RED + (a1,), anchor="mm")
+        if lt > 3.0:
+            a2 = int(255 * ease((lt - 3.0) / 0.6))
+            ft = ImageFont.truetype(F_TXT, 40)
+            dd.text((W / 2, 1180), "Wer bist du – 1, 2 oder 3?", font=ft, fill=(230, 230, 232, a2), anchor="mm")
+            dd.text((W / 2, 1240), "Schreib's in die Kommentare.", font=ft, fill=(160, 160, 165, a2), anchor="mm")
+    if t < 0.6:
+        frame.alpha_composite(Image.new("RGBA", (W, H), (0, 0, 0, int(255 * (1 - t / 0.6)))))
+    if t > TOTAL - 0.6:
+        frame.alpha_composite(Image.new("RGBA", (W, H), (0, 0, 0, int(255 * c01((t - TOTAL + 0.6) / 0.6)))))
+    return frame.convert("RGB").tobytes()
+
+
+# ------------------------------------------------------------------ ambient score
+SR = 44100
+
+
+def make_audio():
+    n = int(TOTAL * SR)
+    tt = np.arange(n) / SR
+    rng = np.random.default_rng(5)
+    out = np.zeros(n)
+    # dark drone (Am), swelling towards day 365
+    swell = np.clip((tt - DSTART[3]) / (DSTART[-1] - DSTART[3]), 0, 1)
+    for f, a in ((55, 0.22), (110, 0.12), (164.8, 0.06), (220, 0.04)):
+        out += a * (0.6 + 0.4 * swell) * np.sin(2 * np.pi * f * tt + np.sin(tt * 0.3))
+    # piano-ish notes (sparse)
+    notes = [440, 523.3, 659.3, 587.3, 523.3, 440, 392, 440]
+    L = int(2.5 * SR)
+    lt = np.arange(L) / SR
+    for k, t0 in enumerate(np.arange(0.5, TOTAL - 3, 1.9)):
+        f = notes[k % len(notes)]
+        tone = (np.sin(2 * np.pi * f * lt) + 0.3 * np.sin(4 * np.pi * f * lt)) * np.exp(-lt * 2.2) * 0.16
+        i = int(t0 * SR)
+        out[i:i + L] += tone[:max(0, min(L, n - i))]
+    # clock ticks + alarm beeps each morning, heartbeat in the montage
+    tick = rng.standard_normal(int(0.01 * SR)) * 0.08
+    for k in range(int(TOTAL * 2)):
+        i = int(k * 0.5 * SR)
+        if k * 0.5 < OUTRO0:
+            out[i:i + len(tick)] += tick[:max(0, min(len(tick), n - i))]
+    bl = int(0.09 * SR)
+    beep = np.sign(np.sin(2 * np.pi * 1400 * np.arange(bl) / SR)) * 0.07
+    for (d, L2), s0 in zip(DAYS, DSTART):
+        for j in range(3 if L2 > 3 else 1):
+            i = int((s0 + L2 * 0.5 + j * 0.18) * SR)
+            out[i:i + bl] += beep[:max(0, min(bl, n - i))]
+    kl = int(0.3 * SR)
+    kt = np.arange(kl) / SR
+    kick = np.sin(2 * np.pi * (45 + 60 * np.exp(-kt * 25)) * kt) * np.exp(-kt * 9)
+    t0 = DSTART[3]
+    while t0 < OUTRO0:
+        for off in (0, 0.22):
+            i = int((t0 + off) * SR)
+            out[i:i + kl] += 0.45 * kick[:max(0, min(kl, n - i))]
+        t0 += 0.85
+    # outro hit
+    bl2 = int(2.5 * SR)
+    bt = np.arange(bl2) / SR
+    boom = np.sin(2 * np.pi * (35 + 70 * np.exp(-bt * 6)) * bt) * np.exp(-bt * 1.5)
+    i = int((OUTRO0 + 1.3) * SR)
+    out[i:i + bl2] += 0.9 * boom[:max(0, min(bl2, n - i))]
+    out *= np.clip(tt / 1.0, 0, 1) * np.clip((TOTAL - tt) / 1.2, 0, 1)
+    out = out / np.abs(out).max() * 0.9
+    p = BUILD / "score.wav"
+    with wave.open(str(p), "wb") as wf:
+        wf.setnchannels(1)
+        wf.setsampwidth(2)
+        wf.setframerate(SR)
+        wf.writeframes((out * 32767).astype(np.int16).tobytes())
+    return p
+
+
+def main():
+    if len(sys.argv) > 1 and sys.argv[1] == "preview":
+        d = BUILD / "stills"
+        d.mkdir(exist_ok=True)
+        for a in sys.argv[2:]:
+            Image.frombytes("RGB", (W, H), render_frame(int(float(a) * FPS))).save(d / f"t{float(a):05.1f}.png")
+        print("stills ->", d, "total", round(TOTAL, 1))
+        return
+    audio = make_audio()
+    ff = subprocess.Popen(["ffmpeg", "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}",
+                           "-r", str(FPS), "-i", "-", "-i", str(audio), "-af", "loudnorm=I=-14:TP=-1",
+                           "-c:v", "libx264", "-preset", "medium", "-crf", "17", "-pix_fmt", "yuv420p",
+                           "-c:a", "aac", "-b:a", "192k", "-shortest", "-movflags", "+faststart", str(OUT)],
+                          stdin=subprocess.PIPE)
+    with Pool() as pool:
+        for fr in pool.imap(render_frame, range(NFRAMES), chunksize=6):
+            ff.stdin.write(fr)
+    ff.stdin.close()
+    ff.wait()
+    print("->", OUT)
+
+
+if __name__ == "__main__":
+    main()
