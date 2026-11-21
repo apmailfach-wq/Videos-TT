@@ -1,16 +1,16 @@
 """Sprechertext für 'Oma Frieda Faust – Folge 2: Oma Frieda geht zur Schule'."""
 
 VOICES = {
-    "erz":   ("de-DE-ChristophNeural", "-4%", "-16Hz",
-              "bass=g=5:f=110,aecho=0.8:0.5:40|75:0.18|0.10,volume=1.15"),
-    "oma":   ("de-AT-IngridNeural", "-2%", "-7Hz", "vibrato=f=5.5:d=0.035,volume=1.1"),
-    "omaflott": ("de-AT-IngridNeural", "+12%", "-7Hz", "vibrato=f=5.5:d=0.035,volume=1.1"),
-    "gamer": ("de-AT-JonasNeural", "+10%", "+30Hz", "volume=1.0"),
-    "girl":  ("de-DE-TanjaNeural", "+16%", "+38Hz", "volume=1.0"),
-    "rowdy": ("de-CH-JanNeural", "+10%", "+14Hz", "volume=1.05"),
-    "kleiner": ("de-AT-JonasNeural", "+8%", "+48Hz", "volume=1.0"),
-    "bully2": ("de-AT-JonasNeural", "+10%", "+12Hz", "volume=1.0"),
-    "dixi":  ("de-CH-JanNeural", "-5%", "+14Hz", "lowpass=f=650,aecho=0.8:0.6:25:0.3,volume=1.6"),
+    # natürlichere Stimmen: Multilingual-Neural für Oma & Erzähler, Kinder von jungen Frauenstimmen (leicht angehoben)
+    "erz":   ("de-DE-FlorianMultilingualNeural", "-6%", "-6Hz", "bass=g=3:f=110,aecho=0.8:0.4:30:0.08,volume=1.1"),
+    "oma":   ("de-DE-SeraphinaMultilingualNeural", "-6%", "-10Hz", "vibrato=f=5:d=0.015,volume=1.1"),
+    "omaflott": ("de-DE-SeraphinaMultilingualNeural", "+3%", "-10Hz", "vibrato=f=5:d=0.015,volume=1.1"),
+    "gamer": ("de-DE-TanjaNeural", "+6%", "+18Hz", "volume=1.0"),
+    "girl":  ("de-DE-AmalaNeural", "+8%", "+20Hz", "volume=1.0"),
+    "rowdy": ("de-DE-KillianNeural", "+4%", "+6Hz", "volume=1.05"),
+    "kleiner": ("de-DE-KatjaNeural", "+6%", "+24Hz", "volume=1.0"),
+    "bully2": ("de-AT-JonasNeural", "+8%", "+4Hz", "volume=1.0"),
+    "dixi":  ("de-DE-KillianNeural", "-5%", "+6Hz", "lowpass=f=650,aecho=0.8:0.6:25:0.3,volume=1.6"),
 }
 
 # (id, speaker, text, start_s, latest_end_s)
@@ -63,7 +63,7 @@ _LINES_OLD = [
 ]
 
 LINES = [(i, sp, tx, round(R(a), 2), round(R_end(b), 2)) for i, sp, tx, a, b in _LINES_OLD] + [
-    ("gag1", "oma",      "Ah. Der Duft der Bildung.",                      at(0, 0.20), at(0, 2.25)),
+    ("gag1", "oma",      "Ah … der Duft der Bildung.",                      at(0, 0.20), at(0, 2.25)),
     ("gagA", "omaflott", "Anwesenheit! Wer fehlt, hebt die Hand.",         at(1, 0.10), at(1, 2.70)),
     ("gagB", "girl",     "Frau Faust, wie alt sind Sie eigentlich?",       at(1, 3.55), at(1, 5.80)),
     ("gagC", "omaflott", "Alt genug, um alle eure Ausreden zu kennen.",    at(1, 5.95), at(1, 8.35)),

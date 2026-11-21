@@ -21,13 +21,33 @@ from script import TOTAL  # noqa: E402  (vor shots2 importieren, sonst greift sc
 import shots3 as S  # noqa: E402
 import world3 as W3  # noqa: E402
 import world as Wd  # noqa: E402
-from gfx import (F_BLACK, F_INTER, FPS, H, ROOT, W, YELLOW, clamp01, ease_back, ease_out, extrude_text, paste_c,
+from gfx import (F_BLACK, F_INTER, FPS, H, ROOT, W as W_, YELLOW, clamp01, ease_back, ease_out, extrude_text, paste_c,
                  rrect, text_img)  # noqa: E402
 
 BUILD = ROOT / "build" / "omafrieda2"
 OUT = ROOT / os.environ.get("VIDEO_OUT", "oma-frieda-faust-folge-2.mp4")
 TL = json.loads((BUILD / "timeline.json").read_text())
 LINES = {l["id"]: l for l in TL["lines"]}
+_KN = TL.get("warp") or [(0.0, 0.0), (TOTAL, TOTAL)]
+_KX = np.array([k[0] for k in _KN])
+_KY = np.array([k[1] for k in _KN])
+TOTAL_BASE = TOTAL
+TOTAL = float(TL.get("total", TOTAL))
+
+
+def W(t):
+    """Basiszeit (Schnittliste) -> Videozeit (gedehnt für natürliche Sprechpausen)."""
+    return float(np.interp(t, _KX, _KY))
+
+
+def Winv(T):
+    return float(np.interp(T, _KY, _KX))
+
+
+def WR(x):
+    return W(S.R(x))
+
+
 NFRAMES = int(TOTAL * FPS)
 SR = 48000
 GROUP = {"oma": "oma", "omaflott": "oma", "gamer": "gamer", "girl": "girl", "rowdy": "rowdy", "kleiner": "kleiner",
@@ -230,18 +250,19 @@ def init():
         return
     load_envs()
     CAPS.extend(build_caps())
-    Wd.MOUTH["fn"] = mouth_fn
+    Wd.MOUTH["fn"] = lambda who, T: mouth_fn(who, W(T))
 
 
 def render_frame(fi):
-    T = fi / FPS
+    Tn = fi / FPS
+    T = Winv(Tn)                       # Basiszeit für Bild & Texte
     i, a, b, fn = S.shot_at(T)
     f = fn(T - a, T)
-    if f.size != (W, H):
-        f = f.resize((W, H))
+    if f.size != (W_, H):
+        f = f.resize((W_, H))
     f = W3.natural(f, T)
     overlays(f, T)
-    draw_caps(f, T, fn)
+    draw_caps(f, Tn, fn)               # Untertitel folgen der echten Sprachzeit
     return f.convert("RGB").tobytes()
 
 
@@ -542,101 +563,101 @@ def build_audio(path):
         buf[i:i + len(x)] += x[:n - i] * g
 
     # Hook
-    put(sfx, fx_braam(1.6, 49), S.R(0.0), 0.9)
-    put(sfx, fx_whoosh(0.6, 1, 200, 1500), S.R(0.0), 0.5)
-    put(sfx, fx_scratch(), S.FREEZE_AT - 0.03, 1.0)
-    put(sfx, fx_rewind(), S.R(2.2), 0.9)
-    quiet = {0.0, 0.9, 2.2, 2.95} | {round(S.R(x), 2) for x in (14.5, 41.7, 42.35, 43.45, 59.4)} | {round(END, 2)}
+    put(sfx, fx_braam(1.6, 49), WR(0.0), 0.9)
+    put(sfx, fx_whoosh(0.6, 1, 200, 1500), WR(0.0), 0.5)
+    put(sfx, fx_scratch(), W(S.FREEZE_AT - 0.03), 1.0)
+    put(sfx, fx_rewind(), WR(2.2), 0.9)
+    quiet = {0.0, 0.9, 2.2, 2.95} | {round(WR(x), 2) for x in (14.5, 41.7, 42.35, 43.45, 59.4)} | {round(END, 2)}
     for k, (a, b, fn) in enumerate(S.SHOTS):
         if round(a, 2) in quiet:
             continue
-        put(sfx, fx_whoosh(0.28, 40 + k, 600, 5000), a - 0.12, 0.18)
+        put(sfx, fx_whoosh(0.28, 40 + k, 600, 5000), W(a) - 0.12, 0.18)
     # gemütlicher Morgen + Klassenzimmer
-    cozy = tape_stop(music_cozy(S.R(13.85) - S.R(2.95)), 0.3)
-    put(mus, cozy, S.R(2.95), 0.8)
+    cozy = tape_stop(music_cozy(WR(13.85) - WR(2.95)), 0.3)
+    put(mus, cozy, WR(2.95), 0.8)
     rng = np.random.default_rng(5)
     for t0 in np.arange(3.1, 5.8, 0.55):  # (vor dem ersten Einschub)
         put(sfx, fx_chirp(int(t0 * 100)), t0 + rng.uniform(0, 0.3), 0.4)
-    put(sfx, fx_pop(), S.R(4.8), 0.6)
-    put(sfx, fx_pop(), S.R(6.6), 0.6)
+    put(sfx, fx_pop(), WR(4.8), 0.6)
+    put(sfx, fx_pop(), WR(6.6), 0.6)
     for t0 in np.arange(6.2, 7.0, 0.09):  # Kreide (wird über S.R verschoben)
-        put(sfx, fx_click(int(t0 * 70)), S.R(t0), 0.5)
+        put(sfx, fx_click(int(t0 * 70)), WR(t0), 0.5)
     # Papierkügelchen
-    put(sfx, fx_whoosh(0.6, 33, 800, 6000), S.R(14.1), 0.8)
-    put(sfx, fx_thud(), S.R(14.75), 0.8)
-    put(sfx, fx_bass(1.0), S.R(14.75), 0.7)
-    put(sfx, fx_sparkle(), S.R(14.8), 0.6)
-    epic = music_epic(END - S.R(14.75))
-    put(mus, epic, S.R(14.75), 0.62)
+    put(sfx, fx_whoosh(0.6, 33, 800, 6000), WR(14.1), 0.8)
+    put(sfx, fx_thud(), WR(14.75), 0.8)
+    put(sfx, fx_bass(1.0), WR(14.75), 0.7)
+    put(sfx, fx_sparkle(), WR(14.8), 0.6)
+    epic = music_epic(W(END) - WR(14.75))
+    put(mus, epic, WR(14.75), 0.62)
     # Handy
     for t0 in np.arange(17.35, 18.0, 0.12):  # Handyspiel
-        put(sfx, tone(880 + 220 * ((t0 * 10) % 3), 0.08, 0.002, 0.05) * 0.3, S.R(t0), 0.6)
-    put(sfx, fx_whoosh(0.25, 34, 500, 4000), S.R(18.45), 0.6)
-    put(sfx, fx_pop(), S.R(19.22), 0.6)
+        put(sfx, tone(880 + 220 * ((t0 * 10) % 3), 0.08, 0.002, 0.05) * 0.3, WR(t0), 0.6)
+    put(sfx, fx_whoosh(0.25, 34, 500, 4000), WR(18.45), 0.6)
+    put(sfx, fx_pop(), WR(19.22), 0.6)
     # Draußen: Tritt gegen die Dixi-Tür
     for k in range(3):
-        put(sfx, fx_thud(), S.R(25.9 + k * 0.6), 0.6)
+        put(sfx, fx_thud(), WR(25.9 + k * 0.6), 0.6)
     # Pause
     t = np.arange(int(1.0 * SR)) / SR
     ring = (np.sin(2 * np.pi * 1900 * t) + 0.5 * np.sin(2 * np.pi * 2650 * t)) * (np.sin(2 * np.pi * 22 * t) > 0)
-    put(sfx, ring * np.exp(-t * 1.5) * 0.4, S.R(27.4), 1.0)
-    put(sfx, fx_braam(1.6, 46), S.R(29.6), 0.6)
-    put(sfx, fx_tension(1.4), S.R(33.2), 0.4)
-    put(sfx, fx_tension(1.6), S.R(40.1), 0.9)
-    put(sfx, fx_bass(0.9), S.R(40.1), 0.6)
+    put(sfx, ring * np.exp(-t * 1.5) * 0.4, WR(27.4), 1.0)
+    put(sfx, fx_braam(1.6, 46), WR(29.6), 0.6)
+    put(sfx, fx_tension(1.4), WR(33.2), 0.4)
+    put(sfx, fx_tension(1.6), WR(40.1), 0.9)
+    put(sfx, fx_bass(0.9), WR(40.1), 0.6)
     # Wurf
-    put(sfx, fx_whoosh(0.25, 50, 400, 3000), S.GRIP_T, 0.7)
-    put(sfx, fx_thud(), S.GRIP_T + 0.05, 0.5)
-    put(sfx, fx_whoosh(0.35, 51, 300, 4000), S.STEP_T, 0.8)
-    put(sfx, fx_bass(1.4), S.SWEEP_T, 1.0)
-    put(sfx, fx_thud(), S.SWEEP_T, 1.0)
+    put(sfx, fx_whoosh(0.25, 50, 400, 3000), W(S.GRIP_T), 0.7)
+    put(sfx, fx_thud(), W(S.GRIP_T + 0.05), 0.5)
+    put(sfx, fx_whoosh(0.35, 51, 300, 4000), W(S.STEP_T), 0.8)
+    put(sfx, fx_bass(1.4), W(S.SWEEP_T), 1.0)
+    put(sfx, fx_thud(), W(S.SWEEP_T), 1.0)
     tt = np.arange(int(1.1 * SR)) / SR
     drone = (np.sin(2 * np.pi * 41 * tt) + 0.5 * np.sin(2 * np.pi * 61.5 * tt)) * np.sin(np.pi * tt / 1.1) * 0.5
-    put(sfx, drone, S.SWEEP_T, 0.8)
-    put(sfx, fx_whoosh(1.0, 10, 80, 600), S.SWEEP_T, 0.9)
+    put(sfx, drone, W(S.SWEEP_T), 0.8)
+    put(sfx, fx_whoosh(1.0, 10, 80, 600), W(S.SWEEP_T), 0.9)
     slam = fast_lp(noise(0.4, 61), 900) * np.exp(-np.arange(int(0.4 * SR)) / SR * 12) * 2.0
-    put(sfx, np.tanh(slam), S.SLAM_T, 1.0)
-    put(sfx, fx_thud(), S.SLAM_T, 1.0)
-    put(sfx, fx_pop(), S.SLAM_T + 0.1, 0.6)
-    put(sfx, fx_pop(), S.R(44.7), 0.4)
-    put(sfx, fx_whoosh(0.5, 52, 400, 4000), S.RUN_T, 0.7)
+    put(sfx, np.tanh(slam), W(S.SLAM_T), 1.0)
+    put(sfx, fx_thud(), W(S.SLAM_T), 1.0)
+    put(sfx, fx_pop(), W(S.SLAM_T + 0.1), 0.6)
+    put(sfx, fx_pop(), WR(44.7), 0.4)
+    put(sfx, fx_whoosh(0.5, 52, 400, 4000), W(S.RUN_T), 0.7)
     for k in range(6):
-        put(sfx, fx_click(300 + k), S.RUN_T + k * 0.11, 0.6)
-    put(sfx, np.tanh(slam), S.SLAM2_T, 0.9)
-    put(sfx, fx_thud(), S.SLAM2_T, 0.9)
+        put(sfx, fx_click(300 + k), W(S.RUN_T) + k * 0.11, 0.6)
+    put(sfx, np.tanh(slam), W(S.SLAM2_T), 0.9)
+    put(sfx, fx_thud(), W(S.SLAM2_T), 0.9)
     # Klopfen + Bonbon
     for k in range(3):
-        put(sfx, fx_thud(), S.R(46.95 + k * 0.5), 0.5)
-    put(sfx, fx_whoosh(0.4, 53, 1500, 7000), S.BONBON_T, 0.5)
-    put(sfx, fx_pop(), S.BONBON_T + 0.7, 0.6)
-    put(sfx, fx_sparkle(), S.R(51.2), 0.5)
+        put(sfx, fx_thud(), WR(46.95 + k * 0.5), 0.5)
+    put(sfx, fx_whoosh(0.4, 53, 1500, 7000), W(S.BONBON_T), 0.5)
+    put(sfx, fx_pop(), W(S.BONBON_T + 0.7), 0.6)
+    put(sfx, fx_sparkle(), WR(51.2), 0.5)
     # Held
-    put(sfx, fx_braam(2.0, 55), S.R(56.3), 0.7)
-    put(sfx, fx_sparkle(), S.R(56.8), 0.6)
-    put(sfx, fx_bass(1.4), S.R(57.9), 1.0)
-    put(sfx, fx_braam(1.6, 41), S.R(57.9), 0.9)
+    put(sfx, fx_braam(2.0, 55), WR(56.3), 0.7)
+    put(sfx, fx_sparkle(), WR(56.8), 0.6)
+    put(sfx, fx_bass(1.4), WR(57.9), 1.0)
+    put(sfx, fx_braam(1.6, 41), WR(57.9), 0.9)
     # Ende
     for k in range(3):
-        put(sfx, fx_pop(), S.R(59.75 + k * 0.22), 0.7)
-    put(sfx, fx_pop(), S.R(60.55), 0.6)
-    put(sfx, fx_riser(2.6), S.R(59.8), 0.6)
-    put(sfx, fx_scratch(), END, 1.0)
+        put(sfx, fx_pop(), WR(59.75 + k * 0.22), 0.7)
+    put(sfx, fx_pop(), WR(60.55), 0.6)
+    put(sfx, fx_riser(2.6), WR(59.8), 0.6)
+    put(sfx, fx_scratch(), W(END), 1.0)
     # Gags
-    ins = [S.R_end(p) for p, _ in S.INS]
+    ins = [W(S.R_end(p)) for p, _ in S.INS]
     for k in range(6):
-        put(sfx, fx_click(400 + k), ins[0] + 0.3 + k * 0.13, 0.25)          # Fliegen
-    put(sfx, fx_pop(), ins[1] + 10.4, 0.5)
-    put(sfx, fx_thud(), ins[1] + 10.45, 0.4)
-    put(sfx, fx_pop(), ins[1] + 2.75, 0.4)
+        put(sfx, fx_click(400 + k), W(S.R_end(S.INS[0][0]) + 0.3 + k * 0.13), 0.25)          # Fliegen
+    put(sfx, fx_pop(), W(S.R_end(S.INS[1][0]) + 10.4), 0.5)
+    put(sfx, fx_thud(), W(S.R_end(S.INS[1][0]) + 10.45), 0.4)
+    put(sfx, fx_pop(), W(S.R_end(S.INS[1][0]) + 2.75), 0.4)
     tg = np.arange(int(0.35 * SR)) / SR
-    put(sfx, np.sin(2 * np.pi * (300 - 200 * tg) * tg) * np.exp(-tg * 6) * 0.5, ins[1] + 12.0, 0.8)  # Schlucken
+    put(sfx, np.sin(2 * np.pi * (300 - 200 * tg) * tg) * np.exp(-tg * 6) * 0.5, W(S.R_end(S.INS[1][0]) + 12.0), 0.8)  # Schlucken
     for k in range(8):
-        put(sfx, fx_click(500 + k), ins[2] + 2.3 + k * 0.1, 0.35)          # Stricknadeln klappern
-    put(sfx, fx_braam(1.2, 49), ins[2] + 2.2, 0.5)
+        put(sfx, fx_click(500 + k), W(S.R_end(S.INS[2][0]) + 2.3 + k * 0.1), 0.35)          # Stricknadeln klappern
+    put(sfx, fx_braam(1.2, 49), W(S.R_end(S.INS[2][0]) + 2.2), 0.5)
     for k in range(4):
-        put(sfx, fx_click(600 + k), ins[3] + k * 0.12, 0.5)                 # Hände abklopfen
-    put(sfx, fx_pop(), ins[4] + 0.1, 0.4)
-    put(sfx, fx_sparkle(), ins[5] + 3.2, 0.4)
+        put(sfx, fx_click(600 + k), W(S.R_end(S.INS[3][0]) + k * 0.12), 0.5)                 # Hände abklopfen
+    put(sfx, fx_pop(), W(S.R_end(S.INS[4][0]) + 0.1), 0.4)
+    put(sfx, fx_sparkle(), W(S.R_end(S.INS[5][0]) + 3.2), 0.4)
     # Ducking
     ve = np.abs(voice)
     k = int(0.15 * SR)
@@ -664,7 +685,7 @@ def main():
         for a in args[1:]:
             T = float(a)
             fi = int(round(T * FPS))
-            Image.frombytes("RGB", (W, H), render_frame(fi)).save(outd / f"t{T:05.2f}.png")
+            Image.frombytes("RGB", (W_, H), render_frame(fi)).save(outd / f"t{T:05.2f}.png")
             print("still", T)
         return
     if args and args[0] == "audio":
@@ -676,7 +697,7 @@ def main():
     build_audio(wav)
     silent = BUILD / "video_noaudio.mp4"
     ff = subprocess.Popen(["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s",
-                           f"{W}x{H}", "-r", str(FPS), "-i", "-", "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-maxrate", "9M", "-bufsize", "18M",
+                           f"{W_}x{H}", "-r", str(FPS), "-i", "-", "-c:v", "libx264", "-preset", "medium", "-crf", "22", "-maxrate", "7M", "-bufsize", "14M",
                            "-pix_fmt", "yuv420p", str(silent)], stdin=subprocess.PIPE)
     procs = int(os.environ.get("PROCS", "4"))
     with Pool(procs, initializer=init) as pool:
