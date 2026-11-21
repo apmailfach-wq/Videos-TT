@@ -807,7 +807,7 @@ def emoji(ch, size):
 GAGS = [("hook", "Pause", "⏸️", 860, 760, 150, 0), ("scroll", "Cardio", "💀", 850, 1650, 190, -10),
         ("scroll", "Daumen", "👍", 220, 1650, 160, 15), ("others", "TikTok", "🤡", 870, 1100, 170, 10),
         ("clock", "Namen", "🤨", 220, 780, 150, -8), ("turn", "du", "👉", 180, 900, 170, 0),
-        ("steps", "Scrolling", "🚫", W / 2, 1290, 200, 0), ("future", "Glow", "😎", 230, 1080, 170, -10),
+        ("steps", "Scrolling", "📵", W / 2, 1730, 190, 0), ("future", "Glow", "😎", 230, 1080, 170, -10),
         ("future", "Reels", "✨", 860, 1060, 140, 0), ("cta", "Like", "❤️", 830, 1500, 180, 12)]
 
 
@@ -951,7 +951,7 @@ def make_voice():
     p = BUILD / "voice.wav"
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", str(lst),
                     "-af", "bass=g=6:f=110,treble=g=2:f=5000,acompressor=threshold=0.08:ratio=4:attack=5:release=90:makeup=3,"
-                           "aecho=0.8:0.6:45:0.10,loudnorm=I=-14:TP=-1.5",
+                           "aecho=0.8:0.6:45:0.10,loudnorm=I=-11:TP=-1.0",
                     "-ar", str(SR), "-ac", "1", str(p)], check=True)
     return p
 

@@ -91,7 +91,9 @@ Jubel auf dem Hügel · Handy „OFF“ + Kommentar-Aufforderung.
 
 ```bash
 cd src/motivation
-python3 tts.py                      # Voiceover + Wort-Timings -> build/motivation/
+pip install piper-tts
+python3 tts_piper.py                # Thorsten-Stimme (lädt Modell nach build/voices) + Wort-Timings
+# python3 tts.py                    # alternative: edge-tts
 python3 render.py                   # rendert ../../handy-weg-motivation.mp4
 python3 render.py preview 3 20 40   # Standbilder
 ```
