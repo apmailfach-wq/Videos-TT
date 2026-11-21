@@ -113,3 +113,15 @@ python3 tts.py            # beide Stimmen + Wort-Timings -> build/handy2/
 python3 render.py         # rendert ../../handy-redet-mit-dir.mp4
 python3 render.py times   # Szenen-Zeitplan
 ```
+
+## boss-fight-handy.mp4 – Serienformat „BOSS FIGHT #1: Du vs. dein Handy“
+
+Wiedererkennbares Format im Stil eines Arcade-Prügelspiels (ca. 50 s): Neon-Arena, HP-Balken „DU vs. HANDY · BOSS“,
+Ansager-Stimme („Runde eins. Kämpft!“), das Handy aus `handy2` als Boss, Projektile (🔔📱🌙🪫), Schadenszahlen,
+Combo-Zähler, „LOW HP“, Spezialattacke (Schublade, Training, Lernen, Bauen), „K.O.“, „LEVEL UP +1 Disziplin“,
+Teaser „Nächster Boss: ???“ + Folgen-Button. Chiptune-Beat mit Treffer-Sounds.
+Nächste Folgen: einfach `src/bossfight/lines.py` (Texte) und `HITS` in `render.py` anpassen.
+
+```bash
+cd src/bossfight && python3 tts.py && python3 render.py
+```
