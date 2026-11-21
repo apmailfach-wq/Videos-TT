@@ -10,10 +10,30 @@ VOICES = {
     "rowdy": ("de-CH-JanNeural", "+10%", "+14Hz", "volume=1.05"),
     "kleiner": ("de-AT-JonasNeural", "+8%", "+48Hz", "volume=1.0"),
     "bully2": ("de-AT-JonasNeural", "+10%", "+12Hz", "volume=1.0"),
+    "dixi":  ("de-CH-JanNeural", "-5%", "+14Hz", "lowpass=f=650,aecho=0.8:0.6:25:0.3,volume=1.6"),
 }
 
 # (id, speaker, text, start_s, latest_end_s)
-LINES = [
+# Einschübe für zusätzliche Gags: (Zeitpunkt in der alten Zeitachse, Dauer)
+INS = [(5.90, 2.4), (13.85, 3.8), (40.10, 4.8), (43.95, 1.2), (49.90, 1.4), (56.30, 3.8)]
+
+
+def R(t):
+    """Alte Zeit -> neue Zeit (Einschübe davor werden addiert)."""
+    return t + sum(d for p, d in INS if t >= p)
+
+
+def R_end(t):
+    return t + sum(d for p, d in INS if t > p)
+
+
+def at(k, off):
+    """Zeitpunkt innerhalb von Einschub k."""
+    p, _ = INS[k]
+    return R_end(p) + off
+
+
+_LINES_OLD = [
     ("oma1",  "oma",      "Ich erklär's euch.",                                              1.00, 1.95),
     ("erz1",  "erz",      "Das ist Frieda. Sie ist achtzig.",                                3.30, 5.80),
     ("erz2",  "erz",      "Heute ist sie Vertretungslehrerin.",                              6.00, 8.10),
@@ -42,4 +62,17 @@ LINES = [
     ("erz5",  "erz",      "Wo geht Oma Frieda als Nächstes hin?",                            59.60, 61.85),
 ]
 
-TOTAL = 63.1
+LINES = [(i, sp, tx, round(R(a), 2), round(R(b), 2)) for i, sp, tx, a, b in _LINES_OLD] + [
+    ("gag1", "oma",      "Ah. Der Duft der Bildung.",                      at(0, 0.20), at(0, 2.25)),
+    ("gag2", "gamer",    "Faust? Wie die Hand?",                           at(1, 0.10), at(1, 1.80)),
+    ("gag3", "oma",      "Genau wie die Hand.",                            at(1, 2.00), at(1, 3.65)),
+    ("gag4", "rowdy",    "Was willst du machen? Stricken?",                at(2, 0.10), at(2, 2.10)),
+    ("gag5", "omaflott", "Ich strick dir gleich 'nen Knoten in die Beine.", at(2, 2.25), at(2, 4.70)),
+    ("gag6", "oma",      "Besetzt.",                                       at(3, 0.25), at(3, 1.10)),
+    ("gag7", "dixi",     "Danke, Oma …",                                   at(4, 0.20), at(4, 1.30)),
+    ("gag8", "kleiner",  "Sind Sie morgen wieder da?",                     at(5, 0.15), at(5, 1.60)),
+    ("gag9", "omaflott", "Kommt drauf an, wer frech ist.",                 at(5, 1.75), at(5, 3.70)),
+]
+LINES.sort(key=lambda l: l[3])
+
+TOTAL = round(R(63.1), 2)

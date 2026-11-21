@@ -31,7 +31,7 @@ LINES = {l["id"]: l for l in TL["lines"]}
 NFRAMES = int(TOTAL * FPS)
 SR = 48000
 GROUP = {"oma": "oma", "omaflott": "oma", "gamer": "gamer", "girl": "girl", "rowdy": "rowdy", "kleiner": "kleiner",
-         "erz": "erz", "bully2": "bully2"}
+         "erz": "erz", "bully2": "bully2", "dixi": "dixi"}
 
 
 # ------------------------------------------------------------------ Lippen-Sync
@@ -127,7 +127,8 @@ CAPS = []
 import shots as _S1  # noqa: E402
 S1_HERO = _S1.shot_hero
 SUB_Y = {S.shot_hook_oma: 1400, S1_HERO: 1420, S.hero2: 1460, S.shot_eyes: 1550, S.shot_achtzig: 1450,
-         S.shot_mutig_close: 1450, S.shot_80: 1450}
+         S.shot_mutig_close: 1450, S.shot_80: 1450, S.shot_faust_a: 1450, S.shot_stricken_a: 1450,
+         S.shot_morgen_a: 1450}
 
 
 def sub_text(words, n):
@@ -158,53 +159,53 @@ def pop(T, a, dur=0.28):
 
 def overlays(f, T):
     END = S.SHOTS[-1][0]
-    if T < 2.2 or T >= END:
+    if T < S.R(2.2) or T >= END:
         im = text_img("Er hat sich mit der FALSCHEN Oma angelegt 😳", 68, (255, 255, 255), F_BLACK, max_w=900,
                       hl=(5, (255, 60, 60)))
         paste_c(f, im, 500, 320, 1.0)
-    if 2.4 <= T < 4.2:
-        paste_c(f, text_img("⏪ Heute Morgen …", 76, (255, 255, 255), F_BLACK, max_w=900), 500, 330, pop(T, 2.4))
-    if 4.8 <= T < 5.9:
-        paste_c(f, text_img("80 🎂", 92, (255, 230, 70), F_BLACK), 300, 640, pop(T, 4.8), 1.0, 8)
-    if 6.6 <= T < 8.4:
+    if S.R(2.4) <= T < S.R(4.2):
+        paste_c(f, text_img("⏪ Heute Morgen …", 76, (255, 255, 255), F_BLACK, max_w=900), 500, 330, pop(T, S.R(2.4)))
+    if S.R(4.8) <= T < 5.9:
+        paste_c(f, text_img("80 🎂", 92, (255, 230, 70), F_BLACK), 300, 640, pop(T, S.R(4.8)), 1.0, 8)
+    if S.R(6.6) <= T < S.R(8.4):
         paste_c(f, text_img("Vertretungslehrerin 👵📚", 62, (255, 255, 255), F_BLACK, max_w=900), 500, 330,
-                pop(T, 6.6))
-    if 14.75 <= T < 16.7:
-        paste_c(f, text_img("Die Stricknadeln 🧶", 90, (255, 255, 255), F_BLACK, max_w=900), 500, 330, pop(T, 14.77))
-    if 19.2 <= T < 21.85:
-        paste_c(f, text_img("Handy weg 📵", 96, (255, 255, 255), F_BLACK), 500, 330, pop(T, 19.22))
-    if 27.4 <= T < 29.6:
-        paste_c(f, text_img("Große Pause 🔔", 90, (255, 255, 255), F_BLACK, max_w=900), 500, 330, pop(T, 27.45))
+                pop(T, S.R(6.6)))
+    if S.R(14.75) <= T < S.R(16.7):
+        paste_c(f, text_img("Die Stricknadeln 🧶", 90, (255, 255, 255), F_BLACK, max_w=900), 500, 330, pop(T, S.R(14.77)))
+    if S.R(19.2) <= T < S.R(21.85):
+        paste_c(f, text_img("Handy weg 📵", 96, (255, 255, 255), F_BLACK), 500, 330, pop(T, S.R(19.22)))
+    if S.R(27.4) <= T < S.R(29.6):
+        paste_c(f, text_img("Große Pause 🔔", 90, (255, 255, 255), F_BLACK, max_w=900), 500, 330, pop(T, S.R(27.45)))
     if S.SWEEP_T <= T < S.SLAM_T + 0.5:
         paste_c(f, text_img("Fußfeger 🦶", 96, (255, 255, 255), F_BLACK), 500, 330, pop(T, S.SWEEP_T))
-    if 47.0 <= T < 56.3:
-        a = clamp01((T - 47.0) / 0.25)
+    if S.R(47.0) <= T < S.R(56.3):
+        a = clamp01((T - S.R(47.0)) / 0.25)
         im = text_img("Echter Tipp: Wenn jemand gemobbt wird – nicht wegschauen, Lehrer holen.", 56,
                       (255, 255, 255), F_INTER, max_w=820, stroke=6)
         box = Image.new("RGBA", (im.width + 40, im.height + 16), (0, 0, 0, 0))
         ImageDraw.Draw(box).rounded_rectangle([0, 0, box.width, box.height], radius=30, fill=(20, 20, 30, 185))
         box.alpha_composite(im, (20, 4))
         paste_c(f, box, 500, 330, 1.0, a)
-    if 57.9 <= T < 59.4:
+    if S.R(57.9) <= T < S.R(59.4):
         dt = T - 57.9
         s = 1.0 + 1.6 * (1 - ease_out(dt / 0.16))
         im = extrude_text("OMA FRIEDA FAUST", 112, (255, 214, 60), (170, 90, 10), depth=18, max_w=840)
         paste_c(f, im, 500, 400, s, clamp01(dt / 0.08))
-    if 59.4 <= T < END:
+    if S.R(59.4) <= T < END:
         q = text_img("Wo geht Oma Frieda als Nächstes hin?", 70, (255, 255, 255), F_BLACK, max_w=880)
-        paste_c(f, q, 500, 320, pop(T, 59.45))
+        paste_c(f, q, 500, 320, pop(T, S.R(59.45)))
         opts = [("1️⃣ Supermarkt 🛒", (255, 196, 40)), ("2️⃣ Disco 🪩", (40, 200, 190)),
                 ("3️⃣ Arztpraxis 🩺", (240, 70, 170))]
         for k, (txt, col) in enumerate(opts):
-            s = pop(T, 59.75 + k * 0.22)
+            s = pop(T, S.R(59.75) + k * 0.22)
             if s <= 0:
                 continue
-            wob = math.sin((T - 59.4) * 5 + k) * 1.5
+            wob = math.sin((T - S.R(59.4)) * 5 + k) * 1.5
             paste_c(f, option_card(txt, col), 500, 560 + k * 165, s, 1.0, wob)
-        if T >= 60.55:
-            pulse = 1.0 + 0.06 * math.sin((T - 60.55) * 10)
+        if T >= S.R(60.55):
+            pulse = 1.0 + 0.06 * math.sin((T - S.R(60.55)) * 10)
             paste_c(f, text_img("Schreib nur die Zahl! 👇", 66, (255, 230, 70), F_BLACK, max_w=880), 500, 1060,
-                    pop(T, 60.55) * pulse)
+                    pop(T, S.R(60.55)) * pulse)
 
 
 _cards = {}
@@ -541,48 +542,48 @@ def build_audio(path):
         buf[i:i + len(x)] += x[:n - i] * g
 
     # Hook
-    put(sfx, fx_braam(1.6, 49), 0.0, 0.9)
-    put(sfx, fx_whoosh(0.6, 1, 200, 1500), 0.0, 0.5)
+    put(sfx, fx_braam(1.6, 49), S.R(0.0), 0.9)
+    put(sfx, fx_whoosh(0.6, 1, 200, 1500), S.R(0.0), 0.5)
     put(sfx, fx_scratch(), S.FREEZE_AT - 0.03, 1.0)
-    put(sfx, fx_rewind(), 2.2, 0.9)
-    quiet = {0.0, 0.9, 2.2, 2.95, 14.5, 40.1, 41.7, 42.35, 43.45, 56.3, 59.4, END}
+    put(sfx, fx_rewind(), S.R(2.2), 0.9)
+    quiet = {0.0, 0.9, 2.2, 2.95} | {round(S.R(x), 2) for x in (14.5, 41.7, 42.35, 43.45, 59.4)} | {round(END, 2)}
     for k, (a, b, fn) in enumerate(S.SHOTS):
         if round(a, 2) in quiet:
             continue
         put(sfx, fx_whoosh(0.28, 40 + k, 600, 5000), a - 0.12, 0.18)
     # gemütlicher Morgen + Klassenzimmer
-    cozy = tape_stop(music_cozy(13.85 - 2.95), 0.3)
-    put(mus, cozy, 2.95, 0.8)
+    cozy = tape_stop(music_cozy(S.R(13.85) - S.R(2.95)), 0.3)
+    put(mus, cozy, S.R(2.95), 0.8)
     rng = np.random.default_rng(5)
-    for t0 in np.arange(3.1, 5.8, 0.55):
+    for t0 in np.arange(3.1, 5.8, 0.55):  # (vor dem ersten Einschub)
         put(sfx, fx_chirp(int(t0 * 100)), t0 + rng.uniform(0, 0.3), 0.4)
-    put(sfx, fx_pop(), 4.8, 0.6)
-    put(sfx, fx_pop(), 6.6, 0.6)
-    for t0 in np.arange(6.2, 7.0, 0.09):
-        put(sfx, fx_click(int(t0 * 70)), t0, 0.5)
+    put(sfx, fx_pop(), S.R(4.8), 0.6)
+    put(sfx, fx_pop(), S.R(6.6), 0.6)
+    for t0 in np.arange(6.2, 7.0, 0.09):  # Kreide (wird über S.R verschoben)
+        put(sfx, fx_click(int(t0 * 70)), S.R(t0), 0.5)
     # Papierkügelchen
-    put(sfx, fx_whoosh(0.6, 33, 800, 6000), 14.1, 0.8)
-    put(sfx, fx_thud(), 14.75, 0.8)
-    put(sfx, fx_bass(1.0), 14.75, 0.7)
-    put(sfx, fx_sparkle(), 14.8, 0.6)
-    epic = music_epic(END - 14.75)
-    put(mus, epic, 14.75, 0.62)
+    put(sfx, fx_whoosh(0.6, 33, 800, 6000), S.R(14.1), 0.8)
+    put(sfx, fx_thud(), S.R(14.75), 0.8)
+    put(sfx, fx_bass(1.0), S.R(14.75), 0.7)
+    put(sfx, fx_sparkle(), S.R(14.8), 0.6)
+    epic = music_epic(END - S.R(14.75))
+    put(mus, epic, S.R(14.75), 0.62)
     # Handy
-    for t0 in np.arange(17.35, 18.0, 0.12):
-        put(sfx, tone(880 + 220 * ((t0 * 10) % 3), 0.08, 0.002, 0.05) * 0.3, t0, 0.6)
-    put(sfx, fx_whoosh(0.25, 34, 500, 4000), 18.45, 0.6)
-    put(sfx, fx_pop(), 19.22, 0.6)
+    for t0 in np.arange(17.35, 18.0, 0.12):  # Handyspiel
+        put(sfx, tone(880 + 220 * ((t0 * 10) % 3), 0.08, 0.002, 0.05) * 0.3, S.R(t0), 0.6)
+    put(sfx, fx_whoosh(0.25, 34, 500, 4000), S.R(18.45), 0.6)
+    put(sfx, fx_pop(), S.R(19.22), 0.6)
     # Draußen: Tritt gegen die Dixi-Tür
     for k in range(3):
-        put(sfx, fx_thud(), 25.9 + k * 0.6, 0.6)
+        put(sfx, fx_thud(), S.R(25.9 + k * 0.6), 0.6)
     # Pause
     t = np.arange(int(1.0 * SR)) / SR
     ring = (np.sin(2 * np.pi * 1900 * t) + 0.5 * np.sin(2 * np.pi * 2650 * t)) * (np.sin(2 * np.pi * 22 * t) > 0)
-    put(sfx, ring * np.exp(-t * 1.5) * 0.4, 27.4, 1.0)
-    put(sfx, fx_braam(1.6, 46), 29.6, 0.6)
-    put(sfx, fx_tension(1.4), 33.2, 0.4)
-    put(sfx, fx_tension(1.6), 40.1, 0.9)
-    put(sfx, fx_bass(0.9), 40.1, 0.6)
+    put(sfx, ring * np.exp(-t * 1.5) * 0.4, S.R(27.4), 1.0)
+    put(sfx, fx_braam(1.6, 46), S.R(29.6), 0.6)
+    put(sfx, fx_tension(1.4), S.R(33.2), 0.4)
+    put(sfx, fx_tension(1.6), S.R(40.1), 0.9)
+    put(sfx, fx_bass(0.9), S.R(40.1), 0.6)
     # Wurf
     put(sfx, fx_whoosh(0.25, 50, 400, 3000), S.GRIP_T, 0.7)
     put(sfx, fx_thud(), S.GRIP_T + 0.05, 0.5)
@@ -597,7 +598,7 @@ def build_audio(path):
     put(sfx, np.tanh(slam), S.SLAM_T, 1.0)
     put(sfx, fx_thud(), S.SLAM_T, 1.0)
     put(sfx, fx_pop(), S.SLAM_T + 0.1, 0.6)
-    put(sfx, fx_pop(), 44.7, 0.4)
+    put(sfx, fx_pop(), S.R(44.7), 0.4)
     put(sfx, fx_whoosh(0.5, 52, 400, 4000), S.RUN_T, 0.7)
     for k in range(6):
         put(sfx, fx_click(300 + k), S.RUN_T + k * 0.11, 0.6)
@@ -605,21 +606,36 @@ def build_audio(path):
     put(sfx, fx_thud(), S.SLAM2_T, 0.9)
     # Klopfen + Bonbon
     for k in range(3):
-        put(sfx, fx_thud(), 46.95 + k * 0.5, 0.5)
+        put(sfx, fx_thud(), S.R(46.95 + k * 0.5), 0.5)
     put(sfx, fx_whoosh(0.4, 53, 1500, 7000), S.BONBON_T, 0.5)
     put(sfx, fx_pop(), S.BONBON_T + 0.7, 0.6)
-    put(sfx, fx_sparkle(), 51.2, 0.5)
+    put(sfx, fx_sparkle(), S.R(51.2), 0.5)
     # Held
-    put(sfx, fx_braam(2.0, 55), 56.3, 0.7)
-    put(sfx, fx_sparkle(), 56.8, 0.6)
-    put(sfx, fx_bass(1.4), 57.9, 1.0)
-    put(sfx, fx_braam(1.6, 41), 57.9, 0.9)
+    put(sfx, fx_braam(2.0, 55), S.R(56.3), 0.7)
+    put(sfx, fx_sparkle(), S.R(56.8), 0.6)
+    put(sfx, fx_bass(1.4), S.R(57.9), 1.0)
+    put(sfx, fx_braam(1.6, 41), S.R(57.9), 0.9)
     # Ende
     for k in range(3):
-        put(sfx, fx_pop(), 59.75 + k * 0.22, 0.7)
-    put(sfx, fx_pop(), 60.55, 0.6)
-    put(sfx, fx_riser(2.6), 59.8, 0.6)
+        put(sfx, fx_pop(), S.R(59.75 + k * 0.22), 0.7)
+    put(sfx, fx_pop(), S.R(60.55), 0.6)
+    put(sfx, fx_riser(2.6), S.R(59.8), 0.6)
     put(sfx, fx_scratch(), END, 1.0)
+    # Gags
+    ins = [S.R_end(p) for p, _ in S.INS]
+    for k in range(6):
+        put(sfx, fx_click(400 + k), ins[0] + 0.3 + k * 0.13, 0.25)          # Fliegen
+    put(sfx, fx_pop(), ins[1] + 2.0, 0.5)
+    put(sfx, fx_thud(), ins[1] + 2.05, 0.4)
+    tg = np.arange(int(0.35 * SR)) / SR
+    put(sfx, np.sin(2 * np.pi * (300 - 200 * tg) * tg) * np.exp(-tg * 6) * 0.5, ins[1] + 3.25, 0.8)  # Schlucken
+    for k in range(8):
+        put(sfx, fx_click(500 + k), ins[2] + 2.3 + k * 0.1, 0.35)          # Stricknadeln klappern
+    put(sfx, fx_braam(1.2, 49), ins[2] + 2.2, 0.5)
+    for k in range(4):
+        put(sfx, fx_click(600 + k), ins[3] + k * 0.12, 0.5)                 # Hände abklopfen
+    put(sfx, fx_pop(), ins[4] + 0.1, 0.4)
+    put(sfx, fx_sparkle(), ins[5] + 3.2, 0.4)
     # Ducking
     ve = np.abs(voice)
     k = int(0.15 * SR)

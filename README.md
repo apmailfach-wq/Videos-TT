@@ -111,7 +111,7 @@ python3 render.py preview 0.3 14 25.9   # Standbilder -> build/omafrieda/stills/
 
 ## oma-frieda-faust-folge-2.mp4 (Folge 2: Oma Frieda geht zur Schule – neue Fassung)
 
-63 s · 1080×1920 · 30 fps · natürlicherer Look (Hände mit Fingern, Schnürschuhe, Waden, gedeckte Farben, Filmkorn),
+80 s (mit Extra-Gags) · 1080×1920 · 30 fps · natürlicherer Look (Hände mit Fingern, Schnürschuhe, Waden, gedeckte Farben, Filmkorn),
 realistischer Schulhof (Betonbau, Asphalt mit Rissen, Graffiti, Fahrradständer, Dixi-Klos + Zettel „Toiletten defekt“).
 
 | Zeit | Szene |
@@ -129,5 +129,9 @@ realistischer Schulhof (Betonbau, Asphalt mit Rissen, Graffiti, Fahrradständer,
 cd src/omafrieda2
 python3 tts.py && python3 render.py      # -> ../../oma-frieda-faust-folge-2.mp4
 ```
+Extra-Gags (als Einschübe, `script.py: INS`): „Der Duft der Bildung.“ – „Faust? Wie die Hand?“ / „Genau wie die Hand.“ –
+„Stricken?“ / „Ich strick dir gleich 'nen Knoten in die Beine.“ – „Besetzt.“ – gedämpft aus dem Dixi: „Danke, Oma …“ –
+„Sind Sie morgen wieder da?“ / „Kommt drauf an, wer frech ist.“
+
 Nutzt Figuren/Grafik aus `src/omafrieda/`; neu: `world3.py` (Schulhof + Dixi-Klos), `shots3.py` (Schnittliste),
 `world2.py` (Klassenzimmer).

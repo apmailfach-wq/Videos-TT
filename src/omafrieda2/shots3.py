@@ -18,6 +18,11 @@ from gfx import H, W, blur, cam, clamp01, ease_back, ease_io, ease_out, emoji, g
 from world import View, actor, blink, mouth, view_bg  # noqa: E402
 
 shake = S1.shake
+import importlib.util as _ilu  # noqa: E402
+_spec = _ilu.spec_from_file_location("script_f2", str(Path(__file__).resolve().parent / "script.py"))
+_sc = _ilu.module_from_spec(_spec)
+_spec.loader.exec_module(_sc)
+INS, R, R_end, at = _sc.INS, _sc.R, _sc.R_end, _sc.at
 FREEZE_AT = 0.45
 
 # ------------------------------------------------------------------ Positionen (Schulhof)
@@ -33,14 +38,14 @@ DOOR1 = W3.dixi_door_center(0)
 DOOR2 = W3.dixi_door_center(1)
 
 # Zeitpunkte
-GRAB_T = 41.70
-GRIP_T = 41.95
-STEP_T = 42.15
-SWEEP_T = 42.35
-SLAM_T = 43.45
-RUN_T = 45.55
-SLAM2_T = 46.30
-BONBON_T = 48.0
+GRAB_T = R(41.70)
+GRIP_T = R(41.95)
+STEP_T = R(42.15)
+SWEEP_T = R(42.35)
+SLAM_T = R(43.45)
+RUN_T = R(45.55)
+SLAM2_T = R(46.30)
+BONBON_T = R(48.0)
 
 
 def lerp_pose(a, b, u, base="oma_stand"):
@@ -501,7 +506,7 @@ def shot_knock(t, T):
 
 def shot_mutig_end(t, T):
     v = View(1.6, 300, 1200)
-    gave = T > 51.2
+    gave = T > R(51.2)
     kle = dict(KLE, x=180, y=1280, pose="kid_cheer" if gave else "kid_reach", expr="laugh" if gave else "sad",
                look=(0.7, -0.4), items=(("backpack", (0.7, -0.6)),) if gave else (), mouth=0.5 if gave else 0,
                mouth_kind="grin" if gave else None)
@@ -530,11 +535,11 @@ def shot_danke(t, T):
 
 
 def hero2(t, T):
-    sh = shake(T, 12 * clamp01(1 - (T - 57.9) / 0.35)) if T > 57.9 else (0, 0)
+    sh = shake(T, 12 * clamp01(1 - (T - R(57.9)) / 0.35)) if T > R(57.9) else (0, 0)
     return S1.hero_frame(t + 1, T, 400, (540 + sh[0], 1330 + sh[1]), 1.0 + 0.03 * t)
 
 
-SHOTS = [
+_OLD_SHOTS = [
     (0.00, 0.90, shot_hook),
     (0.90, 2.20, shot_hook_oma),
     (2.20, 2.95, shot_rewind),
@@ -581,6 +586,134 @@ SHOTS = [
     (59.40, 62.60, S1.shot_end),
     (62.60, 63.10, shot_hook_end),
 ]
+
+
+# ------------------------------------------------------------------ Zusätzliche Gags (Einschübe)
+def stink(f, v, T, i=0, strength=1.0):
+    """Grüne Gestank-Schwaden + Fliegen über dem Dixi."""
+    p = W3.DIXI[i]
+    d = ImageDraw.Draw(f, "RGBA")
+    for k in range(3):
+        ph = (T * 0.6 + k / 3) % 1
+        x0 = p["fx"] - 60 + k * 50
+        pts = []
+        for j in range(12):
+            u = j / 11
+            pts.append(v.p(x0 + math.sin(u * 7 + T * 3 + k) * 18, p["G"] - 360 - u * 160 - ph * 60))
+        d.line(pts, fill=(140, 190, 80, int(170 * strength * (1 - ph))), width=int(7 * v.z), joint="curve")
+    r = random.Random(3)
+    for k in range(6):
+        a = T * (3 + k) + k
+        x = p["fx"] + 10 + math.cos(a) * (60 + 15 * k)
+        y = p["G"] - 380 + math.sin(a * 1.3) * 40
+        sx, sy = v.p(x, y)
+        rr = 3.5 * v.z
+        d.ellipse([sx - rr, sy - rr, sx + rr, sy + rr], fill=(20, 20, 20, 230))
+        d.line([(sx - rr * 2, sy - rr), (sx + rr * 2, sy - rr)], fill=(230, 230, 240, 160), width=max(1, int(v.z)))
+
+
+def shot_sniff(t, T):
+    v = View(1.9, 740, 1210)
+    m = mouth("oma", T)
+    x = lerp(560, 640, ease_out(t / 0.6))
+    oma = dict(OMA, x=x, y=1185, pose="oma_stand_bag", expr="sad" if t > 0.3 else "smile", mouth=m,
+               look=(0.7, -0.3), items=(("bag", (0.62, 1.2)),), head_off=(0, 0, 6 if t > 0.3 else 0))
+    return yard(T, v, [oma], dixi={0: (0.0, False, 0.0)}, post=(lambda f, vv: stink(f, vv, T, 0, 1.0),))
+
+
+def shot_faust_q(t, T):
+    m = mouth("gamer", T)
+    return klass(T, View(2.2, 540, 1100), gamer=dict(pose="kid_reach", expr="neutral", mouth=m, look=(0.0, -0.5)),
+                 girl=dict(expr="smile"), kleiner=dict(expr="neutral"))
+
+
+def shot_faust_a(t, T):
+    v = View(2.1 + 0.08 * t, 480, 990)
+    pose = ("oma_stand", ("arms", (((-0.62, 0.7), (-0.6, 1.25), "front"), ((0.75, 0.2), (0.75, -0.25), "fist"))))
+    f = S2.frame(W2.board_static(), T, v, [dict(S2.OMA_B, pose=pose, expr="smirk", mouth=mouth("oma", T),
+                                                look=(0.0, 0.0), brow_up=1)],
+                 post=(lambda ff, vv: W2.board_text(ff, vv, 99, 0, 1),), blur_r=3)
+    if t > 1.2:
+        e = emoji("😳", 110)
+        paste_c(f, e, 860, 1500, S1.Wd_pop(t - 1.2))
+    return f
+
+
+def shot_gulp(t, T):
+    return klass(T, View(1.1, 540, 1080), girl=dict(expr="scared"), gamer=dict(expr="scared", sweat=True),
+                 kleiner=dict(expr="shock", mouth=0.5, mouth_kind="o"))
+
+
+def shot_stricken_q(t, T):
+    v = View(2.1, ROW_XY[0], 1150)
+    acts = [dict(ROW, x=ROW_XY[0], y=ROW_XY[1], pose="b_point", expr="arrogant", mouth=mouth("rowdy", T),
+                 mouth_kind="grin" if mouth("rowdy", T) < 0.1 else None, look=(-0.8, 0.0))]
+    return S1.dramatic(yard(T, v, acts, blur_r=2), 0.5)
+
+
+def shot_stricken_a(t, T):
+    v = View(2.3 + 0.08 * t, OMA_FIGHT[0] - 40, 1110)
+    acts = [dict(OMA, x=OMA_FIGHT[0] - 60, y=OMA_FIGHT[1], pose="oma_knit_stand", expr="smirk", mouth=mouth("oma", T),
+                 look=(0.0, 0.0), items=(("knit", (0, 1.0)),), knit_phase=round((T * 5) % 1.0, 1),
+                 brow_up=1 if t > 1.2 else 0)]
+    return S1.dramatic(yard(T, v, acts, blur_r=4), 0.5)
+
+
+def shot_besetzt(t, T):
+    v = View(1.9, 700, 1230)
+    dust = (t % 0.4) < 0.2
+    pose = ("oma_stand", ("arms", (((-0.5, 0.75), (0.05 if dust else -0.1, 1.05), "front"),
+                                   ((0.5, 0.75), (-0.05 if dust else 0.1, 1.0), "front"))))
+    acts = [dict(OMA, x=560, y=1185, pose=pose, expr="smirk", mouth=mouth("oma", T), look=(0.8, -0.3), brow_up=1)]
+    return S1.dramatic(yard(T, v, acts, dixi=dixi_state(T), post=(lambda f, vv: stink(f, vv, T, 0, 0.7),)), 0.4)
+
+
+def shot_muffled(t, T):
+    sh = math.sin(T * 40) * 3 if mouth("dixi", T) > 0.1 else 0.0
+    v = View(2.3, 830, 1260)
+    d = dixi_state(T)
+    d[0] = (d[0][0], d[0][1], sh)
+    f = S1.dramatic(yard(T, v, [], dixi=d, post=(lambda ff, vv: stink(ff, vv, T, 0, 0.6),)), 0.4)
+    e = emoji("💬", 120)
+    paste_c(f, e, 700, 760, S1.Wd_pop(t - 0.1))
+    return f
+
+
+def shot_morgen_q(t, T):
+    v = View(2.5, 180, 1230)
+    m = mouth("kleiner", T)
+    return yard(T, v, [dict(KLE, x=180, y=1280, pose="kid_stand", expr="smile", mouth=m, look=(0.7, -0.5),
+                            items=(("backpack", (0.0, 0.1)),))], dixi=dixi_state(T), blur_r=5)
+
+
+def shot_morgen_a(t, T):
+    v = View(2.4 + 0.06 * t, 400, 1080)
+    return yard(T, v, [dict(OMA, x=400, y=1185, pose="oma_ready", expr="smirk", mouth=mouth("oma", T),
+                            look=(-0.4, 0.1), brow_up=1 if t > 0.9 else 0, blink=t > 1.6 and t < 1.75)],
+                dixi=dixi_state(T), blur_r=4)
+
+
+INSERTS = [
+    [(0.0, 2.4, shot_sniff)],
+    [(0.0, 1.9, shot_faust_q), (1.9, 3.2, shot_faust_a), (3.2, 3.8, shot_gulp)],
+    [(0.0, 2.15, shot_stricken_q), (2.15, 4.8, shot_stricken_a)],
+    [(0.0, 1.2, shot_besetzt)],
+    [(0.0, 1.4, shot_muffled)],
+    [(0.0, 1.7, shot_morgen_q), (1.7, 3.8, shot_morgen_a)],
+]
+
+
+def _build():
+    out = [(R(a) if a > 0 else 0.0, R_end(b), fn) for a, b, fn in _OLD_SHOTS]
+    for k, (p, dur) in enumerate(INS):
+        base = R_end(p)
+        for a, b, fn in INSERTS[k]:
+            out.append((round(base + a, 3), round(base + b, 3), fn))
+    out.sort(key=lambda s: s[0])
+    return out
+
+
+SHOTS = _build()
 
 
 def shot_at(T):
