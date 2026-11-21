@@ -130,7 +130,7 @@ cd src/bossfight && python3 tts.py && python3 render.py
 
 ## drei-handys.mp4 – „Um 22 Uhr leuchtete bei allen dreien das Handy.“
 
-Dunkler, minimalistischer Look (drei Zimmer übereinander, weiße Strichfiguren, roter Akzent): AUSREDE scrollt jede Nacht,
+Eigener Look „Midnight & Gold“ (Mitternachtsblau, Figurenfarben Violett/Türkis/Gold, goldener Jahresbalken, Sonnenaufgang im Fenster, warmes Türlicht; drei Zimmer übereinander, weiße Strichfiguren): AUSREDE scrollt jede Nacht,
 MOTIVATION hält zwei Tage durch, DISZIPLIN legt das Handy jeden Abend weg und steht jeden Morgen auf – Tageszähler
 TAG 1 → 365, Fenster Nacht/Morgen, Tür ins Licht. Ende: „SEI DER EINE.“ + Kommentar-Frage „1, 2 oder 3?“.
 Keine Stimme, nur Text + selbst erzeugter Ambient-Score (Drone, Klavier, Ticken, Wecker, Herzschlag). Ca. 38 s.

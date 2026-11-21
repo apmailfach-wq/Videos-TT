@@ -1,6 +1,6 @@
 """Render drei-handys.mp4 – dark minimal 'three people' format (no voice, text + ambient score).
 
-Three stacked rooms: AUSREDE, MOTIVATION, DISZIPLIN (red). Every night at 22:00 all three
+Three stacked rooms: AUSREDE, MOTIVATION, DISZIPLIN (gold). Every night at 22:00 all three
 phones light up; only DISZIPLIN puts it away every night and gets up every morning.
 Day counter 1 -> 365, window shows night/morning, door opens into light.
 
@@ -26,7 +26,8 @@ OUT = ROOT / "drei-handys.mp4"
 W, H, FPS, S = 1080, 1920, 30, 2
 F_TXT = "/usr/share/fonts/opentype/inter/Inter-SemiBold.otf"
 F_BIG = str(ROOT / "fonts" / "Unbounded_900Black.ttf")
-RED = (235, 40, 50)
+RED = (255, 184, 48)        # signature gold for DISZIPLIN
+LABEL_COLS = [(150, 140, 200), (80, 210, 200), (255, 184, 48)]   # Ausrede violet, Motivation teal, Disziplin gold
 WHITE = (245, 245, 245)
 BLUE = (90, 160, 255)
 
@@ -96,30 +97,30 @@ def state(who, t):
 # ------------------------------------------------------------------ static scene
 @lru_cache(maxsize=1)
 def base():
-    im = Image.new("RGB", (W * S, H * S), (8, 8, 10))
+    im = Image.new("RGB", (W * S, H * S), (10, 12, 30))
     d = ImageDraw.Draw(im)
     sc = lambda *v: [x * S for x in v]
     for label, y in ROWS:
         # platform: top face (perspective) + front face
-        d.polygon(sc(90, y + 10, 990, y + 10, 950, y - 150, 130, y - 150), fill=(30, 30, 34))
-        d.rectangle(sc(90, y + 10, 990, y + 70), fill=(18, 18, 21))
+        d.polygon(sc(90, y + 10, 990, y + 10, 950, y - 150, 130, y - 150), fill=(32, 36, 72))
+        d.rectangle(sc(90, y + 10, 990, y + 70), fill=(18, 20, 46))
         # nightstand + bed
-        d.rectangle(sc(130, y - 110, 210, y - 10), fill=(44, 44, 50))
-        d.rectangle(sc(240, y - 90, 780, y - 10), fill=(52, 52, 58))
-        d.rectangle(sc(240, y - 115, 780, y - 90), fill=(66, 66, 72))
-        d.rectangle(sc(250, y - 130, 360, y - 100), fill=(92, 92, 98))           # pillow
-        d.rectangle(sc(360, y - 125, 770, y - 92), fill=(74, 74, 80))           # blanket
+        d.rectangle(sc(130, y - 110, 210, y - 10), fill=(48, 52, 94))
+        d.rectangle(sc(240, y - 90, 780, y - 10), fill=(56, 60, 106))
+        d.rectangle(sc(240, y - 115, 780, y - 90), fill=(70, 74, 122))
+        d.rectangle(sc(250, y - 130, 360, y - 100), fill=(106, 110, 156))           # pillow
+        d.rectangle(sc(360, y - 125, 770, y - 92), fill=(84, 88, 136))           # blanket
     # door frame (bottom room)
     y = ROWS[2][1]
-    d.rectangle(sc(DOOR_X - 60, y - 330, DOOR_X + 60, y), fill=(22, 22, 26))
+    d.rectangle(sc(DOOR_X - 60, y - 330, DOOR_X + 60, y), fill=(24, 26, 56))
     # window
-    d.rectangle(sc(380, 440, 700, 650), fill=(16, 16, 20))
+    d.rectangle(sc(380, 440, 700, 650), fill=(16, 18, 42))
     im = im.filter(ImageFilter.GaussianBlur(1.2 * S))
     # top light cone + vignette
     lay = Image.new("L", im.size, 0)
     ImageDraw.Draw(lay).ellipse(sc(-150, -300, W + 150, 1900), fill=60)
     lay = lay.filter(ImageFilter.GaussianBlur(200 * S))
-    im = Image.composite(Image.new("RGB", im.size, (60, 60, 66)), im, lay)
+    im = Image.composite(Image.new("RGB", im.size, (44, 50, 100)), im, lay)
     return im
 
 
@@ -156,7 +157,7 @@ def figure(d, pose, y, st, t):
     lw = 13 * S
     if pose == "lie":
         d.ellipse(sc(BED_X - 32, y - 168, BED_X + 32, y - 104), fill=col)
-        d.rectangle(sc(330, y - 140, 560, y - 100), fill=(84, 84, 90))          # body under blanket
+        d.rectangle(sc(330, y - 140, 560, y - 100), fill=(96, 100, 148))          # body under blanket
     elif pose == "sit":
         k = st["k"]
         hx, hy = BED_X + 20 * k, y - 136 - 120 * k
@@ -178,11 +179,11 @@ def figure(d, pose, y, st, t):
 def clock_icon(d, x, y, shake):
     sc = lambda *v: [q * S for q in v]
     x += math.sin(shake * 60) * 5 * (shake > 0)
-    d.ellipse(sc(x - 22, y - 22, x + 22, y + 22), outline=(200, 200, 205), width=4 * S)
-    d.ellipse(sc(x - 28, y - 32, x - 12, y - 18), fill=(200, 200, 205))
-    d.ellipse(sc(x + 12, y - 32, x + 28, y - 18), fill=(200, 200, 205))
-    d.line(sc(x, y, x, y - 12), fill=(200, 200, 205), width=3 * S)
-    d.line(sc(x, y, x + 9, y + 4), fill=(200, 200, 205), width=3 * S)
+    d.ellipse(sc(x - 22, y - 22, x + 22, y + 22), outline=(180, 186, 225), width=4 * S)
+    d.ellipse(sc(x - 28, y - 32, x - 12, y - 18), fill=(180, 186, 225))
+    d.ellipse(sc(x + 12, y - 32, x + 28, y - 18), fill=(180, 186, 225))
+    d.line(sc(x, y, x, y - 12), fill=(180, 186, 225), width=3 * S)
+    d.line(sc(x, y, x + 9, y + 4), fill=(180, 186, 225), width=3 * S)
 
 
 def render_frame(n):
@@ -194,20 +195,27 @@ def render_frame(n):
     outro = t >= OUTRO0
     morning = ease((p - 0.45) / 0.12) if not outro else 0.0
     # window: night (moon) -> morning
-    sky = tuple(int(20 + (215 - 20) * morning) for _ in range(3))
+    sky = tuple(int(a + (b - a) * morning) for a, b in zip((14, 20, 58), (255, 170, 95)))
     d.rectangle(sc(392, 452, 688, 638), fill=sky)
-    d.line(sc(540, 452, 540, 638), fill=(30, 30, 34), width=8 * S)
+    d.line(sc(540, 452, 540, 638), fill=(24, 26, 56), width=8 * S)
     if morning < 0.5:
         d.ellipse(sc(610, 480, 660, 530), fill=(230, 230, 230, int(255 * (1 - 2 * morning))))
         for k in range(12):
             r = random.Random(k)
             sx, sy = r.uniform(400, 680), r.uniform(460, 620)
             d.ellipse(sc(sx - 2, sy - 2, sx + 2, sy + 2), fill=(200, 200, 200))
+    if morning > 0.2:
+        sy = 640 - 70 * morning
+        d.ellipse(sc(500, sy - 40, 580, sy + 40), fill=(255, 236, 170, int(255 * min(1, morning * 1.5))))
+        d.rectangle(sc(392, 600, 688, 638), fill=(60, 50, 90))             # rooftops
     if morning > 0:
-        put_glow(img, 540, 545, (255, 255, 255), 160, 0.6 * morning)
+        put_glow(img, 540, 545, (255, 190, 110), 170, 0.6 * morning)
     # day counter + clock time
-    text_spaced(d, 740, 510, f"TAG {day}", 26, (170, 170, 175), anchor="lm")
-    text_spaced(d, 740, 550, "06:30" if morning > 0.5 else "22:00", 22, (110, 110, 115), anchor="lm")
+    text_spaced(d, 740, 510, f"TAG {day}", 26, (200, 204, 235), anchor="lm")
+    # signature: golden year bar (day / 365)
+    d.rounded_rectangle(sc(740, 590, 960, 598), 4 * S, fill=(40, 44, 86))
+    d.rounded_rectangle(sc(740, 590, 740 + max(8, 220 * day / 365), 598), 4 * S, fill=RED)
+    text_spaced(d, 740, 550, "06:30" if morning > 0.5 else "22:00", 22, (130, 136, 180), anchor="lm")
     # door light (bottom room)
     y2 = ROWS[2][1]
     door = 0.0
@@ -216,10 +224,10 @@ def render_frame(n):
     if outro:
         door = ease((t - OUTRO0) / 0.8)
     if door > 0:
-        d.rectangle(sc(DOOR_X - 52, y2 - 322, DOOR_X - 52 + 104 * door, y2), fill=(250, 250, 250))
+        d.rectangle(sc(DOOR_X - 52, y2 - 322, DOOR_X - 52 + 104 * door, y2), fill=(255, 230, 175))
         d.polygon(sc(DOOR_X - 52, y2, DOOR_X + 52, y2, DOOR_X + 60, y2 + 60, DOOR_X - 240 * door, y2 + 60),
-                  fill=(255, 255, 255, int(70 * door)))
-        put_glow(img, DOOR_X, y2 - 160, (255, 255, 255), 230, 0.7 * door)
+                  fill=(255, 210, 140, int(80 * door)))
+        put_glow(img, DOOR_X, y2 - 160, (255, 200, 120), 240, 0.7 * door)
     # rooms: labels, clocks, phones, people
     for who, (label, y) in enumerate(ROWS):
         st = state(who, t)
@@ -227,12 +235,12 @@ def render_frame(n):
         ring = (not outro) and 0.5 < p < 0.62
         clock_icon(d, 170, y - 140, (t * 7) % 1 if ring else 0)
         phone_on = st.get("phone", False)
-        d.rectangle(sc(150, y - 103, 186, y - 96), fill=(90, 160, 255) if phone_on else (60, 60, 64))
+        d.rectangle(sc(150, y - 103, 186, y - 96), fill=(90, 160, 255) if phone_on else (60, 64, 100))
         if phone_on and st["pose"] == "lie":
             put_glow(img, BED_X + 10, y - 150, BLUE, 90, 0.9 * dim)
             d.polygon(sc(BED_X + 40, y - 150, BED_X + 120, y - 190, BED_X + 120, y - 120), fill=(140, 190, 255, 70))
             d.rectangle(sc(BED_X + 40, y - 170, BED_X + 62, y - 132), fill=(160, 205, 255))   # phone in hand
-        lab_col = RED if who == 2 else (170, 170, 175)
+        lab_col = LABEL_COLS[who]
         if who == 2 and st["pose"] != "gone":
             put_glow(img, BED_X if st["pose"] != "walk" else st["x"], y - 160, RED, 110, 0.55)
         hx = BED_X if st["pose"] != "walk" else st["x"]
@@ -248,13 +256,13 @@ def render_frame(n):
     text_spaced(d, W / 2, 300, line1, 26, (225, 225, 228, int(255 * c01(t / 0.8))), spacing=0.08)
     if t > DSTART[-1] + 0.5:
         a = int(255 * c01((t - DSTART[-1] - 0.5) / 0.8))
-        text_spaced(d, W / 2, 350, "NUR EINER LEGTE ES JEDEN ABEND WEG.", 26, (255, 90, 95, a), spacing=0.08)
+        text_spaced(d, W / 2, 350, "NUR EINER LEGTE ES JEDEN ABEND WEG.", 26, (255, 200, 90, a), spacing=0.08)
     frame = img.resize((W, H), Image.LANCZOS)
     if outro:
         lt = t - OUTRO0
         dd = ImageDraw.Draw(frame, "RGBA")
         a1 = int(230 * ease((lt - 1.2) / 0.8))
-        dd.rectangle([0, 0, W, H], fill=(5, 5, 7, int(a1 * 0.75)))
+        dd.rectangle([0, 0, W, H], fill=(8, 10, 28, int(a1 * 0.8)))
         if lt > 1.4:
             f = ImageFont.truetype(F_BIG, 120)
             dd.text((W / 2, 840), "SEI DER", font=f, fill=(255, 255, 255, a1), anchor="mm")
