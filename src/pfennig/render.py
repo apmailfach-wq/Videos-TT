@@ -271,6 +271,11 @@ def row_panel(r):
     ImageDraw.Draw(mask).rounded_rectangle([0, 0, 999, ROW_H - 1], radius=28, fill=255)
     im.paste(base, (0, 0), mask)
     d.line([40, ROW_H - 60, 960, ROW_H - 60], fill=(48, 54, 84), width=3)
+    col = [RED, (150, 175, 255), GOLD][r]
+    glow = Image.new("RGBA", im.size, (0, 0, 0, 0))
+    ImageDraw.Draw(glow).rounded_rectangle([3, 3, 996, ROW_H - 4], radius=28, outline=col + (200,), width=4)
+    im.alpha_composite(glow.filter(ImageFilter.GaussianBlur(6)))
+    ImageDraw.Draw(im).rounded_rectangle([1, 1, 998, ROW_H - 2], radius=28, outline=col + (120,), width=2)
     # little window with moon
     d.rounded_rectangle([840, 30, 960, 120], radius=8, fill=(30, 38, 70), outline=(60, 70, 110), width=3)
     d.line([900, 30, 900, 120], fill=(60, 70, 110), width=3)
@@ -386,6 +391,15 @@ def draw_row(frame, r, t):
                 im = im.resize((max(1, int(im.width * sc)), max(1, int(im.height * sc))), Image.BICUBIC)
             frame.alpha_composite(im, (int(x0 + PX + 30), int(y0 + 6)))
 
+    # +5 € / -5 € popups when a coin lands
+    for st in SPAWN[r]:
+        u = (t - st - FLY) / 0.7
+        if 0 <= u <= 1 and st < T_DAY1 + 3.0:
+            txt, pc = ("-5 €", RED) if r == 0 else ("+5 €", GOLD if r == 2 else WHITE)
+            pop = Image.new("RGBA", (160, 60), (0, 0, 0, 0))
+            ImageDraw.Draw(pop).text((80, 30), txt, font=font(F_K, 40), fill=pc + (int(255 * (1 - u * u)),),
+                                     anchor="mm", stroke_width=4, stroke_fill=(10, 12, 24, int(200 * (1 - u * u))))
+            frame.alpha_composite(pop, (int(x0 + TX - 80), int(y0 + 150 - 80 * ease_out(u))))
     # texts
     fd = ImageDraw.Draw(frame)
     col = [DIM, WHITE, GOLD][r]
@@ -481,31 +495,180 @@ def draw_end(frame, t):
 
 # ------------------------------------------------------------------ frame
 BG = None
+DOT = {}
+_rng = np.random.default_rng(9)
+DUST = [(float(_rng.random() * W), float(_rng.random() * H), int(_rng.choice([2, 3, 4, 6])),
+         float(10 + _rng.random() * 30)) for _ in range(40)]
 
 
 def init():
     global BG
     y = np.linspace(0, 1, H)[:, None]
     g = np.array([10, 12, 24]) + (np.array([16, 19, 36]) - np.array([10, 12, 24])) * y[..., None]
-    BG = Image.fromarray(np.repeat(g, W, axis=1).astype(np.uint8), "RGB").convert("RGBA")
+    arr = np.repeat(g, W, axis=1)
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    glow = np.exp(-(((xx - W / 2) / 700) ** 2 + ((yy - 300) / 500) ** 2))
+    arr = arr + np.array([40, 34, 70]) * glow[..., None]
+    vig = np.sqrt(((xx - W / 2) / W) ** 2 + ((yy - H / 2) / H) ** 2)
+    arr = arr * (1 - 0.5 * np.clip(vig * 1.3, 0, 1) ** 2)[..., None]
+    BG = Image.fromarray(arr.clip(0, 255).astype(np.uint8), "RGB").convert("RGBA")
+    for r_ in (2, 3, 4, 6):
+        im = Image.new("RGBA", (r_ * 4, r_ * 4), (0, 0, 0, 0))
+        ImageDraw.Draw(im).ellipse([r_, r_, r_ * 3, r_ * 3], fill=(255, 220, 150, 110))
+        DOT[r_] = im.filter(ImageFilter.GaussianBlur(r_ * 0.6))
+
+
+def story_frame(t, ui=True):
+    fr = BG.copy()
+    for (px, py, pr, sp) in DUST:   # floating light dust
+        y = (py - t * sp) % H
+        fr.alpha_composite(DOT[pr], (int(px + math.sin(t * 0.7 + py) * 20) - pr * 2, int(y)))
+    for r in range(3):
+        draw_row(fr, r, t)
+    if not ui:
+        return fr
+    if t < T_REV:
+        draw_header(fr, t)
+        draw_speed(fr, t)
+    elif t < T_END + 0.4:
+        draw_reveal(fr, t)
+    draw_end(fr, t)
+    return fr
+
+
+def draw_speed(fr, t):
+    if t < T_DAY1 + 0.3:
+        return
+    sp = "x10" if t < T_M1 else ("x100" if t < T_Y5 else "x1000")
+    d = ImageDraw.Draw(fr)
+    e = emoji("⏩", 44)
+    pul = 1 + 0.08 * abs(math.sin(t * 6))
+    tw = font(F_K, 34).getlength(sp)
+    x = 700
+    d.rounded_rectangle([x, 302, x + tw + 90, 358], radius=28, fill=(255, 196, 60))
+    fr.alpha_composite(e, (x + 14, 308))
+    d.text((x + 68, 331), sp, font=font(F_K, int(34 * pul)), fill=(20, 16, 8), anchor="lm")
+
+
+REV_LINES = [("WER DEN", "CENT"), ("NICHT EHRT,", None), ("IST DES", "EUROS"), ("NICHT WERT.", None)]
+
+
+def draw_reveal(fr, t):
+    p = t - T_REV
+    if p < 4.2:
+        dark = Image.new("RGBA", (W, H), (6, 8, 16, int(150 * c01(p / 0.3))))
+        fr.alpha_composite(dark)
+    d = ImageDraw.Draw(fr)
+    f = font(F_K, 104)
+    for i, (a, hl) in enumerate(REV_LINES):
+        q = (p - 0.15 - i * 0.42) / 0.22
+        if q <= 0:
+            continue
+        sc = 1 + 0.6 * (1 - ease_out(q))
+        tmp = Image.new("RGBA", (W, 150), (0, 0, 0, 0))
+        td = ImageDraw.Draw(tmp)
+        words = a + ((" " + hl) if hl else "")
+        tw = f.getlength(words)
+        x = W / 2 - tw / 2
+        td.text((x, 75), a, font=f, fill=WHITE, anchor="lm")
+        if hl:
+            hx = x + f.getlength(a + " ")
+            hw = f.getlength(hl)
+            td.rounded_rectangle([hx - 14, 18, hx + hw + 14, 134], radius=18, fill=GOLD)
+            td.text((hx, 75), hl, font=f, fill=(20, 16, 8), anchor="lm")
+        if abs(sc - 1) > 0.01:
+            tmp = tmp.resize((int(W * sc), int(150 * sc)), Image.BICUBIC)
+        fr.alpha_composite(tmp, (int(W / 2 - tmp.width / 2), int(200 + i * 150 - tmp.height / 2 + 75)))
+
+
+# ------------------------------------------------------------------ cold-open hook
+HOOK = 2.7
+REW0 = 1.55
+
+
+def hook_frame(tg):
+    if tg < REW0:
+        fr = story_frame(T_Y30 - 0.1, ui=False)
+        fr = fr.filter(ImageFilter.GaussianBlur(9))
+        fr.alpha_composite(Image.new("RGBA", (W, H), (6, 8, 16, 150)))
+        d = ImageDraw.Draw(fr)
+        text_c(d, 300, "GLEICHE 5 € AM TAG.", font(F_K, 62), WHITE, 2)
+        for k, (txt, col, y, t0) in enumerate([("0 €", RED, 640, 0.0), ("178.340 €", GOLD, 1010, 0.45)]):
+            q = (tg - t0) / 0.18
+            if q <= 0:
+                continue
+            fs = 210 if k == 0 else 170
+            tmp = Image.new("RGBA", (W, 300), (0, 0, 0, 0))
+            ImageDraw.Draw(tmp).text((W / 2, 150), txt, font=font(F_K, fs), fill=col, anchor="mm",
+                                     stroke_width=6, stroke_fill=(10, 12, 24))
+            g = tmp.filter(ImageFilter.GaussianBlur(18))
+            sc = 1 + 0.8 * (1 - ease_out(q))
+            for im in (g, g, tmp):
+                im2 = im.resize((int(W * sc), int(300 * sc)), Image.BICUBIC) if sc > 1.01 else im
+                fr.alpha_composite(im2, (int(W / 2 - im2.width / 2), int(y - im2.height / 2)))
+        if tg > 0.3:
+            text_c(d, 850, "VS", font(F_K, 70), DIM, 4)
+        if tg > 0.9:
+            text_c(d, 1300, "WIE GEHT DAS?", font(F_K, 72), WHITE, 3)
+        return fr
+    # rewind: story plays backwards with VHS look
+    u = ease_io((tg - REW0) / (HOOK - REW0))
+    st = (T_Y30 + 0.6) * (1 - u)
+    fr = story_frame(st)
+    a = np.array(fr.convert("RGB")).astype(np.int16)
+    a[::4] = (a[::4] * 0.55).astype(np.int16)          # scanlines
+    shift = int(8 + 10 * math.sin(tg * 30))
+    a[..., 0] = np.roll(a[..., 0], shift, axis=1)
+    a[..., 2] = np.roll(a[..., 2], -shift, axis=1)
+    band = int((tg * 2300) % H)
+    a[band:band + 40] = np.roll(a[band:band + 40], 30, axis=1)
+    fr = Image.fromarray(a.clip(0, 255).astype(np.uint8)).convert("RGBA")
+    d = ImageDraw.Draw(fr)
+    d.rounded_rectangle([W / 2 - 330, 840, W / 2 + 330, 990], radius=24, fill=(8, 10, 20, 230))
+    e = emoji("⏪", 80)
+    fr.alpha_composite(e, (int(W / 2 - 300), 875))
+    d.text((W / 2 + 50, 915), "30 JAHRE ZURÜCK", font=font(F_K, 52), fill=WHITE, anchor="mm")
+    return fr
+
+
+def aberrate(fr, amt):
+    a = np.array(fr.convert("RGB"))
+    a[..., 0] = np.roll(a[..., 0], amt, axis=1)
+    a[..., 2] = np.roll(a[..., 2], -amt, axis=1)
+    return Image.fromarray(a)
+
+
+BEAT = 60 / 84
 
 
 def render_frame(fi):
-    t = fi / FPS
-    fr = BG.copy()
-    intro = [1.0, 1.0, 1.0]
-    for r in range(3):
-        if intro[r] > 0:
-            draw_row(fr, r, t)
-            if intro[r] < 1:
-                fr.alpha_composite(Image.new("RGBA", (1000, ROW_H), (10, 12, 24, int(255 * (1 - intro[r])))),
-                                   (40, ROW_Y[r]))
-    draw_header(fr, t)
-    draw_end(fr, t)
-    # flash at reveal
-    f = 1 - c01((t - T_REV) / 0.35)
-    if 0 < f < 1 and t >= T_REV:
-        fr.alpha_composite(Image.new("RGBA", (W, H), (255, 235, 180, int(120 * f))))
+    tg = fi / FPS
+    if tg < HOOK:
+        fr = hook_frame(tg)
+        shake = 1 - c01(min(abs(tg - 0.02), abs(tg - 0.47)) / 0.25)
+        zoom = 1 + 0.04 * shake
+        dx = int(math.sin(tg * 90) * 14 * shake)
+    else:
+        t = tg - HOOK
+        fr = story_frame(t)
+        zoom, dx = 1.0, 0
+        if T_DAY1 < t < T_REV:      # punch-zoom on every beat during the time-lapse
+            bp = ((t - T_DAY1) % BEAT) / BEAT
+            zoom += 0.018 * (1 - ease_out(bp * 3)) * c01((t - T_DAY1) / 2)
+        k = 1 - c01((t - T_REV) / 0.5)
+        if t >= T_REV and k > 0:
+            zoom += 0.07 * k
+            dx = int(math.sin(t * 80) * 22 * k)
+        f = 1 - c01((t - T_REV) / 0.35)
+        if 0 < f < 1 and t >= T_REV:
+            fr.alpha_composite(Image.new("RGBA", (W, H), (255, 235, 180, int(130 * f))))
+        if t >= T_REV and t - T_REV < 0.35:
+            fr = aberrate(fr, int(14 * (1 - (t - T_REV) / 0.35))).convert("RGBA")
+    if zoom > 1.001 or dx:
+        zw, zh = int(W * zoom), int(H * zoom)
+        fr = fr.resize((zw, zh), Image.BILINEAR)
+        cx, cy = (zw - W) // 2 + dx, (zh - H) // 2
+        fr = fr.crop((cx, cy, cx + W, cy + H))
     return fr.convert("RGB").tobytes()
 
 
@@ -597,7 +760,32 @@ def make_audio(path):
     while tt < T_Y30:
         put(sfx, tick(), tt, 0.25)
         tt += max(0.06, 0.35 - (tt - T_DAY1) * 0.03)
-    mix = mus * 0.5 + sfx
+    story = mus * 0.5 + sfx
+    # cold-open hook: two impacts, coin burst, tape-rewind, then the story
+    hn = int(HOOK * SR)
+    mix = np.zeros(hn + n)
+    mix[hn:] += story
+    b = boom()
+    for t0 in (0.02, 0.47):
+        i = int(t0 * SR)
+        mix[i:i + len(b)] += b[:len(mix) - i] * 0.8
+    for j in range(10):
+        i = int((0.47 + j * 0.03) * SR)
+        c = clink()
+        mix[i:i + len(c)] += c * 0.25
+    for f in (220.0, 261.63, 329.63):
+        pn = piano(f, 1.6)
+        i = int(0.47 * SR)
+        mix[i:i + len(pn)] += pn * 0.3
+    rn = int((HOOK - REW0) * SR)
+    tt = np.arange(rn) / SR
+    fr_ = 1400 * np.exp(-tt * 1.8) + 120
+    saw = 2 * ((np.cumsum(fr_) / SR) % 1) - 1
+    trem = 0.6 + 0.4 * np.sin(2 * np.pi * 22 * tt)
+    rw = (saw * 0.25 + np.random.default_rng(4).standard_normal(rn) * 0.12) * trem * np.minimum(1, tt / 0.05)
+    i = int(REW0 * SR)
+    mix[i:i + rn] += rw * 0.7
+    n = len(mix)
     mix = mix / (np.abs(mix).max() + 1e-9) * 0.9
     fade = np.minimum(1, (n - np.arange(n)) / SR / 1.0)
     with wave.open(str(path), "wb") as w:
@@ -617,11 +805,11 @@ def main():
     aud = BUILD / "audio.wav"
     make_audio(aud)
     out = ROOT / "cent-video.mp4"
-    nf = int(TOTAL * FPS)
+    nf = int((HOOK + TOTAL) * FPS)
     cmd = ["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(FPS),
            "-i", "-", "-i", str(aud), "-af", "loudnorm=I=-14:TP=-1.5", "-c:v", "libx264", "-preset", "medium",
            "-crf", "19", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "192k", "-ar", "48000",
-           "-movflags", "+faststart", "-t", f"{TOTAL:.3f}", str(out)]
+           "-movflags", "+faststart", "-t", f"{HOOK + TOTAL:.3f}", str(out)]
     ff = subprocess.Popen(cmd, stdin=subprocess.PIPE)
     with Pool(os.cpu_count(), initializer=init) as pool:
         for i, buf in enumerate(pool.imap(render_frame, range(nf), chunksize=4)):

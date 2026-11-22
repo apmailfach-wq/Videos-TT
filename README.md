@@ -100,6 +100,8 @@ python3 render.py geld preview 2 15 30   # Standbilder
 
 ## cent-video.mp4 – neues Format „3 Leben im Zeitraffer“ (ohne Sprecher)
 
+Cold-Open-Hook: „0 € vs 178.340 €“ knallt rein → VHS-Rückspulen „30 Jahre zurück“ → Story. Neon-Zeilen, Lichtpartikel, +5-€-Popups, Speed-Badge (x10/x100/x1000), Beat-Zoom, Glitch + Kinetic Typography bei der Pointe.
+
 „Wer den Cent nicht ehrt, ist des Euros nicht wert.“ 3 Freunde, jeder hat jeden Tag 5 € übrig:
 1 gibt aus, 2 spart im Sparschwein, 3 investiert (Geldbaum). Zeitraffer Tag 1 → Jahr 30 (0 € / 54.750 € / ≈178.000 €*),
 Sprechblasen je Figur, Regen über Nr. 1 / Sonne über Nr. 3, dann das Sprichwort als Pointe + Endkarte „Gleiches Geld. 3 verschiedene Leben. Welche Zahl bist du? Schreib nur die Zahl“. 29,8 s, nur Musik/Sounds (synthetisch).
