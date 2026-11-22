@@ -100,7 +100,7 @@ python3 render.py geld preview 2 15 30   # Standbilder
 
 ## cent-video.mp4 – neues Format „3 Leben im Zeitraffer“ (ohne Sprecher)
 
-Hook: „DIESER KAFFEE KOSTET DICH …“ – Preisschild rattert von 5 € auf 178.340 €, Knall, „Glaubst du nicht?“, Zoom-Sprung in den Becher → Story. Neon-Zeilen, Lichtpartikel, +5-€-Popups, Speed-Badge (x10/x100/x1000), Beat-Zoom, Glitch + Kinetic Typography bei der Pointe.
+Hook: „DIESER KAFFEE KOSTET DICH …“ – Preisschild rattert von 5 € auf 178.340 €, Knall, „Glaubst du nicht?“, Zoom-Sprung in den Becher → Story. Neon-Zeilen, Lichtpartikel, +5-€-Popups, Speed-Badge (x10/x100/x1000), Beat-Zoom, Glitch + Kinetic Typography bei der Pointe. Gesichter mit Emotionen, Kamerafahrt am Tag 1, „Inflation“-Blase, nahtloser Loop zurück zum Kaffee.
 
 „Wer den Cent nicht ehrt, ist des Euros nicht wert.“ 3 Freunde, jeder hat jeden Tag 5 € übrig:
 1 gibt aus, 2 spart im Sparschwein, 3 investiert (Geldbaum). Zeitraffer Tag 1 → Jahr 30 (0 € / 54.750 € / ≈178.000 €*),

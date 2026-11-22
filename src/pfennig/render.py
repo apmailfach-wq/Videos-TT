@@ -33,7 +33,7 @@ F_EMOJI = "/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf"
 BUBBLES = {   # row: [(start, end, text)]
     0: [(1.9, 3.9, "Gönn dir!"), (8.0, 10.4, "Ist doch nur 'n Kaffee."), (14.0, 16.0, "Nächsten Monat spar ich."),
         (18.6, 99, "Wo ist mein Geld hin?!")],
-    1: [(3.2, 5.2, "Für schlechte Zeiten."), (12.0, 14.2, "Läuft doch!")],
+    1: [(3.2, 5.2, "Für schlechte Zeiten."), (12.0, 14.2, "Läuft doch!"), (15.6, 18.0, "Inflation frisst mein Geld?!")],
     2: [(4.5, 6.6, "Für mein Zukunfts-Ich."), (9.0, 11.2, "Langweilig … egal."),
         (18.9, 99, "Jetzt arbeitet das Geld!")],
 }
@@ -151,7 +151,7 @@ def label_day(t):
 
 
 # ------------------------------------------------------------------ drawing primitives (ss = supersample)
-def figure(d, x, floor, ss, arm_f=15, arm_b=-15, head=(0, 0), col=WHITE, w=8, arms_up=0.0):
+def figure(d, x, floor, ss, arm_f=15, arm_b=-15, head=(0, 0), col=WHITE, w=8, arms_up=0.0, mood=0.3):
     S = lambda v: v * ss  # noqa: E731
     hip = (x, floor - 110)
     sh = (x, floor - 215)
@@ -171,6 +171,26 @@ def figure(d, x, floor, ss, arm_f=15, arm_b=-15, head=(0, 0), col=WHITE, w=8, ar
     for p in (hip, sh, (x - 26, floor), (x + 26, floor)):
         d.ellipse([S(p[0] - w / 2), S(p[1] - w / 2), S(p[0] + w / 2), S(p[1] + w / 2)], fill=col)
     d.ellipse([S(hd[0] - 27), S(hd[1] - 27), S(hd[0] + 27), S(hd[1] + 27)], fill=col)
+    fc = (24, 26, 44)
+    ex, ey = hd[0] + 4, hd[1] - 5
+    for o in (-9, 9):   # eyes (squint when happy, droop when sad)
+        if mood > 0.6:
+            d.arc([S(ex + o - 5), S(ey - 3), S(ex + o + 5), S(ey + 5)], 200, 340, fill=fc, width=int(S(3)))
+        else:
+            d.ellipse([S(ex + o - 3.5), S(ey - 3.5), S(ex + o + 3.5), S(ey + 3.5)], fill=fc)
+            if mood < -0.4:
+                d.line([S(ex + o - 6), S(ey - 9 + (o > 0) * 3), S(ex + o + 6), S(ey - 9 + (o < 0) * 3)], fill=fc,
+                       width=int(S(2.5)))
+    m = max(-1.0, min(1.0, mood))
+    my = hd[1] + 11
+    if abs(m) < 0.15:
+        d.line([S(ex - 8), S(my), S(ex + 8), S(my)], fill=fc, width=int(S(3)))
+    elif m > 0:
+        h = 4 + 8 * m
+        d.arc([S(ex - 11), S(my - h), S(ex + 11), S(my + h)], 20, 160, fill=fc, width=int(S(3)))
+    else:
+        h = 4 + 6 * -m
+        d.arc([S(ex - 10), S(my + 2), S(ex + 10), S(my + 2 + 2 * h)], 200, 340, fill=fc, width=int(S(3)))
 
 
 def coin(d, x, y, ss, r=17, a=255):
@@ -330,7 +350,10 @@ def draw_row(frame, r, t):
     if r == 0 and t > T_Y30 - 1.2:
         k = ease_out((t - T_Y30 + 1.2) / 0.6)
         head = (12 * k, 10 * k)           # looks down/over to the others
-    figure(d, PX, floor, ss, arm_f=arm_f, arm_b=-12, head=head, arms_up=arms_up)
+    fmood = [0.7 - 1.7 * c01((t - T_M1) / (T_Y30 - T_M1)) if t > T_M1 else 0.7,
+            0.4 - 0.7 * c01((t - 15.6) / 0.4) if 15.6 < t < 18.0 else 0.4,
+            0.0 + 1.0 * c01((t - T_Y5 + 2) / 4) if t > 4.5 else 0.0][r]
+    figure(d, PX, floor, ss, arm_f=arm_f, arm_b=-12, head=head, arms_up=arms_up, mood=fmood)
 
     # targets
     if r == 1:
@@ -707,6 +730,14 @@ def render_frame(fi):
         t = tg - HOOK
         fr = story_frame(t)
         zoom, dx = 1.0, 0
+        fz, fy = focus(t)
+        if fz > 0.001:
+            z = 1 + 0.16 * fz
+            zw, zh = int(W * z), int(H * z)
+            im = fr.resize((zw, zh), Image.BILINEAR)
+            top = int(min(max(fy * z - H / 2, 0), zh - H))
+            left = int((zw - W) * 0.1)
+            fr = im.crop((left, top, left + W, top + H))
         if T_DAY1 < t < T_REV:      # punch-zoom on every beat during the time-lapse
             bp = ((t - T_DAY1) % BEAT) / BEAT
             zoom += 0.018 * (1 - ease_out(bp * 3)) * c01((t - T_DAY1) / 2)
@@ -724,7 +755,23 @@ def render_frame(fi):
         fr = fr.resize((zw, zh), Image.BILINEAR)
         cx, cy = (zw - W) // 2 + dx, (zh - H) // 2
         fr = fr.crop((cx, cy, cx + W, cy + H))
+    lp = (tg - (HOOK + TOTAL - LOOP)) / LOOP     # seamless loop back into the coffee hook
+    if lp > 0:
+        fr = Image.blend(fr.convert("RGBA"), hook_scene(0.0), ease_io(lp))
     return fr.convert("RGB").tobytes()
+
+
+LOOP = 0.4
+FOCUS = [(1.7, 640), (3.0, 1035), (4.3, 1430)]
+
+
+def focus(t):
+    """Camera pushes in on each friend during day 1."""
+    w = ease_io((t - 1.3) / 0.5) * (1 - ease_io((t - 6.0) / 0.6))
+    y = FOCUS[0][1]
+    for (ta, ya), (tb, yb) in zip(FOCUS, FOCUS[1:]):
+        y = y + (yb - y) * ease_io((t - tb + 0.2) / 0.4) if t > tb - 0.2 else y
+    return w, y
 
 
 # ------------------------------------------------------------------ sound
