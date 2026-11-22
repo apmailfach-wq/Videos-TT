@@ -97,3 +97,11 @@ python3 tts.py geld                      # Stimme + Wort-Timings -> build/sprich
 python3 render.py geld                   # -> ../../sprichwort-02-geld.mp4
 python3 render.py geld preview 2 15 30   # Standbilder
 ```
+
+## pfennig-video.mp4 – neues Format „3 Leben im Zeitraffer“ (ohne Sprecher)
+
+„Wer den Pfennig nicht ehrt, ist des Talers nicht wert.“ 3 Freunde, jeder hat jeden Tag 5 € übrig:
+1 gibt aus, 2 spart im Sparschwein, 3 investiert (Geldbaum). Zeitraffer Tag 1 → Jahr 30 (0 € / 54.750 € / ≈178.000 €*),
+dann das Sprichwort als Pointe + „Sei Nr. 3. Wer bist du – 1, 2 oder 3?“. 28,5 s, nur Musik/Sounds (synthetisch).
+*5 €/Tag, 30 Jahre, 7 % p. a., Beispielrechnung, keine Anlageberatung.
+`cd src/pfennig && python3 render.py` (Standbilder: `python3 render.py preview 5 20`)
