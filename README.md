@@ -98,9 +98,9 @@ python3 render.py geld                   # -> ../../sprichwort-02-geld.mp4
 python3 render.py geld preview 2 15 30   # Standbilder
 ```
 
-## pfennig-video.mp4 – neues Format „3 Leben im Zeitraffer“ (ohne Sprecher)
+## cent-video.mp4 – neues Format „3 Leben im Zeitraffer“ (ohne Sprecher)
 
-„Wer den Pfennig nicht ehrt, ist des Talers nicht wert.“ 3 Freunde, jeder hat jeden Tag 5 € übrig:
+„Wer den Cent nicht ehrt, ist des Euros nicht wert.“ 3 Freunde, jeder hat jeden Tag 5 € übrig:
 1 gibt aus, 2 spart im Sparschwein, 3 investiert (Geldbaum). Zeitraffer Tag 1 → Jahr 30 (0 € / 54.750 € / ≈178.000 €*),
 Sprechblasen je Figur, Regen über Nr. 1 / Sonne über Nr. 3, dann das Sprichwort als Pointe + Endkarte „Gleiches Geld. 3 verschiedene Leben. Welche Zahl bist du? Schreib nur die Zahl“. 29,8 s, nur Musik/Sounds (synthetisch).
 *5 €/Tag, 30 Jahre, 7 % p. a., Beispielrechnung, keine Anlageberatung.

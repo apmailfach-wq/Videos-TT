@@ -426,7 +426,7 @@ def draw_header(frame, t):
         text_c(d, 235, l2[:max(0, n - len(l1))], font(F_B, 32), GOLD, 3)
     else:
         p = t - T_REV
-        lines = [("WER DEN PFENNIG", WHITE), ("NICHT EHRT,", WHITE), ("IST DES TALERS", GOLD), ("NICHT WERT.", GOLD)]
+        lines = [("WER DEN CENT", WHITE), ("NICHT EHRT,", WHITE), ("IST DES EUROS", GOLD), ("NICHT WERT.", GOLD)]
         for i, (ln, col) in enumerate(lines):
             a = c01((p - i * 0.35) / 0.25)
             if a > 0:
@@ -616,7 +616,7 @@ def main():
         return
     aud = BUILD / "audio.wav"
     make_audio(aud)
-    out = ROOT / "pfennig-video.mp4"
+    out = ROOT / "cent-video.mp4"
     nf = int(TOTAL * FPS)
     cmd = ["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(FPS),
            "-i", "-", "-i", str(aud), "-af", "loudnorm=I=-14:TP=-1.5", "-c:v", "libx264", "-preset", "medium",
