@@ -102,6 +102,6 @@ python3 render.py geld preview 2 15 30   # Standbilder
 
 „Wer den Pfennig nicht ehrt, ist des Talers nicht wert.“ 3 Freunde, jeder hat jeden Tag 5 € übrig:
 1 gibt aus, 2 spart im Sparschwein, 3 investiert (Geldbaum). Zeitraffer Tag 1 → Jahr 30 (0 € / 54.750 € / ≈178.000 €*),
-dann das Sprichwort als Pointe + „Sei Nr. 3. Wer bist du – 1, 2 oder 3?“. 28,5 s, nur Musik/Sounds (synthetisch).
+Sprechblasen je Figur, Regen über Nr. 1 / Sonne über Nr. 3, dann das Sprichwort als Pointe + Endkarte „Gleiches Geld. 3 verschiedene Leben. Welche Zahl bist du? Schreib nur die Zahl“. 29,8 s, nur Musik/Sounds (synthetisch).
 *5 €/Tag, 30 Jahre, 7 % p. a., Beispielrechnung, keine Anlageberatung.
 `cd src/pfennig && python3 render.py` (Standbilder: `python3 render.py preview 5 20`)

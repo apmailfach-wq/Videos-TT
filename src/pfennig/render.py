@@ -23,11 +23,43 @@ ROOT = Path(__file__).resolve().parents[2]
 BUILD = ROOT / "build" / "pfennig"
 BUILD.mkdir(parents=True, exist_ok=True)
 W, H, FPS = 1080, 1920, 30
-TOTAL = 28.5
+TOTAL = 29.8
 
 F_B = "/usr/share/fonts/opentype/inter/Inter-Bold.otf"
 F_K = "/usr/share/fonts/opentype/inter/Inter-Black.otf"
 F_M = "/usr/share/fonts/opentype/inter/Inter-Medium.otf"
+F_EMOJI = "/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf"
+
+BUBBLES = {   # row: [(start, end, text)]
+    0: [(1.9, 3.9, "Gönn dir!"), (8.0, 10.4, "Ist doch nur 'n Kaffee."), (14.0, 16.0, "Nächsten Monat spar ich."),
+        (18.6, 99, "Wo ist mein Geld hin?!")],
+    1: [(3.2, 5.2, "Für schlechte Zeiten."), (12.0, 14.2, "Läuft doch!")],
+    2: [(4.5, 6.6, "Für mein Zukunfts-Ich."), (9.0, 11.2, "Langweilig … egal."),
+        (18.9, 99, "Jetzt arbeitet das Geld!")],
+}
+
+
+@lru_cache(maxsize=32)
+def bubble_img(text):
+    f = ImageFont.truetype(F_B, 30)
+    tw = f.getlength(text)
+    w, h = int(tw + 44), 64
+    im = Image.new("RGBA", (w, h + 18), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    d.rounded_rectangle([0, 0, w - 1, h], radius=18, fill=(250, 250, 255))
+    d.polygon([(24, h - 2), (52, h - 2), (18, h + 16)], fill=(250, 250, 255))
+    d.text((w / 2, h / 2 + 1), text, font=f, fill=(20, 22, 36), anchor="mm")
+    return im
+
+
+@lru_cache(maxsize=8)
+def emoji(ch, size):
+    f = ImageFont.truetype(F_EMOJI, 109)
+    im = Image.new("RGBA", (200, 160), (0, 0, 0, 0))
+    ImageDraw.Draw(im).text((100, 80), ch, font=f, embedded_color=True, anchor="mm")
+    im = im.crop(im.getbbox())
+    sc = size / max(im.size)
+    return im.resize((int(im.width * sc), int(im.height * sc)), Image.LANCZOS)
 
 WHITE = (236, 242, 255)
 GOLD = (255, 196, 60)
@@ -250,6 +282,22 @@ def draw_row(frame, r, t):
     x0, y0 = 40, ROW_Y[r]
     frame.alpha_composite(row_panel(r), (x0, y0))
     ss = 2
+    mood = ease_out((t - (T_Y30 - 2.6)) / 1.2)
+    if mood > 0 and r == 2:
+        sun = Image.new("RGBA", (1000, ROW_H), (0, 0, 0, 0))
+        sd = ImageDraw.Draw(sun)
+        cx, cy = TX, 120
+        for k in range(14):
+            a = k / 14 * 2 * math.pi + t * 0.25
+            sd.polygon([(cx, cy), (cx + math.cos(a - 0.08) * 900, cy + math.sin(a - 0.08) * 900),
+                        (cx + math.cos(a + 0.08) * 900, cy + math.sin(a + 0.08) * 900)],
+                       fill=(255, 200, 90, int(38 * mood)))
+        sd.ellipse([cx - 160, cy - 160, cx + 160, cy + 160], fill=(255, 210, 110, int(70 * mood)))
+        sun = sun.filter(ImageFilter.GaussianBlur(14))
+        mask = Image.new("L", sun.size, 0)
+        ImageDraw.Draw(mask).rounded_rectangle([0, 0, 999, ROW_H - 1], radius=28, fill=255)
+        sun.putalpha(Image.fromarray((np.array(sun.getchannel("A")) * (np.array(mask) / 255)).astype(np.uint8)))
+        frame.alpha_composite(sun, (x0, y0))
     lay = Image.new("RGBA", (1000 * ss, ROW_H * ss), (0, 0, 0, 0))
     d = ImageDraw.Draw(lay)
     floor = ROW_H - 60
@@ -317,6 +365,26 @@ def draw_row(frame, r, t):
     glow = lay.filter(ImageFilter.GaussianBlur(10))
     frame.alpha_composite(glow, (x0, y0))
     frame.alpha_composite(lay, (x0, y0))
+    if mood > 0 and r == 0:     # grey rain over friend 1
+        rain = Image.new("RGBA", (1000, ROW_H), (40, 48, 70, int(90 * mood)))
+        rd = ImageDraw.Draw(rain)
+        rng = np.random.default_rng(int(t * FPS) % 7)
+        for i in range(70):
+            rx = (i * 61.7 + t * 40) % 1000
+            ry = (i * 37.3 + t * 900) % (ROW_H + 60) - 40
+            rd.line([rx, ry, rx - 8, ry + 34], fill=(170, 185, 220, int(150 * mood)), width=3)
+        mask = Image.new("L", rain.size, 0)
+        ImageDraw.Draw(mask).rounded_rectangle([0, 0, 999, ROW_H - 1], radius=28, fill=255)
+        rain.putalpha(Image.fromarray(np.minimum(np.array(rain.getchannel("A")), np.array(mask))))
+        frame.alpha_composite(rain, (x0, y0))
+    for (b0, b1, txt) in BUBBLES[r]:
+        if b0 <= t < b1:
+            p = (t - b0) / 0.25
+            im = bubble_img(txt)
+            sc = 0.6 + 0.4 * ease_out(p)
+            if sc < 0.999:
+                im = im.resize((max(1, int(im.width * sc)), max(1, int(im.height * sc))), Image.BICUBIC)
+            frame.alpha_composite(im, (int(x0 + PX + 30), int(y0 + 6)))
 
     # texts
     fd = ImageDraw.Draw(frame)
@@ -351,9 +419,9 @@ def text_c(d, y, txt, f, col, track=3):
 def draw_header(frame, t):
     d = ImageDraw.Draw(frame)
     if t < T_REV:
-        n = int(t * 60)
+        n = int(t * 70) + 40
         l1 = "3 FREUNDE. JEDEN TAG 5 € ÜBRIG."
-        l2 = "WER HAT NACH 30 JAHREN AM MEISTEN?"
+        l2 = "NUR EINER WIRD REICH. WER?"
         text_c(d, 175, l1[:n], font(F_K, 50), WHITE, 2)
         text_c(d, 235, l2[:max(0, n - len(l1))], font(F_B, 32), GOLD, 3)
     else:
@@ -381,22 +449,34 @@ def draw_end(frame, t):
     p = c01((t - T_END) / 0.4)
     if p <= 0:
         return
-    frame.alpha_composite(Image.new("RGBA", (W, H), (8, 10, 20, int(242 * p))))
+    frame.alpha_composite(Image.new("RGBA", (W, H), (8, 10, 20, int(246 * p))))
     if p < 1:
         return
     d = ImageDraw.Draw(frame)
     q = t - T_END - 0.4
-    a1 = c01(q / 0.3)
-    if a1 > 0:
-        f = font(F_K, 150)
-        d.text((W / 2, 820), "SEI", font=f, fill=WHITE, anchor="ms")
-        d.text((W / 2, 980), "NR. 3.", font=f, fill=GOLD, anchor="ms")
-    if q > 0.6:
-        text_c(d, 1120, "Wer bist du – 1, 2 oder 3?", font(F_B, 46), WHITE, 0)
-        text_c(d, 1185, "Schreib's in die Kommentare.", font(F_M, 40), DIM, 0)
-    if q > 1.0:
-        text_c(d, 1400, "* Beispiel: 5 € pro Tag, 30 Jahre, 7 % Rendite p. a.", font(F_M, 26), DIM, 0)
-        text_c(d, 1440, "Keine Anlageberatung.", font(F_M, 26), DIM, 0)
+    text_c(d, 300, "GLEICHES GELD.", font(F_K, 64), WHITE, 2)
+    if q > 0.35:
+        text_c(d, 385, "3 VERSCHIEDENE LEBEN.", font(F_K, 64), GOLD, 2)
+    if q > 0.8:
+        text_c(d, 560, "Welche Zahl bist du – ehrlich?", font(F_B, 50), WHITE, 0)
+    cols = [(RED, "Ausgeber"), (WHITE, "Sparer"), (GOLD, "Investor")]
+    for i, (col, lab) in enumerate(cols):
+        a = (q - 1.1 - i * 0.18) / 0.3
+        if a <= 0:
+            continue
+        cx, cy = 260 + i * 280, 800
+        act = int((q - 2.0) / 0.45) % 3 == i and q > 2.0
+        r = 105 * (0.4 + 0.6 * ease_out(a)) * (1.1 if act else 1.0)
+        d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=(26, 30, 52), outline=col, width=10 if act else 6)
+        d.text((cx, cy + 4), str(i + 1), font=font(F_K, int(120 * r / 105)), fill=col, anchor="mm")
+        d.text((cx, cy + 150), lab, font=font(F_B, 34), fill=col, anchor="mm")
+    if q > 1.9:
+        text_c(d, 1080, "Schreib nur die Zahl in die Kommentare", font(F_B, 42), WHITE, 0)
+        e = emoji("👇", 150)
+        frame.alpha_composite(e, (int(W / 2 - e.width / 2), int(1130 + abs(math.sin(q * 5)) * 40)))
+    if q > 1.2:
+        text_c(d, 1440, "* Beispiel: 5 € pro Tag, 30 Jahre, 7 % Rendite p. a.", font(F_M, 26), DIM, 0)
+        text_c(d, 1480, "Keine Anlageberatung.", font(F_M, 26), DIM, 0)
 
 
 # ------------------------------------------------------------------ frame
@@ -413,7 +493,7 @@ def init():
 def render_frame(fi):
     t = fi / FPS
     fr = BG.copy()
-    intro = [ease_out((t - 0.15 - r * 0.15) / 0.4) for r in range(3)]
+    intro = [1.0, 1.0, 1.0]
     for r in range(3):
         if intro[r] > 0:
             draw_row(fr, r, t)
