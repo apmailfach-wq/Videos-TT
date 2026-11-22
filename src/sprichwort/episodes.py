@@ -9,15 +9,15 @@ CTA_Q = "Welches *Sprichwort* soll ich als *Nächstes* checken?"
 
 EPISODES = {
     "geld": dict(
-        number=1,
-        out="sprichwort-01-geld.mp4",
+        number=2,
+        out="sprichwort-02-geld.mp4",
         voice="de-DE-ConradNeural", rate="+8%",
         saying="Geld allein macht nicht glücklich",
         scenes=[
             dict(key="hook",
                  text="Geld allein macht nicht glücklich. Das hat dir deine Oma bestimmt auch gesagt. Aber stimmt das wirklich?",
-                 heads=[(None, "Sprichwort-Check #1", "Omas *Weisheit*"),
-                        ("stimmt", "Sprichwort-Check #1", "Stimmt das *wirklich?*")],
+                 heads=[(None, "Sprichwort-Check #2", "Omas *Weisheit*"),
+                        ("stimmt", "Sprichwort-Check #2", "Stimmt das *wirklich?*")],
                  vis=dict(type="plaque")),
             dict(key="bedeutung",
                  text="Gemeint ist: Liebe, Freunde und Gesundheit kann man nicht kaufen.",
@@ -47,15 +47,15 @@ EPISODES = {
         ]),
 
     "sport": dict(
-        number=2,
-        out="sprichwort-02-sport.mp4",
+        number=1,
+        out="sprichwort-01-sport.mp4",
         voice="de-DE-ConradNeural", rate="+8%",
         saying="Sport ist Mord",
         scenes=[
             dict(key="hook",
                  text="Sport ist Mord. Sagt Onkel Günther seit dreißig Jahren. Vom Sofa aus. Aber stimmt das?",
-                 heads=[(None, "Sprichwort-Check #2", "Onkel Günthers *Motto*"),
-                        ("stimmt", "Sprichwort-Check #2", "Stimmt das *wirklich?*")],
+                 heads=[(None, "Sprichwort-Check #1", "Onkel Günthers *Motto*"),
+                        ("stimmt", "Sprichwort-Check #1", "Stimmt das *wirklich?*")],
                  vis=dict(type="plaque")),
             dict(key="bedeutung",
                  text="Gemeint ist: Sport ist anstrengend, gefährlich und bringt sowieso nichts.",
