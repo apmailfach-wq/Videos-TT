@@ -107,3 +107,8 @@ Hook: „DIESER KAFFEE KOSTET DICH …“ – Preisschild rattert von 5 € auf 
 Sprechblasen je Figur, Regen über Nr. 1 / Sonne über Nr. 3, dann das Sprichwort als Pointe + Endkarte „Gleiches Geld. 3 verschiedene Leben. Welche Zahl bist du? Schreib nur die Zahl“. 29,8 s, nur Musik/Sounds (synthetisch).
 *5 €/Tag, 30 Jahre, 7 % p. a., Beispielrechnung, keine Anlageberatung.
 `cd src/pfennig && python3 render.py` (Standbilder: `python3 render.py preview 5 20`)
+
+## morgenstund-video.mp4 – Probe: Sprichwort im Split-Screen-Format (16 s, ohne Sprecher)
+
+„Morgenstund hat Gold im Mund.“ Oben Frühaufsteher, unten Snoozer, rote Digitaluhr dazwischen (06:00 → 07:45 im Zeitraffer),
+Sprechblasen, Panik-Moment, Sprichwort als Pointe, Endkarte „1 oder 2?“, nahtloser Loop. `cd src/morgenstund && python3 render.py`
