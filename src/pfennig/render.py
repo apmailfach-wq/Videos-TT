@@ -582,53 +582,108 @@ def draw_reveal(fr, t):
 
 
 # ------------------------------------------------------------------ cold-open hook
-HOOK = 2.7
-REW0 = 1.55
+HOOK = 3.1
+REW0 = 1.55          # kept for audio compat
+T_ROLL0, T_ROLL1, T_ZOOM = 0.55, 1.65, 2.45
+
+
+@lru_cache(maxsize=1)
+def big_cup():
+    ss = 6
+    im = Image.new("RGBA", (200 * ss, 240 * ss), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    S = lambda v: int(v * ss)  # noqa: E731
+    x, y = 100, 228
+    d.polygon([(S(x - 62), S(y - 150)), (S(x + 62), S(y - 150)), (S(x + 46), S(y)), (S(x - 46), S(y))],
+              fill=(240, 244, 255))
+    d.rounded_rectangle([S(x - 70), S(y - 176), S(x + 70), S(y - 146)], radius=S(8), fill=(120, 76, 50))
+    d.rounded_rectangle([S(x - 76), S(y - 186), S(x + 76), S(y - 170)], radius=S(6), fill=(150, 96, 64))
+    d.polygon([(S(x - 56), S(y - 108)), (S(x + 56), S(y - 108)), (S(x + 51), S(y - 62)), (S(x - 51), S(y - 62))],
+              fill=(176, 116, 78))
+    d.ellipse([S(x - 20), S(y - 100), S(x + 20), S(y - 70)], fill=(240, 244, 255))
+    d.text((S(x), S(y - 85)), "€", font=font(F_K, S(26)), fill=(176, 116, 78), anchor="mm")
+    return im.resize((200 * 3, 240 * 3), Image.LANCZOS)
+
+
+def price_tag(txt, col):
+    f = font(F_K, 112)
+    tw = f.getlength(txt)
+    w, h = int(tw + 150), 175
+    im = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    d.polygon([(0, h / 2), (50, 0), (w, 0), (w, h), (50, h)], fill=(250, 250, 255))
+    d.ellipse([34, h / 2 - 12, 58, h / 2 + 12], fill=(10, 12, 24))
+    d.text((70 + tw / 2 + 10, h / 2 + 4), txt, font=f, fill=col, anchor="mm")
+    return im
+
+
+def roll_value(tg):
+    u = c01((tg - T_ROLL0) / (T_ROLL1 - T_ROLL0))
+    u = u ** 2.2
+    return 5 + (178340 - 5) * u
+
+
+def hook_scene(tg):
+    fr = BG.copy()
+    d = ImageDraw.Draw(fr)
+    hit = tg >= T_ROLL1
+    # light cone behind the cup
+    gl = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    col = (255, 90, 90) if hit else (255, 200, 110)
+    ImageDraw.Draw(gl).ellipse([140, 620, 940, 1420], fill=col + (90 if hit else 60,))
+    fr.alpha_composite(gl.filter(ImageFilter.GaussianBlur(90)))
+    # headline
+    f = font(F_K, 112)
+    text_c(d, 280, "DIESER KAFFEE", f, WHITE, 2)
+    if tg > 0.28:
+        text_c(d, 410, "KOSTET DICH …", f, GOLD, 2)
+    # cup with floating + steam
+    cup = big_cup()
+    cy = 1010 + math.sin(tg * 3) * 10
+    fr.alpha_composite(cup, (int(W / 2 - cup.width / 2), int(cy - cup.height / 2)))
+    sd = ImageDraw.Draw(fr)
+    for k in (-50, 0, 50):
+        pts = [(W / 2 + k + math.sin(tg * 4 + i * 0.5 + k) * 14, cy - 330 - i * 14) for i in range(10)]
+        sd.line(pts, fill=(220, 228, 250, 150), width=8, joint="curve")
+    # price tag (rolls up, then slams red)
+    v = roll_value(tg)
+    tcol = (20, 22, 36) if v < 1000 else ((200, 140, 10) if not hit else (220, 40, 40))
+    tag = price_tag(fmt_eur(v), tcol)
+    q = (tg - T_ROLL1) / 0.2
+    sc = 1.0 if not hit else 1.15 + 0.6 * (1 - ease_out(q))
+    rot = 8 * math.sin(tg * 2.5) if not hit else -6
+    tag = tag.rotate(rot, resample=Image.BICUBIC, expand=True)
+    if sc > 1.01:
+        tag = tag.resize((int(tag.width * sc), int(tag.height * sc)), Image.BICUBIC)
+    fr.alpha_composite(tag, (int(W / 2 - tag.width / 2 + 40), int(1300 - tag.height / 2)))
+    if hit and tg > T_ROLL1 + 0.3:
+        tx = font(F_K, 76)
+        a = c01((tg - T_ROLL1 - 0.3) / 0.15)
+        tmp = Image.new("RGBA", (W, 120), (0, 0, 0, 0))
+        text_c(ImageDraw.Draw(tmp), 80, "GLAUBST DU NICHT?", tx, GOLD + (int(255 * a),), 2)
+        fr.alpha_composite(tmp, (0, 1420))
+        e = emoji("🤨", 110)
+        fr.alpha_composite(e, (int(W / 2 - e.width / 2), int(1560 + math.sin(tg * 6) * 6)))
+    return fr
 
 
 def hook_frame(tg):
-    if tg < REW0:
-        fr = story_frame(T_Y30 - 0.1, ui=False)
-        fr = fr.filter(ImageFilter.GaussianBlur(9))
-        fr.alpha_composite(Image.new("RGBA", (W, H), (6, 8, 16, 150)))
-        d = ImageDraw.Draw(fr)
-        text_c(d, 300, "GLEICHE 5 € AM TAG.", font(F_K, 62), WHITE, 2)
-        for k, (txt, col, y, t0) in enumerate([("0 €", RED, 640, 0.0), ("178.340 €", GOLD, 1010, 0.45)]):
-            q = (tg - t0) / 0.18
-            if q <= 0:
-                continue
-            fs = 210 if k == 0 else 170
-            tmp = Image.new("RGBA", (W, 300), (0, 0, 0, 0))
-            ImageDraw.Draw(tmp).text((W / 2, 150), txt, font=font(F_K, fs), fill=col, anchor="mm",
-                                     stroke_width=6, stroke_fill=(10, 12, 24))
-            g = tmp.filter(ImageFilter.GaussianBlur(18))
-            sc = 1 + 0.8 * (1 - ease_out(q))
-            for im in (g, g, tmp):
-                im2 = im.resize((int(W * sc), int(300 * sc)), Image.BICUBIC) if sc > 1.01 else im
-                fr.alpha_composite(im2, (int(W / 2 - im2.width / 2), int(y - im2.height / 2)))
-        if tg > 0.3:
-            text_c(d, 850, "VS", font(F_K, 70), DIM, 4)
-        if tg > 0.9:
-            text_c(d, 1300, "WIE GEHT DAS?", font(F_K, 72), WHITE, 3)
-        return fr
-    # rewind: story plays backwards with VHS look
-    u = ease_io((tg - REW0) / (HOOK - REW0))
-    st = (T_Y30 + 0.6) * (1 - u)
-    fr = story_frame(st)
-    a = np.array(fr.convert("RGB")).astype(np.int16)
-    a[::4] = (a[::4] * 0.55).astype(np.int16)          # scanlines
-    shift = int(8 + 10 * math.sin(tg * 30))
-    a[..., 0] = np.roll(a[..., 0], shift, axis=1)
-    a[..., 2] = np.roll(a[..., 2], -shift, axis=1)
-    band = int((tg * 2300) % H)
-    a[band:band + 40] = np.roll(a[band:band + 40], 30, axis=1)
-    fr = Image.fromarray(a.clip(0, 255).astype(np.uint8)).convert("RGBA")
-    d = ImageDraw.Draw(fr)
-    d.rounded_rectangle([W / 2 - 330, 840, W / 2 + 330, 990], radius=24, fill=(8, 10, 20, 230))
-    e = emoji("⏪", 80)
-    fr.alpha_composite(e, (int(W / 2 - 300), 875))
-    d.text((W / 2 + 50, 915), "30 JAHRE ZURÜCK", font=font(F_K, 52), fill=WHITE, anchor="mm")
-    return fr
+    if tg < T_ZOOM:
+        return hook_scene(tg)
+    # zoom-blur dive into the cup, then flash into the story
+    u = ease_io((tg - T_ZOOM) / (HOOK - T_ZOOM))
+    src = hook_scene(T_ZOOM)
+    acc = None
+    for k in range(5):
+        z = 1 + (u * 7) * (1 - k * 0.06)
+        zw, zh = int(W * z), int(H * z)
+        im = src.resize((zw, zh), Image.BILINEAR)
+        cx, cy = (zw - W) // 2, int((zh - H) * (1010 / H))
+        im = im.crop((cx, cy, cx + W, cy + H))
+        acc = im if acc is None else Image.blend(acc, im, 1 / (k + 1))
+    fl = int(255 * c01((u - 0.6) / 0.4))
+    acc.alpha_composite(Image.new("RGBA", (W, H), (255, 245, 225, fl)))
+    return acc
 
 
 def aberrate(fr, amt):
@@ -645,7 +700,7 @@ def render_frame(fi):
     tg = fi / FPS
     if tg < HOOK:
         fr = hook_frame(tg)
-        shake = 1 - c01(min(abs(tg - 0.02), abs(tg - 0.47)) / 0.25)
+        shake = 1 - c01(abs(tg - T_ROLL1) / 0.3) if tg >= T_ROLL1 else 0.0
         zoom = 1 + 0.04 * shake
         dx = int(math.sin(tg * 90) * 14 * shake)
     else:
@@ -761,30 +816,35 @@ def make_audio(path):
         put(sfx, tick(), tt, 0.25)
         tt += max(0.06, 0.35 - (tt - T_DAY1) * 0.03)
     story = mus * 0.5 + sfx
-    # cold-open hook: two impacts, coin burst, tape-rewind, then the story
+    # cold-open hook: slot-machine roll, impact, dive whoosh
     hn = int(HOOK * SR)
     mix = np.zeros(hn + n)
     mix[hn:] += story
-    b = boom()
-    for t0 in (0.02, 0.47):
+
+    def add(sig, t0, g):
         i = int(t0 * SR)
-        mix[i:i + len(b)] += b[:len(mix) - i] * 0.8
-    for j in range(10):
-        i = int((0.47 + j * 0.03) * SR)
-        c = clink()
-        mix[i:i + len(c)] += c * 0.25
+        sig = sig[:max(0, len(mix) - i)]
+        mix[i:i + len(sig)] += sig * g
+
+    add(boom(), 0.02, 0.5)
     for f in (220.0, 261.63, 329.63):
-        pn = piano(f, 1.6)
-        i = int(0.47 * SR)
-        mix[i:i + len(pn)] += pn * 0.3
-    rn = int((HOOK - REW0) * SR)
+        add(piano(f, 1.2), 0.02, 0.25)
+    tt0, step = T_ROLL0, 0.12
+    while tt0 < T_ROLL1:
+        add(tick(), tt0, 0.9)
+        add(clink(), tt0, 0.08)
+        tt0 += step
+        step = max(0.03, step * 0.86)
+    add(boom(), T_ROLL1, 1.0)
+    for j in range(12):
+        add(clink(), T_ROLL1 + j * 0.025, 0.25)
+    for f in (110.0, 155.56, 207.65):     # dark stab
+        add(piano(f, 1.0), T_ROLL1, 0.4)
+    rn = int((HOOK - T_ZOOM + 0.1) * SR)
     tt = np.arange(rn) / SR
-    fr_ = 1400 * np.exp(-tt * 1.8) + 120
-    saw = 2 * ((np.cumsum(fr_) / SR) % 1) - 1
-    trem = 0.6 + 0.4 * np.sin(2 * np.pi * 22 * tt)
-    rw = (saw * 0.25 + np.random.default_rng(4).standard_normal(rn) * 0.12) * trem * np.minimum(1, tt / 0.05)
-    i = int(REW0 * SR)
-    mix[i:i + rn] += rw * 0.7
+    noise = np.random.default_rng(4).standard_normal(rn)
+    sw = np.convolve(noise, np.ones(6) / 6, "same") * (tt / tt[-1]) ** 2
+    add(sw, T_ZOOM, 0.6)
     n = len(mix)
     mix = mix / (np.abs(mix).max() + 1e-9) * 0.9
     fade = np.minimum(1, (n - np.arange(n)) / SR / 1.0)
