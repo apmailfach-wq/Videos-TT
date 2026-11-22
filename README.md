@@ -77,3 +77,23 @@ python3 render.py              # rendert ../../fuehrerschein-video-neon.mp4
 python3 render.py shots        # Schnittliste
 python3 render.py preview 5 30 # Standbilder
 ```
+
+## Serie „Sprichwort-Check“ (neu)
+
+Ein Sprichwort pro Video (~39 s): Omas Stickbild schwingt rein → „Stimmt das wirklich?“ → Bedeutung →
+Faktencheck mit Studie (Zähler + Grafik) → „Der Haken“ (VS-Karten) → Wahrheits-Tacho + Stempel
+(MYTHOS / HALB WAHR / STIMMT) → Community-Frage „Welches Sprichwort soll ich als Nächstes checken?“
+
+| Datei | Sprichwort | Urteil | Quelle |
+|---|---|---|---|
+| `sprichwort-01-geld.mp4` | Geld allein macht nicht glücklich | HALB WAHR | Killingsworth, PNAS 2021 (33.391 Befragte); Dunn et al., Science 2008 |
+| `sprichwort-02-sport.mp4` | Sport ist Mord | MYTHOS | Garcia et al., Uni Cambridge, BJSM 2023 |
+
+Neue Folge = neuer Eintrag in `src/sprichwort/episodes.py`, dann:
+
+```bash
+cd src/sprichwort
+python3 tts.py geld                      # Stimme + Wort-Timings -> build/sprichwort/geld/
+python3 render.py geld                   # -> ../../sprichwort-01-geld.mp4
+python3 render.py geld preview 2 15 30   # Standbilder
+```

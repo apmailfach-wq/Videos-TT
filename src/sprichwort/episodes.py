@@ -1,0 +1,85 @@
+"""Episodes of the series "Sprichwort-Check": one proverb per video, ~30-40 s.
+
+Every scene has the spoken text, the headline states (kicker, headline, trigger word) and a visual.
+Words wrapped in *stars* are highlighted in the headline. Trigger words refer to the spoken text.
+"""
+
+CTA_TEXT = "Welches Sprichwort soll ich als Nächstes checken? Schreib's in die Kommentare!"
+CTA_Q = "Welches *Sprichwort* soll ich als *Nächstes* checken?"
+
+EPISODES = {
+    "geld": dict(
+        number=1,
+        out="sprichwort-01-geld.mp4",
+        voice="de-DE-ConradNeural", rate="+8%",
+        saying="Geld allein macht nicht glücklich",
+        scenes=[
+            dict(key="hook",
+                 text="Geld allein macht nicht glücklich. Das hat dir deine Oma bestimmt auch gesagt. Aber stimmt das wirklich?",
+                 heads=[(None, "Sprichwort-Check #1", "Omas *Weisheit*"),
+                        ("stimmt", "Sprichwort-Check #1", "Stimmt das *wirklich?*")],
+                 vis=dict(type="plaque")),
+            dict(key="bedeutung",
+                 text="Gemeint ist: Liebe, Freunde und Gesundheit kann man nicht kaufen.",
+                 heads=[(None, "Was heißt das?", "Nicht alles ist *käuflich*")],
+                 vis=dict(type="icons", items=[("❤️", "Liebe", "Liebe"), ("🫂", "Freunde", "Freunde"),
+                                                ("🩺", "Gesundheit", "Gesundheit")],
+                          stamp=("NICHT KÄUFLICH", "kaufen"))),
+            dict(key="check",
+                 text="Eine Studie mit über 33.000 Menschen zeigt: Wer mehr verdient, ist im Schnitt auch glücklicher. Und zwar ohne Obergrenze.",
+                 heads=[(None, "Faktencheck", "Was sagt die *Wissenschaft?*"),
+                        ("Wer", "Faktencheck", "Mehr Geld = *glücklicher*"),
+                        ("ohne", "Faktencheck", "Ohne *Obergrenze!*")],
+                 vis=dict(type="study", source="STUDIE · USA · PNAS 2021", number=33391, unit="Menschen befragt",
+                          extra=dict(type="chart", at="Wer", x="Einkommen", y="Glück", note="kein Limit!",
+                                     note_at="ohne"))),
+            dict(key="twist",
+                 text="Aber: Wer Geld für andere oder für Erlebnisse ausgibt, wird glücklicher als mit neuen Sachen.",
+                 heads=[(None, "Der Haken", "Es kommt drauf an, *wofür*")],
+                 vis=dict(type="versus", left=("🎁", "Für andere &", "Erlebnisse", "andere"),
+                          right=("🛍️", "Für neue", "Sachen", "Sachen"),
+                          mark="left", mark_text="glücklicher", mark_at="glücklicher")),
+            dict(key="urteil",
+                 text="Unser Urteil: Halb wahr. Geld macht glücklicher, aber allein eben nicht.",
+                 heads=[(None, "Urteil", "Halb *wahr*")],
+                 vis=dict(type="verdict", pos=0.5, label="HALB WAHR", at="Halb")),
+            dict(key="cta", text=CTA_TEXT, heads=[(None, "Du bist dran", "")], vis=dict(type="cta")),
+        ]),
+
+    "sport": dict(
+        number=2,
+        out="sprichwort-02-sport.mp4",
+        voice="de-DE-ConradNeural", rate="+8%",
+        saying="Sport ist Mord",
+        scenes=[
+            dict(key="hook",
+                 text="Sport ist Mord. Sagt Onkel Günther seit dreißig Jahren. Vom Sofa aus. Aber stimmt das?",
+                 heads=[(None, "Sprichwort-Check #2", "Onkel Günthers *Motto*"),
+                        ("stimmt", "Sprichwort-Check #2", "Stimmt das *wirklich?*")],
+                 vis=dict(type="plaque")),
+            dict(key="bedeutung",
+                 text="Gemeint ist: Sport ist anstrengend, gefährlich und bringt sowieso nichts.",
+                 heads=[(None, "Was heißt das?", "Lieber *liegen* bleiben")],
+                 vis=dict(type="icons", items=[("😮‍💨", "anstrengend", "anstrengend"), ("🤕", "gefährlich", "gefährlich"),
+                                                ("🤷", "bringt nix", "bringt")],
+                          stamp=("AUSREDE?", "nichts"))),
+            dict(key="check",
+                 text="Eine große Auswertung der Uni Cambridge zeigt: Schon elf Minuten zügiges Gehen am Tag könnten jeden zehnten frühen Todesfall verhindern.",
+                 heads=[(None, "Faktencheck", "Was sagt die *Wissenschaft?*"),
+                        ("jeden", "Faktencheck", "*Jeder 10.* frühe Tod vermeidbar")],
+                 vis=dict(type="study", source="UNI CAMBRIDGE · BJSM 2023", number=11, unit="Minuten Gehen pro Tag",
+                          count_at="elf",
+                          extra=dict(type="people", at="jeden", n=10))),
+            dict(key="twist",
+                 text="Klar, Verletzungen gibt's. Aber das Sofa ist auf Dauer viel gefährlicher.",
+                 heads=[(None, "Der Haken", "Was ist *gefährlicher?*")],
+                 vis=dict(type="versus", left=("🤕", "Ab und zu", "Verletzung", "Verletzungen"),
+                          right=("🛋️", "Jeden Tag", "Sofa", "Sofa"),
+                          mark="right", mark_text="gefährlicher", mark_at="gefährlicher", mark_red=True)),
+            dict(key="urteil",
+                 text="Unser Urteil: Mythos. Nicht Sport ist Mord, sondern das Sofa.",
+                 heads=[(None, "Urteil", "*Mythos!*")],
+                 vis=dict(type="verdict", pos=0.08, label="MYTHOS", at="Mythos")),
+            dict(key="cta", text=CTA_TEXT, heads=[(None, "Du bist dran", "")], vis=dict(type="cta")),
+        ]),
+}
