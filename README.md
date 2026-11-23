@@ -81,7 +81,7 @@ python3 render.py preview 5 30 # Standbilder
 ## ice-video.mp4 – „Der ICE“ (Satire-Kurzfilm, schwarzer Bahn-Humor)
 
 **Hook:** „Heute war ich pünktlich. Deutschland ist in Panik.“ – der ICE erzählt selbst, todernst.
-Länge ca. 78 s · 1080×1920 · 30 fps · Cartoon-Look: ICE mit Glupschaugen, blaue Anzeigetafel oben
+Länge ca. 62 s · 1080×1920 · 30 fps · Cartoon-Look: ICE mit Glupschaugen, blaue Anzeigetafel oben
 (Verspätung grün „+0“ blinkt panisch → rot „+70“ = Ordnung wiederhergestellt), Lauftext-Gags, Wort-für-Wort-Untertitel.
 
 | Szene | Gag |
@@ -89,9 +89,7 @@ Länge ca. 78 s · 1080×1920 · 30 fps · Cartoon-Look: ICE mit Glupschaugen, b
 | Hook | Ab Bild 1 Chaos (Martinshorn, Sirenen, rote Strahlen, rennende Menschen) – mittendrin der Zug, eiskalt mit Sonnenbrille und „+0 MIN“; bei „Deutschland“ fällt die Brille, Panik-Augen, zitterndes „PANIK!“; Teaser „WARTE AUF DIE KUH …“ |
 | 6:12 Uhr | Einfahrt auf die Minute + „richtige Wagenreihung“ (Wagen 1-2-3), zwei Stempel |
 | Durchsage | Gong, Bahnhofslautsprecher (Seraphina, blechern mit Hall): „Sehr geehrte Fahrgäste, aufgrund einer unerwarteten Pünktlichkeit kommt es zu erheblichen Verspätungen im gesamten Betriebsablauf.“ – alle starren zum Lautsprecher, Stempel „PÜNKTLICH = VERSPÄTUNG“ |
-| Bahnsteig | Stille (Grillen), Kaffee fällt (Boing) – die Oma (lila Kleid, Dutt, Brille, Perlenohrringe, Handtasche) bekreuzigt sich (Chor, Lichtschein, 🙏), Mann verabschiedet sich von Mama, Rentner weint: „Warte seit 1998 auf Anschluss“ |
-| Nachrichten | EILMELDUNG → Prof. Dr. Gleis: „Systemfehler“ → Vorstand: Untersuchung … und Preiserhöhung (Stempel „PREISE +20 %“, Ka-Ching) |
-| Kassel | Handys filmen, „Das WLAN funktioniert.“ |
+| Bahnsteig | Kaffee fällt (Boing) – die Oma (lila Kleid, Dutt, Brille, Perlenohrringe, Handtasche) bekreuzigt sich (Chor, Lichtschein, 🙏), Mann verabschiedet sich von Mama, Rentner weint: „Warte seit 1998 auf Anschluss“ |
 | Kuh vor Fulda | Western-Duell, gemeinsames Blinzeln, Kuh bekommt Schaffnermütze, zwinkert: „IM AUFTRAG DER BAHN“ |
 | 70 Minuten | Klima ❌ Bistro ❌ WC ❌ – „Endlich fühle ich mich wieder wie ich selbst.“ (Herzchen) |
 | Ende | „PUUUH!“ am Bahnsteig → Vorstandsetage: Kuh im Ledersessel, Chart „Boni ↑ Pünktlichkeit ↓“, Porträt „Mitarbeiterin“, Sonnenbrille fällt bei „Bonus“, Geldstapel → „Eure schlimmste Bahn-Story?“ |
