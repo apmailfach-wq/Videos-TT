@@ -92,7 +92,6 @@ Länge ca. 100 s · 1080×1920 · 30 fps · Cartoon-Look: ICE mit Glupschaugen, 
 | Bahnsteig | Stille (Grillen), Kaffee fällt (Boing) – die Oma (lila Kleid, Dutt, Brille, Perlenohrringe, Handtasche) bekreuzigt sich (Chor, Lichtschein, 🙏), Mann verabschiedet sich von Mama, Rentner weint: „Warte seit 1998 auf Anschluss“ |
 | Nachrichten | EILMELDUNG → Prof. Dr. Gleis: „Systemfehler“ → Vorstand: Untersuchung … und Preiserhöhung (Stempel „PREISE +20 %“, Ka-Ching) |
 | Kassel | Handys filmen, WLAN funktioniert → Exorzist mit Kreuz: „Weiche von ihm, Pünktlichkeit!“ |
-| Kind & Papa | „Ist das ein Zug?“ – „Ich hab noch nie einen fahren sehen.“ |
 | Kuh vor Fulda | Western-Duell, gemeinsames Blinzeln, Kuh bekommt Schaffnermütze, zwinkert: „IM AUFTRAG DER BAHN“ |
 | 70 Minuten | Klima ❌ Bistro ❌ WC ❌ – „Endlich fühle ich mich wieder wie ich selbst.“ (Herzchen) |
 | Ende | „PUUUH!“ am Bahnsteig → Vorstandsetage: Kuh im Ledersessel, Chart „Boni ↑ Pünktlichkeit ↓“, Porträt „Mitarbeiterin“, Sonnenbrille fällt bei „Bonus“, Geldstapel → „Eure schlimmste Bahn-Story?“ + „Folgen für Teil 2“ |

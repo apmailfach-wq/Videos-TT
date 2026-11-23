@@ -1808,9 +1808,6 @@ def build_camera():
          ("kassel", A("kassel", "Leute"), A("kassel", "Das") - 0.05, 540, 1380, 1.12, 0),
          ("kassel", A("kassel", "WLAN") - 0.05, A("kassel", "Jemand") - 0.05, 760, 960, 1.25, 0),
          ("kassel", A("kassel", "Jemand") + 0.4, pe("kassel"), 780, 1120, 1.38, -2),
-         ("kind", SEG["kind"][0] + 0.2, pe("kind"), 420, 1260, 1.4, 0),
-         ("papa", SEG["papa"][0], A("papa", "hab") - 0.05, 700, 1060, 1.35, 0),
-         ("papa", A("papa", "hab") - 0.05, pe("papa"), 700, 1030, 1.75, 3),
          ("kuh", A("kuh", "Kuh") - 0.05, A("kuh", "Sie") - 0.05, 420, 1100, 1.3, 0),
          ("kuh", A("kuh", "Sie") - 0.05, A("kuh", "Ich") - 0.05, 540, 760, 1.5, 0),
          ("kuh", A("kuh", "Ich") - 0.05, A("kuh", "Wir") - 0.05, 540, 1330, 1.5, 0),
@@ -2221,8 +2218,6 @@ def make_audio(path):
     put(news_sting(), SEG["news"][0], 0.9)
     for i in range(6):
         put(shutter(rng), at("kassel", "Leute") + 0.3 + i * 0.27 + 0.05 * (i % 2), 1.0)
-    pe = [w for w in WORDS if w["key"] == "papa"][-1]["e"]
-    put(cricket(SEG["papa"][1] - pe), pe + 0.1, 1.2)
     put(horn(1.2), at("kuh", "Kuh") - 0.2, 0.8)
     put(moo(1.6), at("kuh", "Gleis") + 0.25, 1.0)
     put(standoff(), at("kuh", "Sie") - 0.2, 1.0)
@@ -2240,8 +2235,6 @@ def make_audio(path):
     put(boing(), at("bahnsteig", "fallen") + 0.1, 0.9)
     put(choir(1.9), at("bahnsteig", "fallen") + 0.75, 0.9)
     put(vine_boom(), at("bahnsteig", "weint") - 0.15, 0.8)
-    put(scratch(), SEG["papa"][0] - 0.05, 1.0)
-    put(vine_boom(), at("papa", "hab") - 0.05, 1.0)
     put(slide_whistle(1900, 450, 0.7), at("kuh", "Kuh") - 0.3, 1.0)
     put(vine_boom(), at("kuh", "Sie") - 0.05, 0.8)
     put(vine_boom(), at("kuh", "Ich") - 0.05, 0.8)
@@ -2263,7 +2256,6 @@ def make_audio(path):
     # duck the bed in the silent/comic beats
     gate = np.ones(n)
     for a_, b_ in [(at("bahnsteig", "Stille") + 0.2, at("bahnsteig", "Eine")),
-                   ([w for w in WORDS if w["key"] == "papa"][-1]["e"], SEG["papa"][1]),
                    (at("kuh", "Sie") - 0.2, at("kuh", "glaube") + 1.0),
                    (at("bahnsteig", "weint") - 0.1, at("bahnsteig", "Er")),
                    (SEG["durchsage"][0], SEG["durchsage"][1])]:
