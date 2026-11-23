@@ -88,7 +88,8 @@ Länge ca. 100 s · 1080×1920 · 30 fps · Cartoon-Look: ICE mit Glupschaugen, 
 |---|---|
 | Hook | Stolzer Zug vor grünem Strahlenkranz mit „+0 MIN“-Badge → Umschnitt auf rote Strahlen, Sirenen, rennende Menschen („AAAH!“), zitterndes „PANIK!“-Label |
 | 6:12 Uhr | Einfahrt auf die Minute + „richtige Wagenreihung“ (Wagen 1-2-3), zwei Stempel |
-| Bahnsteig | Stille (Grillen), Kaffee fällt (Boing) – die Frau (rotes Kleid, lange Haare, Wimpern, Ohrringe, Handtasche) bekreuzigt sich (Chor, Lichtschein, 🙏), Mann verabschiedet sich von Mama, Rentner weint: „Warte seit 1998 auf Anschluss“ |
+| Durchsage | Gong, Bahnhofslautsprecher (Seraphina, blechern mit Hall): „Sehr geehrte Fahrgäste, aufgrund einer unerwarteten Pünktlichkeit kommt es zu erheblichen Verspätungen im gesamten Betriebsablauf.“ – alle starren zum Lautsprecher, Stempel „PÜNKTLICH = VERSPÄTUNG“ |
+| Bahnsteig | Stille (Grillen), Kaffee fällt (Boing) – die Oma (lila Kleid, Dutt, Brille, Perlenohrringe, Handtasche) bekreuzigt sich (Chor, Lichtschein, 🙏), Mann verabschiedet sich von Mama, Rentner weint: „Warte seit 1998 auf Anschluss“ |
 | Nachrichten | EILMELDUNG → Prof. Dr. Gleis: „Systemfehler“ → Vorstand: Untersuchung … und Preiserhöhung (Stempel „PREISE +20 %“, Ka-Ching) |
 | Kassel | Handys filmen, WLAN funktioniert → Exorzist mit Kreuz: „Weiche von ihm, Pünktlichkeit!“ |
 | Kind & Papa | „Ist das ein Zug?“ – „Ich hab noch nie einen fahren sehen.“ |

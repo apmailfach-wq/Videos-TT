@@ -93,8 +93,9 @@ BEATS = {("einfahrt", "6 Uhr 12", 0): 0.3, ("einfahrt", "ein", 0): 0.2, ("einfah
          ("warten", "70 Minuten", 0): 0.45, ("warten", "aus", 0): 0.2, ("warten", "geschlossen", 0): 0.2,
          ("warten", "defekt", 0): 0.7,
          ("ende", "auf", 0): 0.35, ("ende", "Kuh", 0): 0.55, ("ende", "Vorstand", 0): 0.3}
+PRE = {"durchsage": 1.5}
 PAD = {"hook": 0.25, "einfahrt": 0.25, "bahnsteig": 0.35, "news": 0.4, "kassel": 0.35,
-       "kind": 0.3, "papa": 1.1, "kuh": 0.5, "warten": 0.6, "ende": 3.2}
+       "kind": 0.3, "papa": 1.1, "durchsage": 0.5, "kuh": 0.5, "warten": 0.6, "ende": 3.2}
 
 
 def norm(w):
@@ -125,6 +126,7 @@ def build_timeline():
             if ex and k + 1 < len(ws):
                 cuts.append(((w["end"] + ws[k + 1]["start"]) / 2, ex))
         start = t
+        t += PRE.get(key, 0.0)
         shift = 0.0
         prev = 0.0
         for c, ex in cuts + [(len(audio) / SR, 0.0)]:
@@ -531,6 +533,17 @@ def person(spec, pose, t=0.0, h=520):
             for sg in (-1, 1):
                 d.ellipse([(hx + sg * 68 - 8) * s, (hy + 20) * s, (hx + sg * 68 + 8) * s, (hy + 36) * s],
                           fill=(255, 205, 60), outline=INK)
+        if style == "oma":
+            d.ellipse([(hx - 36) * s, (hy - 128) * s, (hx + 36) * s, (hy - 60) * s], fill=hair, outline=lcol(hair, INK, 0.3),
+                      width=int(3 * s))
+            d.chord([(hx - 76) * s, (hy - 84) * s, (hx + 76) * s, (hy + 36) * s], 180, 360, fill=hair)
+            for sg in (-1, 1):
+                d.ellipse([(hx + sg * 66 - 22) * s, (hy - 30) * s, (hx + sg * 66 + 22) * s, (hy + 14) * s], fill=hair)
+            d.arc([(hx - 50) * s, (hy - 78) * s, (hx + 30) * s, (hy - 20) * s], 200, 280,
+                  fill=WHITE, width=int(5 * s))
+            for sg in (-1, 1):  # wrinkles
+                d.arc([(hx + sg * 44 - 10) * s, (hy - 2) * s, (hx + sg * 44 + 10) * s, (hy + 14) * s],
+                      90 - sg * 60, 90 + sg * 60, fill=lcol(SKIN, INK, 0.35), width=int(3 * s))
         if style in ("short", "kid"):
             d.chord([(hx - 74) * s, (hy - 82) * s, (hx + 74) * s, (hy + 40) * s], 180, 360, fill=hair)
         if style == "long":
@@ -767,6 +780,9 @@ def board_state(t):
     if k == "einfahrt":
         return dict(time="06:12", delay="+0", dcol=GREEN, blink=False,
                     ticker="Planmäßige Einfahrt. Wir bitten um Ihr Verständnis.")
+    if k == "durchsage":
+        return dict(time="06:12", delay="+0", dcol=GREEN, blink=True,
+                    ticker="+++ Bitte beachten Sie die Lautsprecherdurchsage +++ Bitte beachten Sie die Lautsprecherdurchsage +++")
     if k in ("bahnsteig", "news"):
         return dict(time="06:12", delay="+0", dcol=GREEN, blink=True,
                     ticker="+++ Grund für die Pünktlichkeit: unbekannt +++ Seelsorger sind informiert +++")
@@ -1203,14 +1219,65 @@ def platform_with_train(fr, t, ex, look, x=40):
     train_side(fr, x, train_y(), ex, t, look=look)
 
 
-WOMAN = dict(shirt=(225, 45, 85), pants=(70, 40, 55), hair=(150, 70, 30), style="long", ph=0.6, dress=True,
-             lashes=True, lips=(205, 25, 60), earrings=True, bag=(250, 200, 60), belt=(250, 200, 60))
+WOMAN = dict(shirt=(150, 80, 175), pants=(225, 200, 190), hair=(222, 222, 228), style="oma", ph=0.6, dress=True,
+             lips=(200, 60, 90), earrings=True, bag=(120, 70, 40), belt=(250, 205, 70), glasses=True)
 MAN = dict(shirt=(80, 130, 200), pants=(50, 50, 60), hair=(50, 40, 30), style="bald", ph=1.7)
 MAN2 = dict(shirt=(120, 170, 90), pants=(70, 60, 50), hair=(200, 170, 90), style="short", ph=2.4)
 DAD = dict(shirt=(70, 90, 120), pants=(40, 44, 56), hair=(90, 60, 40), style="short", glasses=True, ph=0.3)
 RENTNER = dict(shirt=(170, 150, 120), pants=(110, 90, 70), hair=(225, 225, 225), style="bald", ph=2.9, glasses=True)
 PRIEST = dict(shirt=(25, 25, 30), pants=(25, 25, 30), hair=(70, 60, 50), style="short", collar=True, ph=0.8)
 KID = dict(shirt=(250, 200, 40), pants=(70, 110, 190), hair=(180, 120, 60), style="kid", ph=1.1)
+
+
+def loudspeaker(frame, x, y, t, talking):
+    d = ImageDraw.Draw(frame)
+    d.rectangle([x - 6, 492, x + 6, y - 20], fill=(80, 88, 100))
+    sp = Image.new("RGBA", (300, 220), (0, 0, 0, 0))
+    sd = ImageDraw.Draw(sp)
+    sd.rounded_rectangle([170, 60, 240, 150], radius=14, fill=(150, 156, 168), outline=INK, width=5)
+    sd.polygon([(175, 70), (40, 20), (40, 190), (175, 140)], fill=(205, 210, 220), outline=INK)
+    sd.line([(175, 70), (40, 20)], fill=INK, width=5)
+    sd.line([(175, 140), (40, 190)], fill=INK, width=5)
+    sd.ellipse([22, 14, 62, 196], fill=(60, 64, 76), outline=INK, width=5)
+    sp = shade3d(sp, 0.6)
+    if talking:
+        sp = sp.rotate(3 * math.sin(t * 30), resample=Image.BICUBIC)
+    paste(frame, sp, x, y)
+    if talking:
+        wl = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        wd = ImageDraw.Draw(wl)
+        for i in range(4):
+            ph = (t * 1.6 + i * 0.25) % 1
+            r = 60 + ph * 320
+            wd.arc([x - 110 - r, y - r * 0.8, x - 110 + r, y + r * 0.8], 120, 240,
+                   fill=(255, 255, 255, int(230 * (1 - ph))), width=10)
+        frame.alpha_composite(wl)
+
+
+def sc_durchsage(fr, t, ts, te):
+    u = t - ts
+    ws = [w for w in WORDS if w["key"] == "durchsage"]
+    talking = ws[0]["s"] - 0.05 <= t <= ws[-1]["e"] + 0.1
+    t_p = at("durchsage", "Pünktlichkeit")
+    t_v = at("durchsage", "Verspätungen")
+    fr.alpha_composite(BG["platform"])
+    ex = "neutral" if t < t_p else ("shy" if t < t_v else "awkward")
+    train_side(fr, 40, train_y(), ex, t, look=(0.9, -0.6))
+    loudspeaker(fr, 830, 650, t, talking)
+    # everyone stares up at the speaker, frozen
+    up = (1, -1)
+    paste(fr, person(MAN2, dict(r=(-30, 0), l=(30, 0), mouth="o", look=up, eye=12), t, h=450), 535, 1520 - 235)
+    paste(fr, person(WOMAN, dict(r=(-20, -110), l=(15, 0), hold="coffee", mouth="o", look=up, eye=12), t, h=520),
+          330, 1520 - 270)
+    paste(fr, person(MAN, dict(r=(-25, 0), l=(25, 0), mouth="o", look=up, eye=12), t, h=500), 720, 1520 - 260)
+    paste(fr, person(RENTNER, dict(r=(-15, 0), l=(25, 10), hold="cane", mouth="o", look=up, lid=0.2, eye=11),
+                     t, h=440), 920, 1520 - 229)
+    if t >= ws[0]["s"] - 0.3:
+        b = boxed("DURCHSAGE", 46, WHITE, RED, rot=-4)
+        paste(OV[0], b, 300, 520 + 6 * math.sin(t * 8), alpha=c01((t - ws[0]["s"] + 0.3) / 0.15))
+    if t >= t_v:
+        st = stamp("PÜNKTLICH = VERSPÄTUNG", RED, 44, rot=6)
+        paste(fr, scaled(st, 1.6 - 0.6 * eo((t - t_v) / 0.18)), W // 2, 880, alpha=c01((t - t_v) / 0.1))
 
 
 def sc_bahnsteig(fr, t, ts, te):
@@ -1709,7 +1776,7 @@ def sc_ende(fr, t, ts, te):
             paste(OV[0], f2, W // 2, 1830, alpha=c01((vv - 0.9) / 0.15))
 
 
-SCENE_FN = {"hook": sc_hook, "einfahrt": sc_einfahrt, "bahnsteig": sc_bahnsteig, "news": sc_news,
+SCENE_FN = {"hook": sc_hook, "einfahrt": sc_einfahrt, "durchsage": sc_durchsage, "bahnsteig": sc_bahnsteig, "news": sc_news,
             "kassel": sc_kassel, "kind": sc_kind, "papa": lambda *a: sc_kind(*a, papa=True), "kuh": sc_kuh,
             "warten": sc_warten, "ende": sc_ende}
 
@@ -1728,6 +1795,9 @@ def build_camera():
     L = [("hook", A("hook", "Panik") - 0.05, pe("hook"), 540, 930, 1.32, -4),
          ("einfahrt", A("einfahrt", "Minute") + 0.05, A("einfahrt", "In") - 0.05, 200, 990, 1.3, 0),
          ("einfahrt", A("einfahrt", "Wagenreihung"), pe("einfahrt"), 700, 1050, 1.15, 0),
+         ("durchsage", at("durchsage", "Sehr") - 0.1, at("durchsage", "aufgrund") - 0.05, 790, 700, 1.35, 0),
+         ("durchsage", at("durchsage", "Pünktlichkeit") - 0.05, at("durchsage", "kommt") - 0.05, 190, 990, 1.45, -3),
+         ("durchsage", at("durchsage", "Verspätungen") - 0.05, pe("durchsage"), 560, 1100, 1.2, 2),
          ("bahnsteig", A("bahnsteig", "fallen") - 0.05, A("bahnsteig", "fallen") + 0.5, 300, 1360, 1.3, 2),
          ("bahnsteig", A("bahnsteig", "fallen") + 0.5, A("bahnsteig", "Ein") - 0.05, WX_W, 1130, 1.6, 0),
          ("bahnsteig", A("bahnsteig", "Mutter") - 0.1, A("bahnsteig", "Ein", 1) - 0.1, 720, 1110, 1.5, 0),
@@ -2100,11 +2170,34 @@ def bed(dur, bpm=100):
     return out
 
 
+def pa_filter(x):
+    """Station loudspeaker: band-limited, a little crunchy, with hall echoes."""
+    hp = x - onepole(x, 380)
+    bp = onepole(hp, 3200)
+    bp = np.tanh(bp * 2.2) / 2.2
+    out = bp.copy()
+    for dly, g in ((0.11, 0.32), (0.23, 0.2), (0.38, 0.12), (0.55, 0.07)):
+        i = int(dly * SR)
+        out[i:] += bp[:-i] * g
+    return out * 1.25
+
+
+def station_gong():
+    out = np.zeros(int(2.6 * SR))
+    for i, f in enumerate((523.25, 659.25, 783.99)):
+        tn = tone(f, 1.8, 0.004, 0.9, harm=(1, .25, .08))
+        o = int(i * 0.42 * SR)
+        out[o:o + len(tn)] += tn * 0.5
+    return out
+
+
 def make_audio(path):
     rng = np.random.default_rng(11)
     n = int((TOTAL + 0.5) * SR)
     voice = np.zeros(n)
-    for _, sig, st in PIECES:
+    for key_, sig, st in PIECES:
+        if key_ == "durchsage":
+            sig = pa_filter(sig.astype(np.float64))
         i = int(st * SR)
         sig = sig[:max(0, n - i)]
         voice[i:i + len(sig)] += sig
@@ -2140,6 +2233,9 @@ def make_audio(path):
         put(tick(), tt, 1.0)
     put(moo(1.2), we - 1.2, 0.6)
     put(tone(1568, 0.5, 0.002, 0.2, harm=(1, .3)) * 0.35, at("einfahrt", "Wagenreihung") + 0.6)
+    put(station_gong(), SEG["durchsage"][0] + 0.05, 1.0)
+    put(np.random.default_rng(5).standard_normal(int(0.25 * SR)) * 0.08, SEG["durchsage"][0] + 1.25, 1.0)
+    put(vine_boom(), at("durchsage", "Verspätungen") - 0.05, 0.7)
     put(sob(rng), at("bahnsteig", "weint") - 0.1, 1.0)
     put(boing(), at("bahnsteig", "fallen") + 0.1, 0.9)
     put(choir(1.9), at("bahnsteig", "fallen") + 0.75, 0.9)
@@ -2169,7 +2265,8 @@ def make_audio(path):
     for a_, b_ in [(at("bahnsteig", "Stille") + 0.2, at("bahnsteig", "Eine")),
                    ([w for w in WORDS if w["key"] == "papa"][-1]["e"], SEG["papa"][1]),
                    (at("kuh", "Sie") - 0.2, at("kuh", "glaube") + 1.0),
-                   (at("bahnsteig", "weint") - 0.1, at("bahnsteig", "Er"))]:
+                   (at("bahnsteig", "weint") - 0.1, at("bahnsteig", "Er")),
+                   (SEG["durchsage"][0], SEG["durchsage"][1])]:
         gate[int(a_ * SR):int(b_ * SR)] = 0
     gate = np.convolve(gate, np.ones(4800) / 4800, mode="same")
     mix = voice + fx * 0.6 + b * gate * 0.22
