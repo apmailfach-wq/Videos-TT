@@ -96,7 +96,7 @@ Länge ca. 100 s · 1080×1920 · 30 fps · Cartoon-Look: ICE mit Glupschaugen, 
 | 70 Minuten | Klima ❌ Bistro ❌ WC ❌ – „Endlich fühle ich mich wieder wie ich selbst.“ (Herzchen) |
 | Ende | „PUUUH!“ am Bahnsteig → Vorstandsetage: Kuh im Ledersessel, Chart „Boni ↑ Pünktlichkeit ↓“, Porträt „Mitarbeiterin“, Sonnenbrille fällt bei „Bonus“, Geldstapel → „Eure schlimmste Bahn-Story?“ + „Folgen für Teil 2“ |
 
-Stimmen (edge-tts): Zug `de-DE-ConradNeural`, Kind `de-DE-KatjaNeural` (hoch gepitcht), Papa `de-DE-KillianNeural` (langsam).
+Stimmen (edge-tts): Zug `de-DE-FlorianMultilingualNeural` (+16 %), Kind `de-DE-KatjaNeural` (hoch gepitcht), Papa `de-DE-KillianNeural` (langsam).
 Comedy-Pausen werden in `render.py` (`BEATS`, `PAD`) direkt in die Tonspur geschnitten.
 
 ```bash

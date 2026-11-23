@@ -1,5 +1,5 @@
 """Der ICE – Satire-Kurzfilm. Der Zug erzählt selbst (deadpan), Kind & Papa als eigene Stimmen."""
-NARR = dict(voice="de-DE-ConradNeural", rate="+15%", pitch="-4Hz")
+NARR = dict(voice="de-DE-FlorianMultilingualNeural", rate="+16%", pitch="+0Hz")
 KID = dict(voice="de-DE-KatjaNeural", rate="+12%", pitch="+55Hz")
 DAD = dict(voice="de-DE-KillianNeural", rate="-6%", pitch="-8Hz")
 
