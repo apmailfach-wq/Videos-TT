@@ -78,23 +78,23 @@ python3 render.py shots        # Schnittliste
 python3 render.py preview 5 30 # Standbilder
 ```
 
-## ice-video.mp4 – „Der ICE“ (Satire-Kurzfilm)
+## ice-video.mp4 – „Der ICE“ (Satire-Kurzfilm, schwarzer Bahn-Humor)
 
 **Hook:** „Heute war ich pünktlich. Deutschland ist in Panik.“ – der ICE erzählt selbst, todernst.
-Länge ca. 66 s · 1080×1920 · 30 fps · Cartoon-Look: ICE mit Glupschaugen, blaue Anzeigetafel oben
+Länge ca. 100 s · 1080×1920 · 30 fps · Cartoon-Look: ICE mit Glupschaugen, blaue Anzeigetafel oben
 (Verspätung grün „+0“ blinkt panisch → rot „+70“ = Ordnung wiederhergestellt), Lauftext-Gags, Wort-für-Wort-Untertitel.
 
-| Szene | Inhalt |
+| Szene | Gag |
 |---|---|
 | Hook | Zug-Gesicht close-up, roter Alarm, Screen-Shake auf „Panik“ |
-| 6:12 Uhr | Bahnhofsuhr springt auf 6:12, Gong, Zug fährt auf die Minute ein, Stempel „AUF DIE MINUTE“ |
-| Bahnsteig | Stille (Grillen), Kaffee fällt, Mann ruft Mama an |
-| Nachrichten | „EILMELDUNG“, Prof. Dr. Gleis: „Ein Systemfehler.“ |
-| Kassel | Schild Kassel-Wilhelmshöhe, Handys filmen, Blitzlichter |
-| Kind & Papa | eigene Stimmen, Sprechblasen, Grillen-Pause |
-| Kuh vor Fulda | Bremsfunken, Muh, Western-Duell im Splitscreen, gemeinsames Blinzeln 🤝 |
-| 70 Minuten | Zeitraffer, Zähler +0 → +70, Kuh schläft |
-| Ende | „Ordnung wiederhergestellt“, alle atmen auf, Kommentar-Frage „Was war eure längste Verspätung?“ |
+| 6:12 Uhr | Einfahrt auf die Minute + „richtige Wagenreihung“ (Wagen 1-2-3), zwei Stempel |
+| Bahnsteig | Stille (Grillen), Kaffee fällt, Mann verabschiedet sich von Mama, Rentner weint: „Warte seit 1998 auf Anschluss“ |
+| Nachrichten | EILMELDUNG → Prof. Dr. Gleis: „Systemfehler“ → Vorstand: Untersuchung … und Preiserhöhung (Stempel „PREISE +20 %“, Ka-Ching) |
+| Kassel | Handys filmen, WLAN funktioniert → Exorzist mit Kreuz: „Weiche von ihm, Pünktlichkeit!“ |
+| Kind & Papa | „Ist das ein Zug?“ – „Ich hab noch nie einen fahren sehen.“ |
+| Kuh vor Fulda | Western-Duell, gemeinsames Blinzeln, Kuh bekommt Schaffnermütze, zwinkert: „IM AUFTRAG DER BAHN“ |
+| 70 Minuten | Klima ❌ Bistro ❌ WC ❌ – „Endlich fühle ich mich wieder wie ich selbst.“ (Herzchen) |
+| Ende | Ordnung wiederhergestellt → Kuh sitzt im Vorstand, Geldregen, „BONUS“ → Frage „Eure schlimmste Bahn-Story?“ |
 
 Stimmen (edge-tts): Zug `de-DE-ConradNeural`, Kind `de-DE-KatjaNeural` (hoch gepitcht), Papa `de-DE-KillianNeural` (langsam).
 Comedy-Pausen werden in `render.py` (`BEATS`, `PAD`) direkt in die Tonspur geschnitten.

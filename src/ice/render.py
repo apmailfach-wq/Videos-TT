@@ -83,13 +83,18 @@ def lcol(a, b, t):
 
 # ================================================================== timeline
 # extra silence (s) after a given word (scene, word, occurrence) -> comedy timing
-BEATS = {("einfahrt", "6 Uhr 12", 0): 0.35, ("einfahrt", "ein", 0): 0.25,
-         ("bahnsteig", "Stille", 0): 1.0, ("bahnsteig", "fallen", 0): 0.35,
-         ("news", "Programm", 0): 0.35,
-         ("kassel", "pünktlich", 0): 0.3,
-         ("kuh", "Gleis", 0): 0.7, ("kuh", "an", 0): 0.55, ("kuh", "an", 1): 0.7}
-PAD = {"hook": 0.3, "einfahrt": 0.3, "bahnsteig": 0.45, "news": 0.45, "kassel": 0.35,
-       "kind": 0.35, "papa": 1.4, "kuh": 1.2, "warten": 2.7, "ende": 3.4}
+BEATS = {("einfahrt", "6 Uhr 12", 0): 0.3, ("einfahrt", "ein", 0): 0.2, ("einfahrt", "Minute", 0): 0.35,
+         ("bahnsteig", "Stille", 0): 0.9, ("bahnsteig", "fallen", 0): 0.25, ("bahnsteig", "verabschieden", 0): 0.3,
+         ("bahnsteig", "weint", 0): 0.45,
+         ("news", "Programm", 0): 0.3, ("news", "Systemfehler", 0): 0.2, ("news", "an", 0): 0.55,
+         ("kassel", "pünktlich", 0): 0.25, ("kassel", "mich", 0): 0.2, ("kassel", "funktioniert", 0): 0.55,
+         ("papa", "Sohn", 0): 0.5,
+         ("kuh", "Gleis", 0): 0.6, ("kuh", "an", 0): 0.5, ("kuh", "an", 1): 0.6, ("kuh", "uns", 0): 0.8,
+         ("warten", "70 Minuten", 0): 0.45, ("warten", "aus", 0): 0.2, ("warten", "geschlossen", 0): 0.2,
+         ("warten", "defekt", 0): 0.7,
+         ("ende", "auf", 0): 0.35, ("ende", "Kuh", 0): 0.55, ("ende", "Vorstand", 0): 0.3}
+PAD = {"hook": 0.25, "einfahrt": 0.25, "bahnsteig": 0.35, "news": 0.4, "kassel": 0.35,
+       "kind": 0.3, "papa": 1.1, "kuh": 0.5, "warten": 0.6, "ende": 3.2}
 
 
 def norm(w):
@@ -472,6 +477,22 @@ def person(spec, pose, t=0.0, h=520):
         if pose.get("hold") == "coffee":
             x, y = hands["r"]
             cup(d, x, y - 10, s)
+        if pose.get("tears"):
+            for k_, ex_ in enumerate((-28, 28)):
+                yy = hy + 22 + ((t * 2.2 + k_ * 0.5) % 1) * 70
+                d.ellipse([(hx + ex_ - 8) * s, (yy - 10) * s, (hx + ex_ + 8) * s, (yy + 12) * s],
+                          fill=(90, 170, 255))
+        if spec.get("collar"):
+            d.rectangle([(cx - 14) * s, 182 * s, (cx + 14) * s, 200 * s], fill=WHITE)
+        if pose.get("hold") == "cane":
+            x, y = hands["l"]
+            d.line([x * s, y * s, (x + 10) * s, 505 * s], fill=(120, 80, 40), width=int(12 * s))
+            d.arc([(x - 30) * s, (y - 22) * s, (x + 6) * s, (y + 14) * s], 180, 360, fill=(120, 80, 40),
+                  width=int(12 * s))
+        if pose.get("hold") == "cross":
+            x, y = hands["r"]
+            d.rectangle([(x - 7) * s, (y - 90) * s, (x + 7) * s, (y + 10) * s], fill=(230, 190, 60))
+            d.rectangle([(x - 32) * s, (y - 66) * s, (x + 32) * s, (y - 52) * s], fill=(230, 190, 60))
         if pose.get("hold") == "phone":
             x, y = hands["l"]
             d.rounded_rectangle([(x - 20) * s, (y - 46) * s, (x + 18) * s, (y + 22) * s], radius=8 * s, fill=INK)
@@ -491,7 +512,7 @@ def cup(d, x, y, s, ang=0):
 
 
 # ------------------------------------------------------------------ cow
-def cow_face(t, look=(0, 0), lid=0.3, chew=0.0, scale=1.0, extra_lid=0.0):
+def cow_face(t, look=(0, 0), lid=0.3, chew=0.0, scale=1.0, extra_lid=0.0, cap=False, wink=False):
     def fn(d, s):
         s *= scale
         # horns + ears
@@ -508,7 +529,11 @@ def cow_face(t, look=(0, 0), lid=0.3, chew=0.0, scale=1.0, extra_lid=0.0):
         d.chord([140 * s, 90 * s, 460 * s, 180 * s], 180, 360, fill=INK)
         ll = max(lid, blink(t, 4.6, 1.3), extra_lid)
         eye(d, 235, 265, 50, 52, look, ll, s, lid_col=(250, 250, 250))
-        eye(d, 365, 265, 50, 52, look, ll, s, lid_col=(250, 250, 250))
+        eye(d, 365, 265, 50, 52, look, 1.0 if wink else ll, s, lid_col=(250, 250, 250))
+        if cap:
+            d.chord([170 * s, 30 * s, 430 * s, 210 * s], 180, 360, fill=RED, outline=INK, width=int(4 * s))
+            d.rounded_rectangle([150 * s, 108 * s, 470 * s, 140 * s], radius=14 * s, fill=(40, 40, 50))
+            d.ellipse([280 * s, 60 * s, 320 * s, 100 * s], fill=YEL, outline=INK, width=int(3 * s))
         jaw = 8 * math.sin(chew * 2 * math.pi)
         d.rounded_rectangle([170 * s, (380 + jaw * 0.3) * s, 430 * s, (540 + jaw) * s], radius=80 * s,
                             fill=(250, 175, 185), outline=INK, width=int(4 * s))
@@ -642,20 +667,22 @@ def board_state(t):
                     ticker="Planmäßige Einfahrt. Wir bitten um Ihr Verständnis.")
     if k in ("bahnsteig", "news"):
         return dict(time="06:12", delay="+0", dcol=GREEN, blink=True,
-                    ticker="+++ Grund für die Pünktlichkeit: unbekannt +++ Behörden ermitteln +++")
+                    ticker="+++ Grund für die Pünktlichkeit: unbekannt +++ Seelsorger sind informiert +++")
     if k in ("kassel", "kind", "papa"):
         return dict(time="07:41", delay="+0", dcol=GREEN, blink=True,
-                    ticker="Kassel-Wilhelmshöhe: pünktlich. Schon wieder. +++ Bitte nicht in Panik verfallen +++")
+                    ticker="Kassel-Wilhelmshöhe: pünktlich. Schon wieder. +++ WLAN verfügbar (kein Witz) +++")
     if k == "kuh":
         return dict(time="08:19", delay="?", dcol=YEL, blink=True,
-                    ticker="Verzögerung wegen Tier im Gleis. Wir danken für Ihr Verständnis.")
+                    ticker="Verzögerung wegen Tier im Gleis (Kollegin). Wir danken für Ihr Verständnis.")
     if k == "warten":
         u = eio((t - (SEG["warten"][0] + 0.3)) / (SEG["warten"][1] - SEG["warten"][0] - 0.6))
         return dict(time="08:19", delay=f"+{int(round(70 * u))}", dcol=RED, blink=False,
-                    ticker="Verzögerung ca. 70 Minuten. Vielen Dank, dass Sie mit uns warten.")
+                    ticker="Klimaanlage: aus · Bistro: zu · WC: defekt · Alles wie immer. Danke für Ihre Geduld.")
+    if t >= at("ende", "Kuh") - 0.1:
+        return dict(time="08:19", delay="+70", dcol=RED, blink=True,
+                    ticker="+++ Neu im Vorstand: Kuh +++ Bonus: ausgezahlt +++ Ticketpreise: steigen +++")
     return dict(time="08:19", delay="+70", dcol=RED, blink=True,
                 ticker="+++ Alles wieder normal +++ Wir wünschen eine gute Fahrt +++")
-
 
 def draw_board(frame, t, y=70, punch=1.0):
     st = board_state(t)
@@ -927,12 +954,11 @@ def sc_einfahrt(fr, t, ts, te):
     fr.alpha_composite(BG["platform"])
     t12 = at("einfahrt", "6 Uhr 12")
     tmin = at("einfahrt", "Minute")
-    # clock: second hand sweeps to 12 exactly at "12"
-    sec = 60 - max(0.0, (t12 + 0.25 - t)) * 6 if t < t12 + 0.25 else 0
-    mm = 11 if t < t12 + 0.25 else 12
+    twr = at("einfahrt", "Wagenreihung")
+    sec = 60 - max(0.0, (t12 + 0.6 - t)) * 6 if t < t12 + 0.6 else 0
+    mm = 11 if t < t12 + 0.6 else 12
     clk = station_clock(6, mm, sec % 60, r=150)
     paste(fr, shadowed(clk), 250, 760)
-    # train slides in from the right, stops at x=40 exactly at "Minute"
     tin = at("einfahrt", "fahre") - 0.3
     p = eo((t - tin) / (tmin + 0.15 - tin))
     x = lerp(W + 50, 40, p)
@@ -945,10 +971,20 @@ def sc_einfahrt(fr, t, ts, te):
             yy = 900 + i * 55
             sd.line([x + 380 + i * 60, yy, x + 700 + i * 60, yy], fill=(255, 255, 255, 160), width=6)
         fr.alpha_composite(sp)
-    if t >= tmin + 0.1:
-        v = t - (tmin + 0.1)
-        st = stamp("AUF DIE MINUTE ✓" if False else "AUF DIE MINUTE", GREEN, 60)
-        paste(fr, scaled(st, 1.6 - 0.6 * eo(v / 0.18)), 690, 720, alpha=c01(v / 0.1))
+    # coach numbers 1-2-3 in the right order
+    if t >= twr - 0.1:
+        v = t - (twr - 0.1)
+        d = ImageDraw.Draw(fr)
+        for i, n in enumerate(("1", "2", "3")):
+            if v > i * 0.15:
+                cx = 520 + i * 200
+                d.rounded_rectangle([cx - 46, 1080, cx + 46, 1170], radius=12, fill=WHITE, outline=INK, width=5)
+                text_center(d, cx, 1088, n, font(F_HEAD, 58), BOARD)
+    for i, (tt, txt, yy) in enumerate([(tmin + 0.1, "AUF DIE MINUTE", 690), (twr + 0.6, "RICHTIGE WAGENREIHUNG", 560)]):
+        if t >= tt:
+            v = t - tt
+            st = stamp(txt, GREEN, 54 if i == 0 else 46, rot=-8 + i * 12)
+            paste(fr, scaled(st, 1.6 - 0.6 * eo(v / 0.18)), 690 if i == 0 else 600, yy, alpha=c01(v / 0.1))
 
 
 def platform_with_train(fr, t, ex, look, x=40):
@@ -960,67 +996,83 @@ WOMAN = dict(shirt=(230, 120, 60), pants=(60, 64, 90), hair=(120, 70, 40), style
 MAN = dict(shirt=(80, 130, 200), pants=(50, 50, 60), hair=(50, 40, 30), style="bald", ph=1.7)
 MAN2 = dict(shirt=(120, 170, 90), pants=(70, 60, 50), hair=(200, 170, 90), style="short", ph=2.4)
 DAD = dict(shirt=(70, 90, 120), pants=(40, 44, 56), hair=(90, 60, 40), style="short", glasses=True, ph=0.3)
+RENTNER = dict(shirt=(170, 150, 120), pants=(110, 90, 70), hair=(225, 225, 225), style="bald", ph=2.9, glasses=True)
+PRIEST = dict(shirt=(25, 25, 30), pants=(25, 25, 30), hair=(70, 60, 50), style="short", collar=True, ph=0.8)
 KID = dict(shirt=(250, 200, 40), pants=(70, 110, 190), hair=(180, 120, 60), style="kid", ph=1.1)
 
 
 def sc_bahnsteig(fr, t, ts, te):
-    u = t - ts
     t_still = at("bahnsteig", "Stille")
-    t_frau = at("bahnsteig", "Frau")
+    t_frau = at("bahnsteig", "Eine")
     t_fall = at("bahnsteig", "fallen")
-    t_mann = at("bahnsteig", "Mann")
     t_mut = at("bahnsteig", "Mutter")
+    t_rent = at("bahnsteig", "Rentner")
+    t_seit = at("bahnsteig", "seit")
     platform_with_train(fr, t, "proud" if t < t_fall else "awkward", (0.6, 0.5))
     shock = t > t_still
     still_mode = t_still < t < t_frau
     if still_mode:
-        gray = Image.new("RGBA", (W, H), (20, 25, 40, 70))
-        fr.alpha_composite(gray)
-    # woman with coffee (left), man (right), bystander (center)
+        fr.alpha_composite(Image.new("RGBA", (W, H), (20, 25, 40, 70)))
+    WX = 330
     pw = dict(r=(-20, -110) if t < t_fall else (-60, -20), l=(15, 0), hold="coffee" if t < t_fall else None,
               mouth="o" if shock else "smile", look=(-0.5, -0.3), eye=12 if shock else 9)
-    paste(fr, person(WOMAN, pw, t), 430, 1520 - 270, center=True)
+    paste(fr, person(WOMAN, pw, t, h=500), WX, 1520 - 260, center=True)
     pm2 = dict(r=(-30, 0), l=(30, 0), mouth="o" if shock else "flat", look=(-0.8, -0.3), eye=12 if shock else 9)
-    paste(fr, person(MAN2, pm2, t, h=470), 660, 1520 - 245, center=True)
+    paste(fr, person(MAN2, pm2, t, h=450), 520, 1520 - 235, center=True)
     phone = t >= t_mut - 0.4
     pm = dict(r=(-25, 0), l=(150, 175) if phone else (25, 0), hold="phone" if phone else None,
               mouth="wavy" if phone else ("o" if shock else "flat"), look=(-0.8, -0.3), tilt=-10 if phone else 0,
               eye=12 if shock and not phone else 9, lid=0.5 if phone else 0)
-    paste(fr, person(MAN, pm, t), 900, 1520 - 270, center=True)
-    # falling cup
+    paste(fr, person(MAN, pm, t, h=500), 720, 1520 - 260, center=True)
+    crying = t >= t_rent
+    pr = dict(r=(-160, -40) if crying else (-15, 0), l=(25, 10), hold="cane", mouth="frown" if crying else "flat",
+              look=(-0.8, -0.2), lid=0.55, tears=crying, tilt=-8 if crying else 0)
+    paste(fr, person(RENTNER, pr, t, h=440), 920, 1520 - 229, center=True)
     if t >= t_fall:
         v = t - t_fall
+        cx0 = WX - 70
         if v < 0.45:
             cl = Image.new("RGBA", (200, 200), (0, 0, 0, 0))
             cup(ImageDraw.Draw(cl), 100, 100, 1, ang=v * 9)
-            paste(fr, cl, 360 - v * 40, 1180 + 900 * v * v)
+            paste(fr, cl, cx0 - v * 40, 1190 + 900 * v * v)
         else:
             sp = Image.new("RGBA", (W, H), (0, 0, 0, 0))
             sd = ImageDraw.Draw(sp)
             g = eo((v - 0.45) / 0.25)
-            sd.ellipse([350 - 110 * g, 1500 - 18 * g, 350 + 110 * g, 1500 + 22 * g], fill=(120, 75, 40))
+            sd.ellipse([cx0 - 110 * g, 1500 - 18 * g, cx0 + 110 * g, 1500 + 22 * g], fill=(120, 75, 40))
             for k in range(7):
                 ang = math.pi + k * math.pi / 6
                 rr_ = 60 + 90 * g
-                sd.ellipse([350 + math.cos(ang) * rr_ - 9, 1500 + math.sin(ang) * rr_ * 0.6 - 9,
-                            350 + math.cos(ang) * rr_ + 9, 1500 + math.sin(ang) * rr_ * 0.6 + 9],
+                sd.ellipse([cx0 + math.cos(ang) * rr_ - 9, 1500 + math.sin(ang) * rr_ * 0.6 - 9,
+                            cx0 + math.cos(ang) * rr_ + 9, 1500 + math.sin(ang) * rr_ * 0.6 + 9],
                            fill=(120, 75, 40, int(255 * (1 - c01((v - 0.6) / 0.6)))))
             fr.alpha_composite(sp)
             cl = Image.new("RGBA", (200, 200), (0, 0, 0, 0))
             cup(ImageDraw.Draw(cl), 100, 100, 1, ang=1.57)
-            paste(fr, cl, 440, 1480)
+            paste(fr, cl, cx0 + 90, 1480)
     if still_mode:
-        b = bubble("…", w=300, fsize=110)
-        paste(fr, b, 540, 820, alpha=c01((t - t_still) / 0.15))
-    if t >= t_mut - 0.2:
-        b = bubble("Mama … ich hab dich lieb. Es ist so weit.", w=600, fsize=58)
-        paste(fr, b, 720, 770, alpha=c01((t - t_mut + 0.2) / 0.15))
+        paste(fr, bubble("…", w=300, fsize=110), 540, 820, alpha=c01((t - t_still) / 0.15))
+    if t_mut - 0.2 <= t < t_rent:
+        b = bubble("Mama … ich hab dich lieb. Er ist pünktlich.", w=600, fsize=56)
+        paste(fr, b, 680, 770, alpha=c01((t - t_mut + 0.2) / 0.15))
+    if t >= t_seit - 0.1:
+        v = t - (t_seit - 0.1)
+        sg = Image.new("RGBA", (420, 230), (0, 0, 0, 0))
+        d = ImageDraw.Draw(sg)
+        d.rounded_rectangle([10, 10, 410, 220], radius=10, fill=(250, 245, 225), outline=INK, width=6)
+        text_center(d, 210, 22, "WARTE SEIT", font(F_HEAD, 40), INK)
+        text_center(d, 210, 80, "1998", font(F_HEAD, 86), RED)
+        text_center(d, 210, 176, "auf Anschluss", font(F_HAND, 40), INK)
+        sg = sg.rotate(6, expand=True, resample=Image.BICUBIC)
+        paste(fr, shadowed(sg), 800, 760 - 30 * (1 - eback(v / 0.3)), alpha=c01(v / 0.12))
 
 
 def sc_news(fr, t, ts, te):
     u = t - ts
     fr.alpha_composite(BG["news"])
     t_exp = at("news", "Experten")
+    t_vor = at("news", "Der")
+    t_preis = at("news", "Preiserhöhung")
     tvw, tvh = 980, 700
     tv = Image.new("RGBA", (tvw, tvh), (0, 0, 0, 0))
     d = ImageDraw.Draw(tv)
@@ -1030,51 +1082,73 @@ def sc_news(fr, t, ts, te):
     for i in range(0, tvw, 60):
         sd.line([i, 0, i - 200, tvh], fill=(40, 85, 170), width=2)
     if t < t_exp:
-        # live picture of the punctual train
         mini = Image.new("RGBA", scr.size, (0, 0, 0, 0))
         train_side(mini, 90, 120, "proud", t, look=(-0.5, 0.2), sc=0.62)
         scr.alpha_composite(mini)
         sd.rectangle([0, 390, scr.width, 410], fill=(150, 160, 170))
         sd.rounded_rectangle([30, 30, 190, 80], radius=8, fill=RED)
         sd.text((52, 36), "LIVE", font=font(F_BODY_X, 36), fill=WHITE)
-    else:
+        lt = "ICE 572 KOMMT PÜNKTLICH AN"
+    elif t < t_vor:
         ex = person(dict(shirt=(60, 60, 70), tie=RED, hair=(200, 200, 200), style="bald", glasses=True, ph=0.2),
                     dict(r=(-160, -60), l=(10, 0), mouth="o" if (t * 3) % 1 < 0.5 else "flat",
                          look=(0, 0)), t, h=760)
         scr.alpha_composite(ex.crop((0, 0, ex.width, min(ex.height, scr.height - 40))), (300, 40))
-        # chart
         sd.rounded_rectangle([40, 70, 300, 330], radius=14, fill=WHITE)
         pts = [(60, 300), (100, 290), (140, 296), (180, 292), (220, 298), (250, 120), (280, 90)]
         sd.line(pts, fill=RED, width=7, joint="curve")
         sd.text((58, 82), "Pünktlichkeit", font=font(F_BODY_X, 26), fill=INK)
         sd.text((240, 130), "?!", font=font(F_HEAD, 40), fill=RED)
-    # breaking banner + lower third
+        lt = "Prof. Dr. Gleis: „Ein Systemfehler.“"
+    else:
+        # board member in front of a money chart
+        sd.rounded_rectangle([560, 60, 880, 330], radius=14, fill=WHITE)
+        sd.text((580, 72), "Ticketpreise", font=font(F_BODY_X, 26), fill=INK)
+        for i, hgt in enumerate((60, 90, 130, 180, 240)):
+            sd.rectangle([590 + i * 56, 310 - hgt, 630 + i * 56, 310], fill=GREEN if i < 4 else RED)
+        ex = person(dict(shirt=(30, 30, 40), tie=(200, 170, 40), hair=(60, 50, 40), style="short", ph=0.9),
+                    dict(r=(-30, 0), l=(30, 0), mouth="smile", look=(0.3, 0), lid=0.35), t, h=760)
+        scr.alpha_composite(ex.crop((0, 0, ex.width, min(ex.height, scr.height - 40))), (120, 40))
+        lt = "Vorstand: „Wir untersuchen das.“" if t < t_preis - 0.2 else "+++ Untersuchung + Preiserhöhung +++"
     sd.rectangle([0, 450, scr.width, 520], fill=RED)
     sd.text((24, 458), "EILMELDUNG", font=font(F_HEAD, 46), fill=WHITE)
     sd.rectangle([0, 520, scr.width, 580], fill=WHITE)
-    lt = "ICE 572 KOMMT PÜNKTLICH AN" if t < t_exp else "Prof. Dr. Gleis: „Ein Systemfehler.“"
     sd.text((24, 530), lt, font=font(F_BODY_X, 38), fill=INK)
     sd.rectangle([0, 580, scr.width, 640], fill=(10, 20, 40))
-    tick = "+++ Bahnsteig in Schockstarre +++ Kaffeeumsatz bricht ein +++ Krisenstab tagt +++ "
+    tick_ = "+++ Bahnsteig in Schockstarre +++ Kaffeeumsatz bricht ein +++ Krisenstab tagt +++ "
     f = font(F_BODY_X, 32)
-    tw = f.getlength(tick)
+    tw = f.getlength(tick_)
     x = -((t * 200) % tw)
     while x < scr.width:
-        sd.text((x, 592), tick, font=f, fill=YEL)
+        sd.text((x, 592), tick_, font=f, fill=YEL)
         x += tw
     tv.alpha_composite(scr, (30, 30))
     zoom = 1.0 + 0.05 * eio(u / (te - ts))
     paste(fr, shadowed(scaled(tv, zoom), dy=20, blur=30, a=0.6), W // 2, 920)
-    # interrupting "jingle" flash
+    if t >= t_preis:
+        v = t - t_preis
+        st = stamp("PREISE +20 %", RED, 70, rot=-10)
+        paste(fr, scaled(st, 1.7 - 0.7 * eo(v / 0.18)), W // 2 + 120, 760, alpha=c01(v / 0.08))
     if u < 0.25:
         fr.alpha_composite(Image.new("RGBA", (W, H), (255, 255, 255, int(200 * (1 - u / 0.25)))))
 
 
+def wifi_icon(sz=260):
+    def fn(d, s):
+        c = sz / 2
+        d.ellipse([0, 0, sz * s, sz * s], fill=WHITE, outline=INK, width=int(8 * s))
+        for i, r in enumerate((95, 68, 41)):
+            d.arc([(c - r) * s, (c - r + 40) * s, (c + r) * s, (c + r + 40) * s], 225, 315, fill=BOARD,
+                  width=int(18 * s))
+        d.ellipse([(c - 13) * s, (c + 60) * s, (c + 13) * s, (c + 86) * s], fill=BOARD)
+    return patch(sz, sz, fn)
+
+
 def sc_kassel(fr, t, ts, te):
-    u = t - ts
     t_film = at("kassel", "Leute")
+    t_wlan = at("kassel", "WLAN")
+    t_exo = at("kassel", "Jemand")
     platform_with_train(fr, t, "shy" if t > t_film else "proud", (0.6, 0.6))
-    # station sign
     sg = Image.new("RGBA", (760, 120), (0, 0, 0, 0))
     d = ImageDraw.Draw(sg)
     d.rounded_rectangle([0, 0, 760, 120], radius=14, fill=BOARD, outline=WHITE, width=6)
@@ -1084,12 +1158,32 @@ def sc_kassel(fr, t, ts, te):
     paste(fr, shadowed(sg), W // 2, 640)
     if t > t_film - 0.2:
         v = t - (t_film - 0.2)
+        down = eio((t - t_exo) / 0.4) if t > t_exo else 0
         for i, (px, delay, rot) in enumerate([(170, 0.0, 8), (420, 0.12, -4), (680, 0.06, 5), (930, 0.2, -9)]):
             p = eo((v - delay) / 0.35)
             ph = phone_hand(t + i * 0.3, sc=1.0).rotate(rot, expand=True, resample=Image.BICUBIC)
-            paste(fr, ph, px, lerp(2100, 1560 + (i % 2) * 70, p))
+            paste(fr, ph, px, lerp(2100, 1560 + (i % 2) * 70, p) + 600 * down)
         for i, (fx, fy, ft) in enumerate([(300, 900, 0.3), (780, 980, 0.6), (520, 860, 0.95), (880, 820, 1.3)]):
             flash(fr, fx, fy, 1 - c01((v - ft) / 0.15) if v >= ft else 0)
+    if t_wlan - 0.1 <= t < t_exo + 0.3:
+        v = t - (t_wlan - 0.1)
+        wi = wifi_icon()
+        paste(fr, shadowed(scaled(wi, 0.5 + 0.5 * eback(v / 0.3))), 760, 900)
+        if v > 0.5:
+            st = stamp("VERBUNDEN", GREEN, 46, rot=-8)
+            paste(fr, st, 760, 1070, alpha=c01((v - 0.5) / 0.1))
+    if t >= t_exo:
+        v = t - t_exo
+        holy = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        hd = ImageDraw.Draw(holy)
+        px = lerp(1250, 780, eo(v / 0.9))
+        hd.polygon([(px - 40, 420), (px + 40, 420), (px + 260, 1500), (px - 260, 1500)], fill=(255, 245, 180, 90))
+        fr.alpha_composite(holy.filter(ImageFilter.GaussianBlur(20)))
+        pp = dict(r=(-170, 0), l=(20, 0), hold="cross", mouth="o", look=(-1, 0), eye=11)
+        paste(fr, person(PRIEST, pp, t, h=540), px, 1520 - 281)
+        if v > 0.8:
+            b = bubble("Weiche von ihm, Pünktlichkeit!", w=560, fsize=54)
+            paste(fr, b, 560, 860, alpha=c01((v - 0.8) / 0.12))
 
 
 def sc_kind(fr, t, ts, te, papa=False):
@@ -1110,7 +1204,9 @@ def sc_kind(fr, t, ts, te, papa=False):
         paste(fr, b, 470, 1700 - 60 + 0 * u, alpha=c01(u / 0.12))
     else:
         v = t - SEG["papa"][0]
-        b = bubble("Ich … weiß es nicht, mein Sohn.", w=700, fsize=70)
+        t_hab = at("papa", "hab")
+        txt = "Ich … weiß es nicht, mein Sohn." if t < t_hab else "Ich hab noch nie einen fahren sehen."
+        b = bubble(txt, w=760, fsize=66)
         paste(fr, b, 560, 1700 - 60, alpha=c01(v / 0.12))
         if dad_think:
             q = font(F_HEAD, 80)
@@ -1152,7 +1248,10 @@ def sc_kuh(fr, t, ts, te):
     if wir:
         lidc = c01(math.sin(c01((t - t_wir - 0.4) / 1.1) * math.pi))  # slow, mutual blink
     top_z = 1.0 + 0.12 * eio(v / 2.5)
-    cf = cow_face(t, look=(0, 0.25), lid=0.45, chew=t * 1.4, scale=1.15 * top_z, extra_lid=lidc)
+    t_gl = at("kuh", "glaube")
+    sent = t >= t_gl
+    cf = cow_face(t, look=(0.6, 0.1) if sent else (0, 0.25), lid=0.45, chew=t * 1.4, scale=1.15 * top_z,
+                  extra_lid=lidc, cap=sent, wink=sent and t > t_gl + 0.6)
     tf = train_front("stare" if not wir else "calm", t, look=(0, -0.2), extra_lid=lidc,
                      scale=1.0 * (1.0 + 0.12 * eio((t - t_ich) / 2.5)) if t >= t_ich else 1.0)
     top = Image.new("RGBA", (W, 620), (0, 0, 0, 0))
@@ -1169,16 +1268,18 @@ def sc_kuh(fr, t, ts, te):
     if wir and t > t_wir + 0.5:
         h = emoji("🤝", int(150 * eback((t - t_wir - 0.5) / 0.3)))
         paste(fr, h, W // 2 + 330, 1075)
+    if sent:
+        v = t - t_gl
+        st = stamp("IM AUFTRAG DER BAHN", RED, 44, rot=8)
+        paste(fr, scaled(st, 1.6 - 0.6 * eo(v / 0.18)), W // 2 - 60, 1010, alpha=c01(v / 0.1))
 
 
 def sc_warten(fr, t, ts, te):
     u = t - ts
     dur = te - ts
-    # time-lapse sky: day passes quickly
     k = c01(u / dur)
     fr.alpha_composite(BG["country"])
-    sky = Image.new("RGBA", (W, H), (255, 140, 60, int(80 * math.sin(k * math.pi))))
-    fr.alpha_composite(sky)
+    fr.alpha_composite(Image.new("RGBA", (W, H), (255, 140, 60, int(80 * math.sin(k * math.pi)))))
     d = ImageDraw.Draw(fr)
     sx = lerp(150, 950, k)
     sy = 700 - 180 * math.sin(k * math.pi)
@@ -1188,52 +1289,120 @@ def sc_warten(fr, t, ts, te):
         d.ellipse([cx - 110, 560 + i * 90, cx + 110, 640 + i * 90], fill=(255, 255, 255, 230))
         d.ellipse([cx - 50, 520 + i * 90, cx + 70, 610 + i * 90], fill=(255, 255, 255, 230))
     paste(fr, cow_side(t, lying=True, look=(1, -0.2), chew=t * 1.6), 330, RAIL_Y - 150)
-    train_side(fr, 560, train_y(), "calm", t, look=(-0.8, 0.4))
-    clk = station_clock(8, int(19 + 70 * eio(u / dur)) % 60, (u * 400) % 60, r=110)
-    hh = 8 + (19 + 70 * eio(u / dur)) // 60
-    clk = station_clock(int(hh), (19 + 70 * eio(u / dur)) % 60, (u * 400) % 60, r=110)
-    paste(fr, shadowed(clk), 180, 610)
-    # big delay counter
+    t_end = at("warten", "Endlich")
+    train_side(fr, 560, train_y(), "happy" if t >= t_end + 0.3 else "calm", t, look=(-0.8, 0.4))
+    mins = 19 + 70 * eio(u / dur)
+    clk = station_clock(int(8 + mins // 60), mins % 60, (u * 400) % 60, r=95)
+    paste(fr, shadowed(clk), 150, 530)
     dl = int(round(70 * eio((u - 0.3) / (dur - 0.6))))
-    big = headline([f"+{dl} MIN"], size=120, cols=[(255, 60, 60)])
-    paste(fr, scaled(big, 1.0 + 0.04 * math.sin(u * 20) * (dl < 70)), 640, 640)
+    big = headline([f"+{dl} MIN"], size=110, cols=[(255, 60, 60)])
+    paste(fr, scaled(big, 1.0 + 0.04 * math.sin(u * 20) * (dl < 70)), 640, 530)
+    # broken-things cards
+    items = [("❄️", "KLIMA", "Klimaanlage", "aus"), ("☕", "BISTRO", "Bistro", "geschlossen"),
+             ("🚽", "WC", "Toilette", "defekt")]
+    for i, (em, lab, w_in, w_x) in enumerate(items):
+        ti, tx = at("warten", w_in), at("warten", w_x)
+        if t < ti:
+            continue
+        v = t - ti
+        cw, ch = 290, 230
+
+        def fn(dd, s, em=em, lab=lab):
+            dd.rounded_rectangle([4 * s, 4 * s, (cw - 4) * s, (ch - 4) * s], radius=26 * s, fill=WHITE,
+                                 outline=INK, width=int(6 * s))
+            text_center(dd, cw / 2 * s, 150 * s, lab, font(F_HEAD, int(40 * s)), INK)
+        card = patch(cw, ch, fn)
+        card.alpha_composite(emoji(em, 100), (cw // 2 - 50, 24))
+        if t >= tx:
+            xl = Image.new("RGBA", card.size, (0, 0, 0, 0))
+            cd = ImageDraw.Draw(xl)
+            cd.line([40, 30, cw - 40, 140], fill=(228, 30, 42, 220), width=14)
+            cd.line([cw - 40, 30, 40, 140], fill=(228, 30, 42, 220), width=14)
+            card.alpha_composite(xl)
+        paste(fr, shadowed(scaled(card, 0.5 + 0.5 * eback(v / 0.25))), 200 + i * 340, 740)
+    if t >= t_end + 0.3:
+        v = t - (t_end + 0.3)
+        for i in range(5):
+            hx = 760 + 140 * math.sin(i * 1.7 + v * 1.2)
+            hy = 830 - v * 160 - i * 50
+            paste(fr, emoji("❤️", 60), hx, hy, alpha=c01(1 - (v - 1.2) / 0.6))
     z = emoji("💤", 90)
     paste(fr, z, 250 + 10 * math.sin(t * 3), 1000 - 20 * ((t * 0.8) % 1), alpha=0.9)
 
 
 def sc_ende(fr, t, ts, te):
     u = t - ts
-    t_dt = at("ende", "Deutschland")
     t_atmet = at("ende", "atmet")
+    t_kuh = at("ende", "Und")
+    t_vor = at("ende", "Sitzt")
+    t_bon = at("ende", "Mit")
     t_end = WORDS[-1]["e"]
-    fr.alpha_composite(BG["platform"])
-    p = eo(u / 1.4)
-    train_side(fr, lerp(W + 50, 40, p), train_y(), "happy" if p > 0.98 else "calm", t, look=(0.5, 0.5))
-    relieved = t >= t_atmet - 0.1
-    for (spec, x, h, ph) in [(WOMAN, 210, 520, 0), (MAN, 840, 520, 1), (MAN2, 520, 470, 2)]:
-        pose = dict(r=(-150, -20) if relieved else (-20, 0), l=(150, 20) if relieved else (20, 0),
-                    mouth="grin" if relieved else "smile", look=(-0.5, -0.4), lid=0.6 if relieved else 0,
-                    hold="coffee" if spec is WOMAN and not relieved else None)
-        jump = -30 * abs(math.sin((t + ph) * 6)) if relieved and t < t_end + 1.0 else 0
-        paste(fr, person(spec, pose, t, h=h), x, 1520 - h * 0.52 + jump)
-    if relieved:
-        v = t - t_atmet
-        wl = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-        wd = ImageDraw.Draw(wl)
-        for i in range(6):
-            yy = 700 + i * 70
-            x0 = (v * 900 + i * 140) % (W + 600) - 300
-            wd.arc([x0, yy, x0 + 300, yy + 60], 200, 340, fill=(255, 255, 255, 200), width=8)
-        fr.alpha_composite(wl)
-        st = stamp("ORDNUNG WIEDERHERGESTELLT", RED, 44, rot=-6)
-        paste(fr, st, W // 2, 690, alpha=c01(v / 0.15))
-    # comment bait at the end
-    if t >= t_end + 0.25:
-        v = t - (t_end + 0.25)
-        b = bubble(CTA + " 👇" if False else CTA, w=860, hand=False, fsize=56, col=YEL)
-        paste(fr, scaled(b, 0.7 + 0.3 * eback(v / 0.3)), W // 2, 1640)
-        e = emoji("👇", 110)
-        paste(fr, e, W // 2, 1840 + 12 * math.sin(t * 6), alpha=c01(v / 0.2))
+    if t < t_kuh:
+        fr.alpha_composite(BG["platform"])
+        p = eo(u / 1.4)
+        train_side(fr, lerp(W + 50, 40, p), train_y(), "happy" if p > 0.98 else "calm", t, look=(0.5, 0.5))
+        relieved = t >= t_atmet - 0.1
+        for (spec, x, h, ph) in [(WOMAN, 210, 520, 0), (MAN, 840, 520, 1), (MAN2, 520, 470, 2)]:
+            pose = dict(r=(-150, -20) if relieved else (-20, 0), l=(150, 20) if relieved else (20, 0),
+                        mouth="grin" if relieved else "smile", look=(-0.5, -0.4), lid=0.6 if relieved else 0,
+                        hold="coffee" if spec is WOMAN and not relieved else None)
+            jump = -30 * abs(math.sin((t + ph) * 6)) if relieved else 0
+            paste(fr, person(spec, pose, t, h=h), x, 1520 - h * 0.52 + jump)
+        if relieved:
+            v = t - t_atmet
+            wl = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+            wd = ImageDraw.Draw(wl)
+            for i in range(6):
+                yy = 700 + i * 70
+                x0 = (v * 900 + i * 140) % (W + 600) - 300
+                wd.arc([x0, yy, x0 + 300, yy + 60], 200, 340, fill=(255, 255, 255, 200), width=8)
+            fr.alpha_composite(wl)
+            st = stamp("ORDNUNG WIEDERHERGESTELLT", RED, 44, rot=-6)
+            paste(fr, st, W // 2, 690, alpha=c01(v / 0.15))
+        return
+    # boardroom: the cow got promoted
+    v = t - t_kuh
+    fr.alpha_composite(vgrad(W, H, (70, 50, 40), (40, 28, 22)))
+    d = ImageDraw.Draw(fr)
+    for x in range(0, W, 120):
+        d.rectangle([x, 420, x + 6, 1300], fill=(85, 62, 50))
+    # window with skyline
+    d.rounded_rectangle([140, 470, 940, 900], radius=10, fill=(150, 200, 240), outline=(30, 20, 15), width=14)
+    for i, (bx, bh) in enumerate([(170, 220), (300, 320), (430, 180), (560, 280), (700, 360), (830, 200)]):
+        d.rectangle([bx, 900 - bh, bx + 100, 890], fill=(120, 160, 200))
+    if t >= t_vor:
+        # suit
+        sw = 520
+        d.rounded_rectangle([W // 2 - sw // 2, 1080, W // 2 + sw // 2, 1500], radius=120, fill=(30, 30, 40))
+        d.polygon([(W // 2 - 70, 1080), (W // 2 + 70, 1080), (W // 2, 1250)], fill=WHITE)
+        d.polygon([(W // 2 - 20, 1090), (W // 2 + 20, 1090), (W // 2 + 28, 1220), (W // 2, 1260),
+                   (W // 2 - 28, 1220)], fill=RED)
+    cf = cow_face(t, look=(0, 0.1), lid=0.35, chew=t * 1.3, scale=0.95)
+    paste(fr, cf, W // 2, 900 + 25 * (1 - eo(v / 0.4)))
+    # desk + nameplate
+    d.rectangle([0, 1380, W, H], fill=(110, 70, 40))
+    d.rectangle([0, 1380, W, 1400], fill=(140, 92, 56))
+    if t >= t_vor:
+        pl = Image.new("RGBA", (560, 110), (0, 0, 0, 0))
+        pd = ImageDraw.Draw(pl)
+        pd.rounded_rectangle([0, 0, 560, 110], radius=10, fill=(220, 180, 60), outline=INK, width=5)
+        text_center(pd, 280, 20, "VORSTAND", font(F_HEAD, 58), INK)
+        paste(fr, pl, W // 2, 1350, alpha=c01((t - t_vor) / 0.1))
+    if t >= t_bon:
+        vb = t - t_bon
+        bag = emoji("💰", int(230 * eback(vb / 0.3)))
+        paste(fr, bag, 860, 1260)
+        for i in range(14):
+            mx = (i * 173) % W
+            my = (vb * 600 + i * 137) % 1300 + 300
+            paste(fr, emoji("💶", 80).rotate(int(i * 40 + vb * 200) % 360, expand=True), mx, my)
+        st = stamp("BONUS", GREEN, 80, rot=-12)
+        paste(fr, scaled(st, 1.6 - 0.6 * eo(vb / 0.18)), 250, 1180, alpha=c01(vb / 0.08))
+    if t >= t_end + 0.3:
+        vv = t - (t_end + 0.3)
+        b = bubble(CTA, w=860, hand=False, fsize=60, col=YEL)
+        paste(fr, scaled(b, 0.7 + 0.3 * eback(vv / 0.3)), W // 2, 1640)
+        paste(fr, emoji("👇", 110), W // 2, 1840 + 12 * math.sin(t * 6), alpha=c01(vv / 0.2))
 
 
 SCENE_FN = {"hook": sc_hook, "einfahrt": sc_einfahrt, "bahnsteig": sc_bahnsteig, "news": sc_news,
@@ -1419,6 +1588,45 @@ def fanfare():
     return out
 
 
+def sob(rng):
+    out = np.zeros(int(1.0 * SR))
+    for i in range(3):
+        n = int(0.22 * SR)
+        tt = np.arange(n) / SR
+        f = 420 - 160 * tt / 0.22
+        sg = np.sin(2 * np.pi * np.cumsum(f) / SR) * np.sin(np.pi * tt / 0.22) * 0.18
+        o = int(i * 0.28 * SR)
+        out[o:o + n] += sg
+    return out
+
+
+def kaching(rng):
+    out = np.zeros(int(1.0 * SR))
+    n = int(0.06 * SR)
+    out[:n] += rng.standard_normal(n) * env(n, 0.001, 0.02) * 0.6
+    for f, o in ((2093, 0.05), (2637, 0.12), (3136, 0.12)):
+        tn = tone(f, 0.8, 0.001, 0.25, harm=(1, .5, .2)) * 0.25
+        i = int(o * SR)
+        out[i:i + len(tn)] += tn[:len(out) - i]
+    return out
+
+
+def choir(dur):
+    n = int(dur * SR)
+    tt = np.arange(n) / SR
+    sig = sum(saw(np.full(n, f) * (1 + 0.004 * np.sin(2 * np.pi * (5 + j) * tt))) for j, f in
+              enumerate((261.63, 329.63, 392.0, 523.25)))
+    e = np.minimum(1, tt / 0.3) * np.minimum(1, (dur - tt) / 0.5)
+    return onepole(sig, 1200) * e * 0.12
+
+
+def thud(rng):
+    n = int(0.25 * SR)
+    tt = np.arange(n) / SR
+    body = np.sin(2 * np.pi * (60 + 80 * np.exp(-tt * 30)) * tt) * env(n, 0.001, 0.08)
+    return (body + rng.standard_normal(n) * env(n, 0.0005, 0.012) * 0.5) * 0.8
+
+
 def bed(dur, bpm=100):
     rng = np.random.default_rng(3)
     n = int(dur * SR)
@@ -1485,7 +1693,16 @@ def make_audio(path):
         tt = ws + 0.3 + (we - ws - 0.6) * (k / 70)
         put(tick(), tt, 1.0)
     put(moo(1.2), we - 1.2, 0.6)
+    put(tone(1568, 0.5, 0.002, 0.2, harm=(1, .3)) * 0.35, at("einfahrt", "Wagenreihung") + 0.6)
+    put(sob(rng), at("bahnsteig", "weint") - 0.1, 1.0)
+    put(kaching(rng), at("news", "Preiserhöhung") + 0.05, 1.0)
+    put(tone(1760, 0.5, 0.002, 0.2, harm=(1, .4)) * 0.35, at("kassel", "WLAN") + 0.1)
+    put(choir(1.8), at("kassel", "Jemand") + 0.2, 1.0)
+    put(tone(2400, 0.3, 0.002, 0.1) * 0.3, at("kuh", "glaube") + 0.6)
+    for w_ in ("aus", "geschlossen", "defekt"):
+        put(thud(rng), at("warten", w_), 1.0)
     put(sigh(rng), at("ende", "atmet"), 1.0)
+    put(kaching(rng), at("ende", "Mit") + 0.1, 1.2)
     put(fanfare(), at("ende", "atmet") + 0.5, 1.0)
     for k in KEYS[1:]:
         if k != "papa":
@@ -1495,7 +1712,8 @@ def make_audio(path):
     gate = np.ones(n)
     for a_, b_ in [(at("bahnsteig", "Stille") + 0.2, at("bahnsteig", "Eine")),
                    ([w for w in WORDS if w["key"] == "papa"][-1]["e"], SEG["papa"][1]),
-                   (at("kuh", "Sie") - 0.2, SEG["kuh"][1])]:
+                   (at("kuh", "Sie") - 0.2, at("kuh", "glaube") + 1.0),
+                   (at("bahnsteig", "weint") - 0.1, at("bahnsteig", "Er"))]:
         gate[int(a_ * SR):int(b_ * SR)] = 0
     gate = np.convolve(gate, np.ones(4800) / 4800, mode="same")
     mix = voice + fx * 0.6 + b * gate * 0.22
