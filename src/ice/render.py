@@ -84,7 +84,7 @@ def lcol(a, b, t):
 # ================================================================== timeline
 # extra silence (s) after a given word (scene, word, occurrence) -> comedy timing
 BEATS = {("einfahrt", "6 Uhr 12", 0): 0.3, ("einfahrt", "ein", 0): 0.2, ("einfahrt", "Minute", 0): 0.35,
-         ("bahnsteig", "Stille", 0): 0.9, ("bahnsteig", "fallen", 0): 0.25, ("bahnsteig", "verabschieden", 0): 0.3,
+         ("bahnsteig", "Stille", 0): 0.9, ("bahnsteig", "fallen", 0): 1.9, ("bahnsteig", "verabschieden", 0): 0.3,
          ("bahnsteig", "weint", 0): 0.45,
          ("news", "Programm", 0): 0.3, ("news", "Systemfehler", 0): 0.2, ("news", "an", 0): 0.55,
          ("kassel", "pünktlich", 0): 0.25, ("kassel", "mich", 0): 0.2, ("kassel", "funktioniert", 0): 0.55,
@@ -460,6 +460,16 @@ def person(spec, pose, t=0.0, h=520):
     k = h / 520
     Wd = 360
 
+    def ik(sx, sy, tx, ty, L1=95, L2=90, bend=-1):
+        dx, dy = tx - sx, ty - sy
+        dist = min(max(math.hypot(dx, dy), 20), L1 + L2 - 1)
+        base = math.degrees(math.atan2(dx, dy))
+        al = math.degrees(math.acos((L1 * L1 + dist * dist - L2 * L2) / (2 * L1 * dist)))
+        a1 = base + bend * al
+        ex_, ey_ = sx + math.sin(math.radians(a1)) * L1, sy + math.cos(math.radians(a1)) * L1
+        a2 = math.degrees(math.atan2(tx - ex_, ty - ey_)) - a1
+        return a1, a2
+
     def arm(d, s, sx, sy, a1, a2, L1=95, L2=90, col=sh, w=26):
         a1r, a2r = math.radians(a1), math.radians(a1 + a2)
         ex_, ey_ = sx + math.sin(a1r) * L1, sy + math.cos(a1r) * L1
@@ -480,25 +490,56 @@ def person(spec, pose, t=0.0, h=520):
             d.line([(cx + dx) * s, 330 * s, (cx + dx * 1.2) * s, 505 * s], fill=pants, width=int(34 * s))
             d.ellipse([(cx + dx * 1.2 - 26) * s, 492 * s, (cx + dx * 1.2 + 26) * s, 520 * s], fill=INK)
         # body
-        if style == "long" and spec.get("dress"):
-            d.polygon(S([(cx - 60, 190), (cx + 60, 190), (cx + 95, 400), (cx - 95, 400)], s), fill=sh)
-        d.rounded_rectangle([(cx - 66) * s, 180 * s, (cx + 66) * s, 350 * s], radius=46 * s, fill=sh)
+        if spec.get("dress"):
+            d.polygon(S([(cx - 58, 240), (cx + 58, 240), (cx + 112, 410), (cx - 112, 410)], s), fill=sh)
+            d.chord([(cx - 112) * s, 380 * s, (cx + 112) * s, 440 * s], 0, 180, fill=sh)
+            for fx_ in (-60, 0, 60):
+                d.line(S([(cx + fx_ * 0.5, 260), (cx + fx_, 420)], s), fill=lcol(sh, INK, 0.25), width=int(4 * s))
+        d.rounded_rectangle([(cx - 62 if spec.get("dress") else cx - 66) * s, 180 * s,
+                             (cx + 62 if spec.get("dress") else cx + 66) * s, 350 * s],
+                            radius=46 * s, fill=sh)
+        if spec.get("dress"):
+            d.rectangle([(cx - 60) * s, 262 * s, (cx + 60) * s, 280 * s], fill=spec.get("belt", INK))
+            d.polygon(S([(cx - 34, 182), (cx + 34, 182), (cx, 232)], s), fill=lcol(sh, WHITE, 0.25))
         if spec.get("tie"):
             d.polygon(S([(cx - 10, 190), (cx + 10, 190), (cx + 14, 290), (cx, 310), (cx - 14, 290)], s),
                       fill=spec["tie"])
         hands = {}
         la, ra = pose.get("l", (20, 0)), pose.get("r", (-20, 0))
         hands["l"] = arm(d, s, cx + 56, 205, la[0], la[1])
-        hands["r"] = arm(d, s, cx - 56, 205, ra[0], ra[1])
+        rt = pose.get("rt")
+        if rt is not None:
+            ra = ik(cx - 56, 205, cx + rt[0], rt[1])
+        if not pose.get("front"):
+            hands["r"] = arm(d, s, cx - 56, 205, ra[0], ra[1])
+        if spec.get("bag"):
+            x, y = hands["l"]
+            d.line([(x - 6) * s, (y - 4) * s, (x + 30) * s, (y + 46) * s], fill=INK, width=int(4 * s))
+            d.rounded_rectangle([(x + 4) * s, (y + 40) * s, (x + 70) * s, (y + 92) * s], radius=12 * s,
+                                fill=spec["bag"], outline=INK, width=int(3 * s))
         # head
         tilt = pose.get("tilt", 0)
         hx, hy = cx + tilt, 118
         if style == "long":
-            d.rounded_rectangle([(hx - 80) * s, (hy - 75) * s, (hx + 80) * s, (hy + 95) * s], radius=60 * s,
+            d.rounded_rectangle([(hx - 86) * s, (hy - 78) * s, (hx + 86) * s, (hy + 140) * s], radius=70 * s,
                                 fill=hair)
+            for sg in (-1, 1):
+                d.ellipse([(hx + sg * 70 - 30) * s, (hy + 100) * s, (hx + sg * 70 + 30) * s, (hy + 160) * s],
+                          fill=hair)
         d.ellipse([(hx - 70) * s, (hy - 75) * s, (hx + 70) * s, (hy + 72) * s], fill=skin)
-        if style in ("short", "long", "kid"):
+        if spec.get("earrings"):
+            for sg in (-1, 1):
+                d.ellipse([(hx + sg * 68 - 8) * s, (hy + 20) * s, (hx + sg * 68 + 8) * s, (hy + 36) * s],
+                          fill=(255, 205, 60), outline=INK)
+        if style in ("short", "kid"):
             d.chord([(hx - 74) * s, (hy - 82) * s, (hx + 74) * s, (hy + 40) * s], 180, 360, fill=hair)
+        if style == "long":
+            # side-swept bangs + highlight
+            d.chord([(hx - 76) * s, (hy - 84) * s, (hx + 76) * s, (hy + 30) * s], 180, 360, fill=hair)
+            d.polygon(S([(hx - 70, hy - 30), (hx + 20, hy - 70), (hx + 74, hy - 20), (hx + 10, hy - 34)], s),
+                      fill=hair)
+            d.arc([(hx - 60) * s, (hy - 74) * s, (hx + 40) * s, (hy - 10) * s], 200, 290,
+                  fill=lcol(hair, WHITE, 0.35), width=int(6 * s))
         if style == "bald":
             d.chord([(hx - 74) * s, (hy - 40) * s, (hx + 74) * s, (hy + 40) * s], 160, 200, fill=hair)
             d.chord([(hx - 74) * s, (hy - 40) * s, (hx + 74) * s, (hy + 40) * s], 340, 380, fill=hair)
@@ -512,12 +553,29 @@ def person(spec, pose, t=0.0, h=520):
                 r = pose.get("eye", 9)
                 d.ellipse([(hx + ex_ + lk[0] * 5 - r) * s, (hy + lk[1] * 4 - r + 4) * s,
                            (hx + ex_ + lk[0] * 5 + r) * s, (hy + lk[1] * 4 + r + 4) * s], fill=INK)
+                if spec.get("lashes"):
+                    sg = 1 if ex_ > 0 else -1
+                    for j in range(3):
+                        x0 = hx + ex_ + sg * (2 + j * 6)
+                        d.line([x0 * s, (hy - r + 4) * s, (x0 + sg * 8) * s, (hy - r - 8 + j * 3) * s],
+                               fill=INK, width=int(4 * s))
+            if spec.get("lashes") and el > 0.5:
+                sg = 1 if ex_ > 0 else -1
+                d.line([(hx + ex_ + sg * 12) * s, (hy + 6) * s, (hx + ex_ + sg * 20) * s, (hy) * s],
+                       fill=INK, width=int(4 * s))
         if spec.get("glasses"):
             for ex_ in (-28, 28):
                 d.ellipse([(hx + ex_ - 22) * s, (hy - 16) * s, (hx + ex_ + 22) * s, (hy + 26) * s], outline=INK,
                           width=int(5 * s))
             d.line([(hx - 6) * s, (hy + 2) * s, (hx + 6) * s, (hy + 2) * s], fill=INK, width=int(5 * s))
-        mouth(d, hx, hy + 40, 40, pose.get("mouth", "smile"), s, open_=0.5 + 0.5 * math.sin(t * 12), th=6)
+        if spec.get("lips"):
+            for sg in (-1, 1):
+                d.ellipse([(hx + sg * 46 - 16) * s, (hy + 22) * s, (hx + sg * 46 + 16) * s, (hy + 38) * s],
+                          fill=(255, 160, 165))
+        mouth(d, hx, hy + 40, 40, pose.get("mouth", "smile"), s, open_=0.5 + 0.5 * math.sin(t * 12), th=6,
+              col=spec.get("lips", INK))
+        if pose.get("front") and rt is not None:
+            hands["r"] = arm(d, s, cx - 56, 205, ra[0], ra[1])
         if pose.get("hold") == "coffee":
             x, y = hands["r"]
             cup(d, x, y - 10, s)
@@ -1145,7 +1203,8 @@ def platform_with_train(fr, t, ex, look, x=40):
     train_side(fr, x, train_y(), ex, t, look=look)
 
 
-WOMAN = dict(shirt=(230, 120, 60), pants=(60, 64, 90), hair=(120, 70, 40), style="long", ph=0.6)
+WOMAN = dict(shirt=(225, 45, 85), pants=(70, 40, 55), hair=(150, 70, 30), style="long", ph=0.6, dress=True,
+             lashes=True, lips=(205, 25, 60), earrings=True, bag=(250, 200, 60), belt=(250, 200, 60))
 MAN = dict(shirt=(80, 130, 200), pants=(50, 50, 60), hair=(50, 40, 30), style="bald", ph=1.7)
 MAN2 = dict(shirt=(120, 170, 90), pants=(70, 60, 50), hair=(200, 170, 90), style="short", ph=2.4)
 DAD = dict(shirt=(70, 90, 120), pants=(40, 44, 56), hair=(90, 60, 40), style="short", glasses=True, ph=0.3)
@@ -1167,11 +1226,29 @@ def sc_bahnsteig(fr, t, ts, te):
     if still_mode:
         fr.alpha_composite(Image.new("RGBA", (W, H), (20, 25, 40, 70)))
     WX = 330
+    pm2 = dict(r=(-30, 0), l=(30, 0), mouth="o" if shock else "flat", look=(-0.8, -0.3), eye=12 if shock else 9)
+    paste(fr, person(MAN2, pm2, t, h=450), 535, 1520 - 235, center=True)
     pw = dict(r=(-20, -110) if t < t_fall else (-60, -20), l=(15, 0), hold="coffee" if t < t_fall else None,
               mouth="o" if shock else "smile", look=(-0.5, -0.3), eye=12 if shock else 9)
-    paste(fr, person(WOMAN, pw, t, h=500), WX, 1520 - 260, center=True)
-    pm2 = dict(r=(-30, 0), l=(30, 0), mouth="o" if shock else "flat", look=(-0.8, -0.3), eye=12 if shock else 9)
-    paste(fr, person(MAN2, pm2, t, h=450), 520, 1520 - 235, center=True)
+    tc = t_fall + 0.55   # sign of the cross: forehead -> chest -> left shoulder -> right shoulder
+    if tc <= t < tc + 2.1:
+        pts = [(-20, 250), (0, 62), (0, 255), (52, 205), (-52, 205), (-30, 300)]
+        u_ = (t - tc) / 2.1 * (len(pts) - 1)
+        i_ = min(int(u_), len(pts) - 2)
+        f_ = eio(u_ - i_)
+        tx_ = lerp(pts[i_][0], pts[i_ + 1][0], f_)
+        ty_ = lerp(pts[i_][1], pts[i_ + 1][1], f_)
+        pw.update(rt=(tx_, ty_), front=True, lid=1.0, mouth="flat", look=(0, -1))
+    elif t >= tc + 2.1:
+        pw.update(r=(-15, 0), mouth="wavy", look=(-0.6, -0.5))
+    paste(fr, person(WOMAN, pw, t, h=540), WX, 1520 - 281, center=True)
+    if tc + 0.2 <= t < tc + 2.4:
+        gl = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        gd = ImageDraw.Draw(gl)
+        a_ = math.sin(c01((t - tc - 0.2) / 2.2) * math.pi)
+        gd.ellipse([WX - 150, 930, WX + 150, 1140], fill=(255, 240, 170, int(110 * a_)))
+        fr.alpha_composite(gl.filter(ImageFilter.GaussianBlur(30)))
+        paste(fr, emoji("🙏", 70), WX + 110, 1000 - 30 * (t - tc), alpha=a_)
     phone = t >= t_mut - 0.4
     pm = dict(r=(-25, 0), l=(150, 175) if phone else (25, 0), hold="phone" if phone else None,
               mouth="wavy" if phone else ("o" if shock else "flat"), look=(-0.8, -0.3), tilt=-10 if phone else 0,
@@ -1639,6 +1716,7 @@ SCENE_FN = {"hook": sc_hook, "einfahrt": sc_einfahrt, "bahnsteig": sc_bahnsteig,
 
 PUNCH = []
 SHAKE = []
+WX_W = 330
 OV = [None]  # per-frame overlay layer (not affected by the camera)
 
 
@@ -1650,7 +1728,8 @@ def build_camera():
     L = [("hook", A("hook", "Panik") - 0.05, pe("hook"), 540, 930, 1.32, -4),
          ("einfahrt", A("einfahrt", "Minute") + 0.05, A("einfahrt", "In") - 0.05, 200, 990, 1.3, 0),
          ("einfahrt", A("einfahrt", "Wagenreihung"), pe("einfahrt"), 700, 1050, 1.15, 0),
-         ("bahnsteig", A("bahnsteig", "fallen") - 0.05, A("bahnsteig", "Ein") - 0.05, 300, 1330, 1.38, 2),
+         ("bahnsteig", A("bahnsteig", "fallen") - 0.05, A("bahnsteig", "fallen") + 0.5, 300, 1360, 1.3, 2),
+         ("bahnsteig", A("bahnsteig", "fallen") + 0.5, A("bahnsteig", "Ein") - 0.05, WX_W, 1130, 1.6, 0),
          ("bahnsteig", A("bahnsteig", "Mutter") - 0.1, A("bahnsteig", "Ein", 1) - 0.1, 720, 1110, 1.5, 0),
          ("bahnsteig", A("bahnsteig", "weint") - 0.15, A("bahnsteig", "seit") - 0.1, 920, 1160, 1.65, -2),
          ("bahnsteig", A("bahnsteig", "seit"), pe("bahnsteig"), 820, 950, 1.25, 0),
@@ -2063,6 +2142,7 @@ def make_audio(path):
     put(tone(1568, 0.5, 0.002, 0.2, harm=(1, .3)) * 0.35, at("einfahrt", "Wagenreihung") + 0.6)
     put(sob(rng), at("bahnsteig", "weint") - 0.1, 1.0)
     put(boing(), at("bahnsteig", "fallen") + 0.1, 0.9)
+    put(choir(1.9), at("bahnsteig", "fallen") + 0.75, 0.9)
     put(vine_boom(), at("bahnsteig", "weint") - 0.15, 0.8)
     put(scratch(), SEG["papa"][0] - 0.05, 1.0)
     put(vine_boom(), at("papa", "hab") - 0.05, 1.0)
