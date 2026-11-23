@@ -2183,7 +2183,7 @@ def pa_filter(x):
 
 
 def station_gong():
-    out = np.zeros(int(2.6 * SR))
+    out = np.zeros(int(3.0 * SR))
     for i, f in enumerate((523.25, 659.25, 783.99)):
         tn = tone(f, 1.8, 0.004, 0.9, harm=(1, .25, .08))
         o = int(i * 0.42 * SR)
