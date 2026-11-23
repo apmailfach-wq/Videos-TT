@@ -99,6 +99,11 @@ Länge ca. 100 s · 1080×1920 · 30 fps · Cartoon-Look: ICE mit Glupschaugen, 
 Stimmen (edge-tts): Zug `de-DE-FlorianMultilingualNeural` (+16 %), Kind `de-DE-KatjaNeural` (hoch gepitcht), Papa `de-DE-KillianNeural` (langsam).
 Comedy-Pausen werden in `render.py` (`BEATS`, `PAD`) direkt in die Tonspur geschnitten.
 
+**Look & Schnitt:** 2,5D-Schattierung (`shade3d`: Bevel-Licht von oben links, Kontaktschatten, kugelige Glanzaugen),
+Tiefenunschärfe im Hintergrund, virtuelle Kamera (`PUNCH`: Punch-in-Zooms mit Overshoot und Dutch-Angle auf Reaktionsgesichter,
+`SHAKE`: Wackler bei Stempeln/Pointen), Whip-Pan-Übergänge zwischen Szenen, Untertitel mit farbigem Highlight-Kasten.
+Comedy-SFX: Martinshorn, Vine-Boom, Record-Scratch, Slide-Whistle, Boing, Airhorn.
+
 ```bash
 cd src/ice
 python3 tts.py                 # Stimmen + Wort-Timings -> build/ice/

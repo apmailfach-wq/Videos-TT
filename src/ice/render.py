@@ -167,6 +167,34 @@ def patch(w, h, fn, ss=2):
     return im.reduce(ss) if ss > 1 else im
 
 
+def shade3d(im, k=0.55, r=None):
+    """Soft clay/3D look: bevel lighting from the top-left on the silhouette + vertical falloff."""
+    A = im.getchannel("A")
+    a = np.asarray(A, np.float32) / 255
+    if a.max() == 0:
+        return im
+    r = r or max(4, min(im.size) // 26)
+    b = np.asarray(A.filter(ImageFilter.GaussianBlur(r)), np.float32) / 255
+    gy, gx = np.gradient(b)
+    light = np.clip((0.55 * gx + 0.83 * gy) * r * 2.6, -1, 1)
+    pos, neg = np.clip(light, 0, 1), np.clip(-light, 0, 1)
+    rgb = np.asarray(im.convert("RGB"), np.float32)
+    h = rgb.shape[0]
+    fall = (1.06 - 0.16 * np.linspace(0, 1, h))[:, None]
+    rgb = rgb * (fall * (1 - 0.5 * k * neg))[..., None]
+    rgb = rgb + (255 - rgb) * (0.55 * k * pos)[..., None]
+    out = Image.fromarray(np.clip(rgb, 0, 255).astype(np.uint8), "RGB").convert("RGBA")
+    out.putalpha(A)
+    return out
+
+
+@lru_cache(maxsize=8)
+def contact_shadow(w, h=60, a=110):
+    im = Image.new("RGBA", (w + 80, h + 80), (0, 0, 0, 0))
+    ImageDraw.Draw(im).ellipse([40, 40, w + 40, h + 40], fill=(10, 15, 30, a))
+    return im.filter(ImageFilter.GaussianBlur(14))
+
+
 def paste(dst, im, x, y, center=True, alpha=1.0):
     if alpha <= 0.01:
         return
@@ -230,14 +258,27 @@ def emoji(ch, size):
 def eye(d, cx, cy, rx, ry, look=(0, 0), lid=0.0, s=1, lid_col=GLASS, pupil=0.45, lower=0.0):
     """Cartoon eye. look in [-1,1]^2, lid 0=open..1=closed (from top), lower = lower lid."""
     box = [(cx - rx) * s, (cy - ry) * s, (cx + rx) * s, (cy + ry) * s]
-    d.ellipse(box, fill=WHITE, outline=INK, width=max(1, int(3 * s)))
+    d.ellipse(box, fill=(196, 205, 224), outline=INK, width=max(1, int(3 * s)))
+    for i in range(1, 6):
+        f_ = 1 - i * 0.07
+        ox, oy = -rx * 0.035 * i, -ry * 0.045 * i
+        col = lcol((196, 205, 224), WHITE, i / 5)
+        d.ellipse([(cx + ox - rx * f_) * s, (cy + oy - ry * f_) * s, (cx + ox + rx * f_) * s,
+                   (cy + oy + ry * f_) * s], fill=col)
+    d.ellipse(box, outline=INK, width=max(1, int(3 * s)))
     pr = min(rx, ry) * pupil
     px = cx + look[0] * (rx - pr * 1.15)
     py = cy + look[1] * (ry - pr * 1.15)
     d.ellipse([(px - pr) * s, (py - pr) * s, (px + pr) * s, (py + pr) * s], fill=INK)
     hr = pr * 0.32
+    d.ellipse([(px - pr * 0.72) * s, (py - pr * 0.72) * s, (px + pr * 0.72) * s, (py + pr * 0.72) * s],
+              fill=(52, 44, 60))
+    d.ellipse([(px - pr * 0.42) * s, (py - pr * 0.42) * s, (px + pr * 0.42) * s, (py + pr * 0.42) * s], fill=INK)
     d.ellipse([(px - pr * 0.35 - hr) * s, (py - pr * 0.4 - hr) * s, (px - pr * 0.35 + hr) * s,
                (py - pr * 0.4 + hr) * s], fill=WHITE)
+    h2 = hr * 0.45
+    d.ellipse([(px + pr * 0.38 - h2) * s, (py + pr * 0.35 - h2) * s, (px + pr * 0.38 + h2) * s,
+               (py + pr * 0.35 + h2) * s], fill=(235, 240, 255))
     if lid > 0.02:
         yl = cy - ry + 2 * ry * c01(lid)
         pts = []
@@ -343,7 +384,7 @@ def train_front(ex, t=0.0, look=(0, 0), extra_lid=0.0, scale=1.0):
             d.polygon(S([(520, yy - 40), (500, yy), (540, yy)], s), fill=(120, 200, 255))
             d.ellipse([500 * s, (yy - 20) * s, 540 * s, (yy + 20) * s], fill=(120, 200, 255))
 
-    return patch(int(560 * scale), int(650 * scale), fn)
+    return shade3d(patch(int(560 * scale), int(650 * scale), fn), 0.6)
 
 
 # ------------------------------------------------------------------ train (side view)
@@ -379,12 +420,14 @@ def train_side_body(L=2600, sc=1.0):
                 d.ellipse([(wx - 14) * s, 355 * s, (wx + 14) * s, 383 * s], fill=(120, 126, 138))
         d.ellipse([18 * s, 286 * s, 62 * s, 308 * s], fill=(255, 244, 196), outline=TRAIN_O)
 
-    return patch(int(L * sc), int(TS_H * sc), fn)
+    return shade3d(patch(int(L * sc), int(TS_H * sc), fn), 0.5, r=12)
 
 
 def train_side(dst, x, y, ex, t, look=(0, 0), sc=1.0, extra_lid=0.0):
     """x,y = top-left of the nose. Train extends to the right off-screen."""
     body = train_side_body(2600, round(sc, 3))
+    sh = contact_shadow(int(2600 * sc), int(40 * sc))
+    paste(dst, sh, x - 40, y + int(372 * sc) - 40 - int(20 * sc), center=False)
     paste(dst, body, x, y, center=False)
     e = EXPR[ex]
     lid = max(e["lid"], blink(t, 3.1, 0.7), extra_lid)
@@ -431,6 +474,7 @@ def person(spec, pose, t=0.0, h=520):
     def fn(d, s):
         s = s * k
         cx = Wd / 2
+        d.ellipse([(cx - 95) * s, 498 * s, (cx + 95) * s, 532 * s], fill=(10, 15, 30, 80))
         # legs
         for dx in (-26, 26):
             d.line([(cx + dx) * s, 330 * s, (cx + dx * 1.2) * s, 505 * s], fill=pants, width=int(34 * s))
@@ -497,7 +541,7 @@ def person(spec, pose, t=0.0, h=520):
             x, y = hands["l"]
             d.rounded_rectangle([(x - 20) * s, (y - 46) * s, (x + 18) * s, (y + 22) * s], radius=8 * s, fill=INK)
 
-    return patch(Wd * k, 540 * k, fn)
+    return shade3d(patch(Wd * k, 540 * k, fn), 0.5)
 
 
 def cup(d, x, y, s, ang=0):
@@ -541,7 +585,7 @@ def cow_face(t, look=(0, 0), lid=0.3, chew=0.0, scale=1.0, extra_lid=0.0, cap=Fa
             d.ellipse([(x - 20) * s, (440 + jaw * 0.5) * s, (x + 20) * s, (470 + jaw * 0.5) * s],
                       fill=(150, 70, 90))
 
-    return patch(int(600 * scale), int(560 * scale), fn)
+    return shade3d(patch(int(600 * scale), int(560 * scale), fn), 0.55)
 
 
 def cow_side(t, lying=False, look=(0, 0), chew=0.0):
@@ -575,7 +619,7 @@ def cow_side(t, lying=False, look=(0, 0), chew=0.0):
         eye(d, hx - 24, hy - 4, 20, 22, look, ll, s, lid_col=(250, 250, 250))
         eye(d, hx + 24, hy - 4, 20, 22, look, ll, s, lid_col=(250, 250, 250))
 
-    return patch(480, 360, fn)
+    return shade3d(patch(480, 360, fn), 0.5)
 
 
 # ------------------------------------------------------------------ backgrounds
@@ -762,25 +806,37 @@ def build_caps():
 CAPS = []
 
 
+CAP_COLS = [(YEL, INK), ((255, 60, 90), WHITE), ((40, 200, 255), INK), (GREEN, INK), ((255, 140, 30), INK)]
+
+
 @lru_cache(maxsize=256)
 def cap_img(ci, active):
-    s, e, ws = CAPS[ci]
-    f = font(F_HEAD, 74)
+    s_, e_, ws = CAPS[ci]
+    size = 76
+    f = font(F_HEAD, size)
     txts = [w["text"].upper() for w in ws]
-    sp = f.getlength(" ")
+    sp = f.getlength(" ") + 10
     wid = sum(f.getlength(x) for x in txts) + sp * (len(txts) - 1)
-    if wid > 960:
-        f = font(F_HEAD, int(74 * 960 / wid))
-        sp = f.getlength(" ")
+    if wid > 940:
+        size = int(size * 940 / wid)
+        f = font(F_HEAD, size)
+        sp = f.getlength(" ") + 10
         wid = sum(f.getlength(x) for x in txts) + sp * (len(txts) - 1)
-    im = Image.new("RGBA", (int(wid) + 40, 130), (0, 0, 0, 0))
+    im = Image.new("RGBA", (int(wid) + 80, 170), (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
-    x = 20
+    bg, fg = CAP_COLS[ci % len(CAP_COLS)]
+    x = 40
     for i, tx in enumerate(txts):
-        col = YEL if i == active else WHITE
-        d.text((x, 20), tx, font=f, fill=col, stroke_width=9, stroke_fill=INK)
-        x += f.getlength(tx) + sp
-    return im
+        tw = f.getlength(tx)
+        if i == active:
+            d.rounded_rectangle([x - 16, 26, x + tw + 16, 40 + size * 1.22], radius=18, fill=INK)
+            d.rounded_rectangle([x - 20, 20, x + tw + 12, 34 + size * 1.22], radius=18, fill=bg)
+            d.text((x - 4, 30), tx, font=f, fill=fg)
+        else:
+            d.text((x, 30), tx, font=f, fill=WHITE, stroke_width=9, stroke_fill=INK)
+        x += tw + sp
+    rot = [-2.5, 2, -1.5, 2.5, -2][ci % 5]
+    return im.rotate(rot, expand=True, resample=Image.BICUBIC)
 
 
 def draw_caption(frame, t, y=1560):
@@ -911,8 +967,8 @@ def init():
     global CAPS
     if BG:
         return
-    BG["platform"] = bg_platform()
-    BG["country"] = bg_country()
+    BG["platform"] = bg_platform().filter(ImageFilter.GaussianBlur(2.2))
+    BG["country"] = bg_country().filter(ImageFilter.GaussianBlur(2.2))
     BG["news"] = bg_news_room()
     CAPS = build_caps()
 
@@ -1032,18 +1088,18 @@ def sc_hook(fr, t, ts, te):
     # headline
     if not panic:
         l1 = boxed("HEUTE WAR ICH", 70, WHITE, INK, rot=-2)
-        paste(fr, scaled(l1, 0.9 + 0.1 * eback(u / 0.22)), W // 2, 1530)
+        paste(OV[0], scaled(l1, 0.9 + 0.1 * eback(u / 0.22)), W // 2, 1530)
         tp = at("hook", "pünktlich") - 0.1
         l2 = boxed("PÜNKTLICH.", 104, INK, GREEN, rot=3)
-        paste(fr, scaled(l2, 0.9 + 0.1 * eback((t - max(0, tp)) / 0.22)), W // 2, 1690)
+        paste(OV[0], scaled(l2, 0.9 + 0.1 * eback((t - max(0, tp)) / 0.22)), W // 2, 1690)
     else:
         v = t - (tdt - 0.08)
         l1 = boxed("DEUTSCHLAND IST IN", 58, WHITE, INK, rot=2)
-        paste(fr, scaled(l1, 0.7 + 0.3 * eback(v / 0.2)), W // 2, 1520)
+        paste(OV[0], scaled(l1, 0.7 + 0.3 * eback(v / 0.2)), W // 2, 1520)
         if t >= pan - 0.1:
             w_ = t - (pan - 0.1)
             l2 = boxed("PANIK!", 150, WHITE, RED, rot=-4, jitter=5, t=t)
-            paste(fr, scaled(l2, 1.5 - 0.5 * eo(w_ / 0.16)), W // 2, 1710)
+            paste(OV[0], scaled(l2, 1.5 - 0.5 * eo(w_ / 0.16)), W // 2, 1710)
 
 
 def sc_einfahrt(fr, t, ts, te):
@@ -1298,13 +1354,13 @@ def sc_kind(fr, t, ts, te, papa=False):
     paste(fr, person(KID, kid_pose, t, h=330), 420, 1525 - 172, center=True)
     if not papa:
         b = bubble("Papa, ist das ein Zug?", w=640, fsize=72)
-        paste(fr, b, 470, 1700 - 60 + 0 * u, alpha=c01(u / 0.12))
+        paste(OV[0], b, 470, 1700 - 60 + 0 * u, alpha=c01(u / 0.12))
     else:
         v = t - SEG["papa"][0]
         t_hab = at("papa", "hab")
         txt = "Ich … weiß es nicht, mein Sohn." if t < t_hab else "Ich hab noch nie einen fahren sehen."
         b = bubble(txt, w=760, fsize=66)
-        paste(fr, b, 560, 1700 - 60, alpha=c01(v / 0.12))
+        paste(OV[0], b, 560, 1700 - 60, alpha=c01(v / 0.12))
         if dad_think:
             q = font(F_HEAD, 80)
             d = ImageDraw.Draw(fr)
@@ -1564,16 +1620,16 @@ def sc_ende(fr, t, ts, te):
         paste(fr, scaled(st, 1.7 - 0.7 * eo(vb / 0.18)), 230, 1180, alpha=c01(vb / 0.08))
     if t >= t_end + 0.3:
         vv = t - (t_end + 0.3)
-        fr.alpha_composite(Image.new("RGBA", (W, H), (0, 0, 0, int(110 * c01(vv / 0.3)))))
+        OV[0].alpha_composite(Image.new("RGBA", (W, H), (0, 0, 0, int(110 * c01(vv / 0.3)))))
         b = boxed("💬" if False else "EURE SCHLIMMSTE", 60, INK, YEL, rot=-2)
-        paste(fr, scaled(b, 0.7 + 0.3 * eback(vv / 0.25)), W // 2, 1530)
+        paste(OV[0], scaled(b, 0.7 + 0.3 * eback(vv / 0.25)), W // 2, 1530)
         b2 = boxed("BAHN-STORY?", 92, WHITE, RED, rot=2)
-        paste(fr, scaled(b2, 0.6 + 0.4 * eback((vv - 0.15) / 0.25)), W // 2, 1670, alpha=c01((vv - 0.15) / 0.05))
-        paste(fr, emoji("👇", 90), W // 2 - 320, 1830 + 12 * math.sin(t * 6), alpha=c01(vv / 0.2))
-        paste(fr, emoji("👇", 90), W // 2 + 320, 1830 + 12 * math.sin(t * 6 + 1), alpha=c01(vv / 0.2))
+        paste(OV[0], scaled(b2, 0.6 + 0.4 * eback((vv - 0.15) / 0.25)), W // 2, 1670, alpha=c01((vv - 0.15) / 0.05))
+        paste(OV[0], emoji("👇", 90), W // 2 - 320, 1830 + 12 * math.sin(t * 6), alpha=c01(vv / 0.2))
+        paste(OV[0], emoji("👇", 90), W // 2 + 320, 1830 + 12 * math.sin(t * 6 + 1), alpha=c01(vv / 0.2))
         if vv > 0.9:
             f2 = boxed("FOLGEN FÜR TEIL 2", 40, INK, WHITE, rot=0)
-            paste(fr, f2, W // 2, 1830, alpha=c01((vv - 0.9) / 0.15))
+            paste(OV[0], f2, W // 2, 1830, alpha=c01((vv - 0.9) / 0.15))
 
 
 SCENE_FN = {"hook": sc_hook, "einfahrt": sc_einfahrt, "bahnsteig": sc_bahnsteig, "news": sc_news,
@@ -1581,33 +1637,121 @@ SCENE_FN = {"hook": sc_hook, "einfahrt": sc_einfahrt, "bahnsteig": sc_bahnsteig,
             "warten": sc_warten, "ende": sc_ende}
 
 
+PUNCH = []
+SHAKE = []
+OV = [None]  # per-frame overlay layer (not affected by the camera)
+
+
+def build_camera():
+    if PUNCH:
+        return
+    A = at
+    pe = lambda k: SEG[k][1]
+    L = [("hook", A("hook", "Panik") - 0.05, pe("hook"), 540, 930, 1.32, -4),
+         ("einfahrt", A("einfahrt", "Minute") + 0.05, A("einfahrt", "In") - 0.05, 200, 990, 1.3, 0),
+         ("einfahrt", A("einfahrt", "Wagenreihung"), pe("einfahrt"), 700, 1050, 1.15, 0),
+         ("bahnsteig", A("bahnsteig", "fallen") - 0.05, A("bahnsteig", "Ein") - 0.05, 300, 1330, 1.38, 2),
+         ("bahnsteig", A("bahnsteig", "Mutter") - 0.1, A("bahnsteig", "Ein", 1) - 0.1, 720, 1110, 1.5, 0),
+         ("bahnsteig", A("bahnsteig", "weint") - 0.15, A("bahnsteig", "seit") - 0.1, 920, 1160, 1.65, -2),
+         ("bahnsteig", A("bahnsteig", "seit"), pe("bahnsteig"), 820, 950, 1.25, 0),
+         ("news", A("news", "Experten"), A("news", "Der") - 0.05, 560, 820, 1.18, 0),
+         ("news", A("news", "Preiserhöhung") - 0.05, pe("news"), 640, 800, 1.32, 3),
+         ("kassel", A("kassel", "Leute"), A("kassel", "Das") - 0.05, 540, 1380, 1.12, 0),
+         ("kassel", A("kassel", "WLAN") - 0.05, A("kassel", "Jemand") - 0.05, 760, 960, 1.25, 0),
+         ("kassel", A("kassel", "Jemand") + 0.4, pe("kassel"), 780, 1120, 1.38, -2),
+         ("kind", SEG["kind"][0] + 0.2, pe("kind"), 420, 1260, 1.4, 0),
+         ("papa", SEG["papa"][0], A("papa", "hab") - 0.05, 700, 1060, 1.35, 0),
+         ("papa", A("papa", "hab") - 0.05, pe("papa"), 700, 1030, 1.75, 3),
+         ("kuh", A("kuh", "Kuh") - 0.05, A("kuh", "Sie") - 0.05, 420, 1100, 1.3, 0),
+         ("kuh", A("kuh", "Sie") - 0.05, A("kuh", "Ich") - 0.05, 540, 760, 1.5, 0),
+         ("kuh", A("kuh", "Ich") - 0.05, A("kuh", "Wir") - 0.05, 540, 1330, 1.5, 0),
+         ("kuh", A("kuh", "glaube") - 0.05, pe("kuh"), 540, 780, 1.32, -3),
+         ("warten", A("warten", "70 Minuten") - 0.05, A("warten", "Klimaanlage") - 0.05, 640, 560, 1.25, 0),
+         ("warten", A("warten", "Endlich") - 0.05, pe("warten"), 740, 970, 1.55, 2),
+         ("ende", A("ende", "atmet") - 0.05, A("ende", "Und") - 0.05, 540, 1150, 1.15, 0),
+         ("ende", A("ende", "Mit") - 0.05, WORDS[-1]["e"] + 0.3, 540, 870, 1.5, 3)]
+    for k, t0, t1, fx, fy, z, rot in L:
+        PUNCH.append(dict(k=k, t0=t0, t1=t1, fx=fx, fy=fy, z=z, rot=rot))
+    for t0, amp in [(A("hook", "Panik"), 16), (A("einfahrt", "Minute") + 0.1, 8),
+                    (A("einfahrt", "Wagenreihung") + 0.6, 8), (A("bahnsteig", "fallen") + 0.45, 7),
+                    (A("news", "Preiserhöhung"), 12), (A("kuh", "Kuh") - 0.1, 10),
+                    (A("warten", "aus"), 7), (A("warten", "geschlossen"), 7), (A("warten", "defekt"), 9),
+                    (A("ende", "atmet"), 6), (A("ende", "Mit"), 14), (A("kassel", "Jemand"), 6)]:
+        SHAKE.append((t0, amp))
+
+
+def cam(t):
+    k = scene_at(t)
+    ts, te = SEG[k]
+    prog = c01((t - ts) / (te - ts))
+    z, fx, fy, rot = 1.0 + 0.06 * eio(prog), W / 2, H * 0.55, 0.0
+    for p in PUNCH:
+        if p["k"] == k and p["t0"] <= t < p["t1"] + 0.25:
+            a = c01(eback((t - p["t0"]) / 0.2, 1.1))
+            a *= 1 - eio((t - p["t1"]) / 0.25)
+            z = lerp(z, p["z"] + 0.04 * eio((t - p["t0"]) / 2.5), a)
+            fx, fy = lerp(fx, p["fx"], min(a, 1)), lerp(fy, p["fy"], min(a, 1))
+            rot = p["rot"] * a
+    sx = sy = 0.0
+    for t0, amp in SHAKE:
+        if 0 <= t - t0 < 0.7:
+            e = amp * math.exp(-(t - t0) * 6)
+            sx += e * math.sin(t * 93)
+            sy += e * math.cos(t * 71)
+    if abs(rot) > 0.01 or abs(sx) + abs(sy) > 0.5:
+        z = max(z, 1.0) + 0.05
+    return z, fx, fy, rot, sx, sy
+
+
+def apply_cam(fr, t):
+    z, fx, fy, rot, sx, sy = cam(t)
+    if abs(z - 1) < 0.002 and abs(rot) < 0.01 and abs(sx) + abs(sy) < 0.3:
+        return fr
+    th = math.radians(rot)
+    cs, sn = math.cos(th) / z, math.sin(th) / z
+    coef = (cs, -sn, fx - cs * fx + sn * fy + sx, sn, cs, fy - sn * fx - cs * fy + sy)
+    return fr.transform(fr.size, Image.AFFINE, coef, resample=Image.BILINEAR, fillcolor=(0, 0, 0, 255))
+
+
+def whip(fr, a, direction):
+    """Whip-pan: horizontal smear + slide, a in [0,1] = strength."""
+    if a <= 0.01:
+        return fr
+    smear = fr.resize((W // 14, H), Image.BILINEAR).resize((W, H), Image.BILINEAR)
+    out = Image.blend(fr, smear, min(1, a * 1.3))
+    dx = direction * W * 0.45 * a
+    bgw = smear.copy()
+    bgw.alpha_composite(out.transform(out.size, Image.AFFINE, (1, 0, -dx, 0, 1, 0), resample=Image.BILINEAR,
+                                      fillcolor=(0, 0, 0, 0)))
+    return bgw
+
+
+NO_WHIP = ("hook", "papa")
+
+
 def render_frame(fi):
     init()
+    build_camera()
     t = fi / FPS
     k = scene_at(t)
     ts, te = SEG[k]
     fr = Image.new("RGBA", (W, H), (0, 0, 0, 255))
+    OV[0] = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     SCENE_FN[k](fr, t, ts, te)
-    # board punch when delay jumps / hook
+    fr = apply_cam(fr, t)
+    fr.alpha_composite(OV[0])
+    v = t - ts
+    if v < 0.16 and k not in NO_WHIP:
+        fr = whip(fr, 1 - eo(v / 0.16), -1)
+    ki = KEYS.index(k)
+    if te - t < 0.12 and ki + 1 < len(KEYS) and KEYS[ki + 1] not in NO_WHIP:
+        fr = whip(fr, eio(1 - (te - t) / 0.12), 1)
     punch = 1.0
     if k == "hook":
         punch = 1.0 + 0.04 * math.sin(t * 18) * (t > at("hook", "Panik") - 0.2)
     draw_board(fr, t, punch=punch)
-    if k not in ("ende",) or t < WORDS[-1]["e"] + 0.25:
-        if k != "hook":
-            draw_caption(fr, t)
-    # screen shake on "Panik"
-    if k == "hook":
-        tp = at("hook", "Panik")
-        if t > tp - 0.1:
-            a = 14 * max(0, 1 - (t - tp) / 0.9)
-            dx, dy = int(a * math.sin(t * 90)), int(a * math.cos(t * 77))
-            fr = fr.transform(fr.size, Image.AFFINE, (1, 0, -dx, 0, 1, -dy), fillcolor=(0, 0, 0, 255))
-    # whip transition between scenes
-    v = t - ts
-    if v < 0.12 and k != "hook" and k != "papa":
-        fr.alpha_composite(Image.new("RGBA", (W, H), (255, 255, 255, int(150 * (1 - v / 0.12)))))
-    # progress bar
+    if (k != "ende" or t < WORDS[-1]["e"] + 0.25) and k != "hook":
+        draw_caption(fr, t)
     d = ImageDraw.Draw(fr)
     d.rectangle([0, H - 12, int(W * t / TOTAL), H], fill=YEL)
     return fr.convert("RGB").tobytes()
@@ -1798,6 +1942,57 @@ def thud(rng):
     return (body + rng.standard_normal(n) * env(n, 0.0005, 0.012) * 0.5) * 0.8
 
 
+def vine_boom():
+    n = int(1.1 * SR)
+    tt = np.arange(n) / SR
+    f = 46 + 70 * np.exp(-tt * 18)
+    x = np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-tt * 3.2)
+    return np.tanh(x * 3.5) * 0.55
+
+
+def martinshorn(dur):
+    n = int(dur * SR)
+    tt = np.arange(n) / SR
+    f = np.where((tt % 1.1) < 0.55, 466.0, 622.0)
+    x = saw(f) * 0.6 + np.sin(2 * np.pi * np.cumsum(f) / SR) * 0.5
+    e = np.minimum(1, tt / 0.05) * np.minimum(1, (dur - tt) / 0.2)
+    return onepole(x * e, 2600) * 0.32
+
+
+def scratch():
+    n = int(0.42 * SR)
+    tt = np.arange(n) / SR
+    f = 250 + 900 * np.abs(np.sin(2 * np.pi * 3.2 * tt))
+    x = saw(f) * np.exp(-tt * 3)
+    return onepole(x, 3000) * 0.4
+
+
+def slide_whistle(f0=500, f1=1900, dur=0.6):
+    n = int(dur * SR)
+    tt = np.arange(n) / SR
+    f = f0 + (f1 - f0) * (tt / dur) + 25 * np.sin(2 * np.pi * 7 * tt)
+    return np.sin(2 * np.pi * np.cumsum(f) / SR) * np.minimum(1, tt / 0.03) * np.minimum(1, (dur - tt) / 0.08) * 0.25
+
+
+def airhorn():
+    out = np.zeros(int(1.9 * SR))
+    for o, d in ((0.0, 0.22), (0.3, 0.22), (0.6, 1.0)):
+        n = int(d * SR)
+        tt = np.arange(n) / SR
+        x = sum(saw(np.full(n, f)) for f in (415, 523, 622)) / 3
+        x = onepole(x, 3200) * np.minimum(1, tt / 0.015) * np.minimum(1, (d - tt) / 0.06)
+        i = int(o * SR)
+        out[i:i + n] += x * 0.45
+    return out
+
+
+def boing():
+    n = int(0.6 * SR)
+    tt = np.arange(n) / SR
+    f = 160 + 120 * np.sin(2 * np.pi * 14 * tt) * np.exp(-tt * 5) + 140 * tt
+    return np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-tt * 4) * 0.45
+
+
 def bed(dur, bpm=100):
     rng = np.random.default_rng(3)
     n = int(dur * SR)
@@ -1843,7 +2038,8 @@ def make_audio(path):
         sig = sig[:max(0, n - i)]
         fx[i:i + len(sig)] += sig * g
 
-    put(alarm(SEG["hook"][1] - at("hook", "Panik") + 0.2), at("hook", "Panik") - 0.1, 1.2)
+    put(martinshorn(SEG["hook"][1] - at("hook", "Deutschland") + 0.3), at("hook", "Deutschland") - 0.1, 1.0)
+    put(vine_boom(), at("hook", "Panik") - 0.03, 1.2)
     put(whoosh(rng, 0.5), at("hook", "Panik") - 0.15, 0.8)
     put(chime(), SEG["einfahrt"][0] + 0.05, 0.9)
     put(horn(0.9), at("einfahrt", "fahre") - 0.2, 0.7)
@@ -1866,6 +2062,15 @@ def make_audio(path):
     put(moo(1.2), we - 1.2, 0.6)
     put(tone(1568, 0.5, 0.002, 0.2, harm=(1, .3)) * 0.35, at("einfahrt", "Wagenreihung") + 0.6)
     put(sob(rng), at("bahnsteig", "weint") - 0.1, 1.0)
+    put(boing(), at("bahnsteig", "fallen") + 0.1, 0.9)
+    put(vine_boom(), at("bahnsteig", "weint") - 0.15, 0.8)
+    put(scratch(), SEG["papa"][0] - 0.05, 1.0)
+    put(vine_boom(), at("papa", "hab") - 0.05, 1.0)
+    put(slide_whistle(1900, 450, 0.7), at("kuh", "Kuh") - 0.3, 1.0)
+    put(vine_boom(), at("kuh", "Sie") - 0.05, 0.8)
+    put(vine_boom(), at("kuh", "Ich") - 0.05, 0.8)
+    put(slide_whistle(400, 1500, 0.5), at("warten", "Endlich") - 0.05, 0.8)
+    put(airhorn(), at("ende", "Mit") + 0.15, 1.0)
     put(kaching(rng), at("news", "Preiserhöhung") + 0.05, 1.0)
     put(tone(1760, 0.5, 0.002, 0.2, harm=(1, .4)) * 0.35, at("kassel", "WLAN") + 0.1)
     put(choir(1.8), at("kassel", "Jemand") + 0.2, 1.0)
