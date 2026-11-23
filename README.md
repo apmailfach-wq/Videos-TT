@@ -77,3 +77,31 @@ python3 render.py              # rendert ../../fuehrerschein-video-neon.mp4
 python3 render.py shots        # Schnittliste
 python3 render.py preview 5 30 # Standbilder
 ```
+
+## Serie „Wenn Dinge reden könnten“ (Folge 1–3)
+
+Alltagsgegenstände erzählen ihre Biografie wie ein Hollywood-Trailer: Kriegsmemoiren, Gefängnisausbruch, Drama.
+Jedes Video: Gegenstand mit Cartoon-Augen + lippensynchronem Mund, Wort-für-Wort-Untertitel (aktuelles Wort gelb,
+Pointen-Wörter rot), Serien-Badge „Wenn Dinge reden könnten · Folge n“, Trailer-Kapitelstempel, synthetisierte
+Epic-Musik (Taiko, Drone, BRAAM-Schläge), Musik-Stopp vor jeder Pointe, Abschlussfrage „Welches Ding soll als
+Nächstes reden?“ als große Karte.
+
+| Datei | Folge | Stimme | Länge |
+|---|---|---|---|
+| `wenn-dinge-reden-schein.mp4` | 1 – Der 50-Euro-Schein | Conrad, tief (−14 Hz) | ca. 48 s |
+| `wenn-dinge-reden-flasche.mp4` | 2 – Die Pfandflasche | Katja | ca. 51 s |
+| `wenn-dinge-reden-socke.mp4` | 3 – Die verschwundene Socke | Killian | ca. 46 s |
+
+```bash
+cd src/dinge
+python3 tts.py all                 # Stimmen je Segment (script.py) -> build/dinge/<folge>/
+python3 render.py schein           # -> ../../wenn-dinge-reden-schein.mp4 (ebenso flasche, socke)
+python3 render.py socke preview    # Kontaktbogen mit Standbildern je Szene
+```
+
+- `script.py` – Texte als Segmente mit dramatischen Pausen (`p`), Szene (`s`), `fx="braam"`, `drop=True`
+- `core.py` – Timeline, Gesichter, Untertitel, Badge/Stempel/CTA, Kamera + Körnung, Musik-Synthese, Mix
+- `chars.py` – Figuren: Geldschein, Pfandflasche, Socken, Haargummi, Sammelkarten
+- `ep_schein.py`, `ep_flasche.py`, `ep_socke.py` – Bühnenbilder je Folge
+
+Neue Folge: Segmente in `script.py` ergänzen, `ep_<name>.py` mit `LABELS` + `draw(img, ctx)` anlegen.
