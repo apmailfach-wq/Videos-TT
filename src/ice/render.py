@@ -92,7 +92,7 @@ BEATS = {("einfahrt", "6 Uhr 12", 0): 0.15, ("einfahrt", "Minute", 0): 0.2,
          ("ende", "auf", 0): 0.25, ("ende", "Kuh", 0): 0.4, ("ende", "Vorstand", 0): 0.25}
 PRE = {"durchsage": 0.7}
 PAD = {"hook": 0.15, "einfahrt": 0.15, "durchsage": 0.3, "bahnsteig": 0.2, "news": 0.25, "kassel": 0.6,
-       "kuh": 0.3, "warten": 0.3, "ende": 2.1}
+       "kuh": 0.3, "warten": 0.3, "ende": 2.6}
 
 
 def norm(w):
@@ -153,6 +153,8 @@ def at(key, word, occ=0, lead=0.04):
 
 
 def scene_at(t):
+    if t < 0:
+        return KEYS[0]
     for k in KEYS:
         if SEG[k][0] <= t < SEG[k][1]:
             return k
@@ -1877,10 +1879,10 @@ def whip(fr, a, direction):
 NO_WHIP = ("hook", "papa")
 
 
-def render_frame(fi):
-    init()
-    build_camera()
-    t = fi / FPS
+LOOP = 0.5   # last seconds: whip straight back into the first frame of the hook (seamless TikTok loop)
+
+
+def compose(t, whips=True):
     k = scene_at(t)
     ts, te = SEG[k]
     fr = Image.new("RGBA", (W, H), (0, 0, 0, 255))
@@ -1888,18 +1890,36 @@ def render_frame(fi):
     SCENE_FN[k](fr, t, ts, te)
     fr = apply_cam(fr, t)
     fr.alpha_composite(OV[0])
-    v = t - ts
-    if v < 0.16 and k not in NO_WHIP:
-        fr = whip(fr, 1 - eo(v / 0.16), -1)
-    ki = KEYS.index(k)
-    if te - t < 0.12 and ki + 1 < len(KEYS) and KEYS[ki + 1] not in NO_WHIP:
-        fr = whip(fr, eio(1 - (te - t) / 0.12), 1)
+    if whips:
+        v = t - ts
+        if v < 0.16 and k not in NO_WHIP:
+            fr = whip(fr, 1 - eo(v / 0.16), -1)
+        ki = KEYS.index(k)
+        if te - t < 0.12 and ki + 1 < len(KEYS) and KEYS[ki + 1] not in NO_WHIP:
+            fr = whip(fr, eio(1 - (te - t) / 0.12), 1)
     punch = 1.0
     if k == "hook":
         punch = 1.0 + 0.04 * math.sin(t * 18) * (t > at("hook", "Panik") - 0.2)
     draw_board(fr, t, punch=punch)
     if (k != "ende" or t < WORDS[-1]["e"] + 0.25) and k != "hook":
         draw_caption(fr, t)
+    return fr
+
+
+def render_frame(fi):
+    init()
+    build_camera()
+    t = fi / FPS
+    tl = TOTAL - t
+    if tl < LOOP:
+        a = 1 - tl / LOOP
+        if a < 0.5:
+            fr = whip(compose(t), eio(a / 0.5), 1)
+        else:
+            # the hook as it will look just before t=0, so frame N -> frame 0 continues the motion
+            fr = whip(compose(t - TOTAL, whips=False), 1 - eo((a - 0.5) / 0.5), -1)
+    else:
+        fr = compose(t)
     d = ImageDraw.Draw(fr)
     d.rectangle([0, H - 12, int(W * t / TOTAL), H], fill=YEL)
     return fr.convert("RGB").tobytes()
@@ -2210,6 +2230,8 @@ def make_audio(path):
         fx[i:i + len(sig)] += sig * g
 
     put(martinshorn(SEG["hook"][1] + 0.3), 0.0, 0.75)
+    put(martinshorn(LOOP + 0.6) [:int(LOOP * SR)] * np.linspace(0, 1, int(LOOP * SR)) ** 0.5, TOTAL - LOOP, 0.75)
+    put(whoosh(rng, 0.35), TOTAL - LOOP * 0.6, 0.5)
     put(martinshorn(SEG["hook"][1] - at("hook", "Deutschland") + 0.3), at("hook", "Deutschland") - 0.1, 0.5)
     put(thud(np.random.default_rng(2)), 0.02, 1.0)
     put(slide_whistle(1700, 350, 0.6), at("hook", "Deutschland") - 0.05, 0.9)
@@ -2260,7 +2282,7 @@ def make_audio(path):
         gate[int(a_ * SR):int(b_ * SR)] = 0
     gate = np.convolve(gate, np.ones(4800) / 4800, mode="same")
     mix = voice + fx * 0.6 + b * gate * 0.22
-    fade = np.minimum(1, (n - np.arange(n)) / SR / 0.6)
+    fade = np.ones(n)
     mix = np.clip(mix * fade, -1, 1)
     with wave.open(str(path), "wb") as w:
         w.setnchannels(1)

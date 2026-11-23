@@ -81,7 +81,7 @@ python3 render.py preview 5 30 # Standbilder
 ## ice-video.mp4 – „Der ICE“ (Satire-Kurzfilm, schwarzer Bahn-Humor)
 
 **Hook:** „Heute war ich pünktlich. Deutschland ist in Panik.“ – der ICE erzählt selbst, todernst.
-Länge ca. 62 s · 1080×1920 · 30 fps · Cartoon-Look: ICE mit Glupschaugen, blaue Anzeigetafel oben
+Länge ca. 63 s · 1080×1920 · 30 fps · nahtloser Loop (letzte 0,5 s wischen zurück in Bild 1 des Hooks, Martinshorn läuft durch) · Cartoon-Look: ICE mit Glupschaugen, blaue Anzeigetafel oben
 (Verspätung grün „+0“ blinkt panisch → rot „+70“ = Ordnung wiederhergestellt), Lauftext-Gags, Wort-für-Wort-Untertitel.
 
 | Szene | Gag |
