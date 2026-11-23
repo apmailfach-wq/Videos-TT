@@ -1118,54 +1118,65 @@ def sc_hook(fr, t, ts, te):
     tdt = at("hook", "Deutschland")
     pan = at("hook", "Panik")
     panic = t >= tdt - 0.08
-    if not panic:
-        rays(fr, W // 2, 1000, 18, u * 0.25, (60, 200, 120), (30, 160, 95))
-    else:
-        rays(fr, W // 2, 1000, 18, -u * 1.4, (215, 25, 40), (150, 10, 25))
+    # the world is already in panic from frame 1 ...
+    rays(fr, W // 2, 1000, 18, -u * (0.5 if not panic else 1.6), (215, 25, 40), (150, 10, 25))
     fr.alpha_composite(vignette())
-    if panic:
-        siren(fr, 120, 520, t)
-        siren(fr, W - 120, 520, t + 0.35, col=(60, 140, 255))
-    # the train
-    expr = "proud" if not panic else ("shock" if t >= pan - 0.2 else "nervous")
-    look = (math.sin(u * 9) * 0.9, 0.1) if panic else (0.0, -0.1)
-    tf = train_front(expr, t, look=look)
-    zoom = 1.28 + 0.06 * eo(u / 4) + (0.05 * (1 - eo((t - pan) / 0.3)) if t >= pan else 0)
+    siren(fr, 120, 560, t)
+    siren(fr, W - 120, 560, t + 0.35, col=(60, 140, 255))
+    for i in range(5):
+        spd = 430 + 90 * i
+        x = (i * 260 + u * spd * (1 if i % 2 else -1)) % (W + 300) - 150
+        bob = -18 * abs(math.sin(t * 14 + i))
+        paste(fr, runner(t, i, h=230), x, 1340 + bob)
+    # ... while the train is cool as ice
+    zoom = 1.24 + 0.05 * eo(u / 4) + (0.07 * (1 - eo((t - pan) / 0.3)) if t >= pan else 0)
+    if not panic:
+        tf = train_front("proud", t, look=(0, 0))
+    else:
+        tf = train_front("shock" if t >= pan - 0.2 else "nervous", t, look=(math.sin(u * 9) * 0.9, 0.1))
     sx = 10 * math.sin(t * 70) if t >= pan else 0
     paste(fr, scaled(tf, zoom), W // 2 + sx, 990)
+    # sunglasses: on while cool, fall off on "Deutschland"
+    ey = 990 + (238 - 325) * zoom
+    sg = scaled(shades(), 1.22 * zoom)
     if not panic:
-        # sparkle + "+0" badge: proud
-        b = boxed("+0 MIN", 62, WHITE, GREEN, rot=10)
-        paste(fr, scaled(b, 0.5 + 0.5 * eback((u - 0.5) / 0.3)), 840, 620, alpha=c01((u - 0.5) / 0.1))
+        paste(fr, sg, W // 2 + 2, ey + 4)
+        # glint across the lenses
+        gx = ((u * 1.3) % 1.6) * 700 - 100
+        if gx < 640:
+            gl = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+            ImageDraw.Draw(gl).polygon([(gx + 200, ey - 60), (gx + 240, ey - 60), (gx + 200, ey + 70), (gx + 160, ey + 70)],
+                                       fill=(255, 255, 255, 150))
+            fr.alpha_composite(gl)
+    else:
+        v = t - (tdt - 0.08)
+        if v < 1.2:
+            paste(fr, sg.rotate(-v * 160, expand=True, resample=Image.BICUBIC), W // 2 + 2 + 120 * v, ey + 4 + 1300 * v * v)
+    # "+0 MIN" stamp + sparkles while cool
+    if not panic:
+        b = boxed("+0 MIN", 64, WHITE, GREEN, rot=10)
+        paste(fr, scaled(b, 1.5 - 0.5 * eo(u / 0.18)), 840, 640)
+        d = ImageDraw.Draw(fr)
         for k in range(4):
             a = (u * 2 + k * 0.25) % 1
-            sx_, sy_ = 160 + k * 250, 560 + 60 * (k % 2)
-            d = ImageDraw.Draw(fr)
+            sx_, sy_ = 170 + k * 240, 640 + 70 * (k % 2)
             r = 22 * math.sin(a * math.pi)
             d.polygon([(sx_, sy_ - r * 2), (sx_ + r * 0.5, sy_), (sx_, sy_ + r * 2), (sx_ - r * 0.5, sy_)], fill=YEL)
             d.polygon([(sx_ - r * 2, sy_), (sx_, sy_ - r * 0.5), (sx_ + r * 2, sy_), (sx_, sy_ + r * 0.5)], fill=YEL)
     else:
         v = t - (tdt - 0.08)
-        for i in range(5):
-            spd = 520 + 90 * i
-            x = (i * 260 + v * spd * (1 if i % 2 else -1)) % (W + 300) - 150
-            bob = -18 * abs(math.sin(t * 14 + i))
-            paste(fr, runner(t, i), x, 1330 + bob)
-        if v > 0.25:
-            d = ImageDraw.Draw(fr)
-            for i, (ax, ay, rot) in enumerate([(150, 760, 12), (900, 820, -10)]):
-                tx = boxed("AAAH!", 46, INK, WHITE, rot=rot)
-                paste(fr, tx, ax + 6 * math.sin(t * 40 + i), ay)
+        for i, (ax, ay, rot) in enumerate([(160, 780, 12), (910, 840, -10)]):
+            if v > 0.15 + i * 0.15:
+                paste(fr, boxed("AAAH!", 46, INK, WHITE, rot=rot), ax + 6 * math.sin(t * 40 + i), ay)
     # retention teaser
     tz = boxed("WARTE AUF DIE KUH …", 34, INK, YEL, rot=-3)
-    paste(OV[0], tz, W // 2, 470 + 5 * math.sin(t * 5), alpha=c01((u - 0.3) / 0.2))
-    # headline
+    paste(OV[0], tz, W // 2, 470 + 5 * math.sin(t * 5))
+    # headline – fully visible from frame 1
     if not panic:
         l1 = boxed("HEUTE WAR ICH", 70, WHITE, INK, rot=-2)
-        paste(OV[0], scaled(l1, 0.9 + 0.1 * eback(u / 0.22)), W // 2, 1530)
-        tp = at("hook", "pünktlich") - 0.1
+        paste(OV[0], scaled(l1, 1.0 + 0.05 * (1 - eo(u / 0.2))), W // 2, 1530)
         l2 = boxed("PÜNKTLICH.", 104, INK, GREEN, rot=3)
-        paste(OV[0], scaled(l2, 0.9 + 0.1 * eback((t - max(0, tp)) / 0.22)), W // 2, 1690)
+        paste(OV[0], scaled(l2, 1.0 + 0.08 * (1 - eo(u / 0.2))), W // 2, 1690)
     else:
         v = t - (tdt - 0.08)
         l1 = boxed("DEUTSCHLAND IST IN", 58, WHITE, INK, rot=2)
@@ -1771,9 +1782,6 @@ def sc_ende(fr, t, ts, te):
         paste(OV[0], scaled(b2, 0.6 + 0.4 * eback((vv - 0.15) / 0.25)), W // 2, 1670, alpha=c01((vv - 0.15) / 0.05))
         paste(OV[0], emoji("👇", 90), W // 2 - 320, 1830 + 12 * math.sin(t * 6), alpha=c01(vv / 0.2))
         paste(OV[0], emoji("👇", 90), W // 2 + 320, 1830 + 12 * math.sin(t * 6 + 1), alpha=c01(vv / 0.2))
-        if vv > 0.9:
-            f2 = boxed("FOLGEN FÜR TEIL 2", 40, INK, WHITE, rot=0)
-            paste(OV[0], f2, W // 2, 1830, alpha=c01((vv - 0.9) / 0.15))
 
 
 SCENE_FN = {"hook": sc_hook, "einfahrt": sc_einfahrt, "durchsage": sc_durchsage, "bahnsteig": sc_bahnsteig, "news": sc_news,
@@ -2203,7 +2211,10 @@ def make_audio(path):
         sig = sig[:max(0, n - i)]
         fx[i:i + len(sig)] += sig * g
 
-    put(martinshorn(SEG["hook"][1] - at("hook", "Deutschland") + 0.3), at("hook", "Deutschland") - 0.1, 1.0)
+    put(martinshorn(SEG["hook"][1] + 0.3), 0.0, 0.75)
+    put(martinshorn(SEG["hook"][1] - at("hook", "Deutschland") + 0.3), at("hook", "Deutschland") - 0.1, 0.5)
+    put(thud(np.random.default_rng(2)), 0.02, 1.0)
+    put(slide_whistle(1700, 350, 0.6), at("hook", "Deutschland") - 0.05, 0.9)
     put(vine_boom(), at("hook", "Panik") - 0.03, 1.2)
     put(whoosh(rng, 0.5), at("hook", "Panik") - 0.15, 0.8)
     put(chime(), SEG["einfahrt"][0] + 0.05, 0.9)

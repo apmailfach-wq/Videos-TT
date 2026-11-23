@@ -86,7 +86,7 @@ Länge ca. 78 s · 1080×1920 · 30 fps · Cartoon-Look: ICE mit Glupschaugen, b
 
 | Szene | Gag |
 |---|---|
-| Hook | Stolzer Zug vor grünem Strahlenkranz mit „+0 MIN“-Badge → Umschnitt auf rote Strahlen, Sirenen, rennende Menschen („AAAH!“), zitterndes „PANIK!“-Label |
+| Hook | Ab Bild 1 Chaos (Martinshorn, Sirenen, rote Strahlen, rennende Menschen) – mittendrin der Zug, eiskalt mit Sonnenbrille und „+0 MIN“; bei „Deutschland“ fällt die Brille, Panik-Augen, zitterndes „PANIK!“; Teaser „WARTE AUF DIE KUH …“ |
 | 6:12 Uhr | Einfahrt auf die Minute + „richtige Wagenreihung“ (Wagen 1-2-3), zwei Stempel |
 | Durchsage | Gong, Bahnhofslautsprecher (Seraphina, blechern mit Hall): „Sehr geehrte Fahrgäste, aufgrund einer unerwarteten Pünktlichkeit kommt es zu erheblichen Verspätungen im gesamten Betriebsablauf.“ – alle starren zum Lautsprecher, Stempel „PÜNKTLICH = VERSPÄTUNG“ |
 | Bahnsteig | Stille (Grillen), Kaffee fällt (Boing) – die Oma (lila Kleid, Dutt, Brille, Perlenohrringe, Handtasche) bekreuzigt sich (Chor, Lichtschein, 🙏), Mann verabschiedet sich von Mama, Rentner weint: „Warte seit 1998 auf Anschluss“ |
@@ -94,7 +94,7 @@ Länge ca. 78 s · 1080×1920 · 30 fps · Cartoon-Look: ICE mit Glupschaugen, b
 | Kassel | Handys filmen, „Das WLAN funktioniert.“ |
 | Kuh vor Fulda | Western-Duell, gemeinsames Blinzeln, Kuh bekommt Schaffnermütze, zwinkert: „IM AUFTRAG DER BAHN“ |
 | 70 Minuten | Klima ❌ Bistro ❌ WC ❌ – „Endlich fühle ich mich wieder wie ich selbst.“ (Herzchen) |
-| Ende | „PUUUH!“ am Bahnsteig → Vorstandsetage: Kuh im Ledersessel, Chart „Boni ↑ Pünktlichkeit ↓“, Porträt „Mitarbeiterin“, Sonnenbrille fällt bei „Bonus“, Geldstapel → „Eure schlimmste Bahn-Story?“ + „Folgen für Teil 2“ |
+| Ende | „PUUUH!“ am Bahnsteig → Vorstandsetage: Kuh im Ledersessel, Chart „Boni ↑ Pünktlichkeit ↓“, Porträt „Mitarbeiterin“, Sonnenbrille fällt bei „Bonus“, Geldstapel → „Eure schlimmste Bahn-Story?“ |
 
 Stimmen (edge-tts): Zug `de-DE-FlorianMultilingualNeural` (+16 %), Kind `de-DE-KatjaNeural` (hoch gepitcht), Papa `de-DE-KillianNeural` (langsam).
 Comedy-Pausen werden in `render.py` (`BEATS`, `PAD`) direkt in die Tonspur geschnitten.
