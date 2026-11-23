@@ -77,3 +77,32 @@ python3 render.py              # rendert ../../fuehrerschein-video-neon.mp4
 python3 render.py shots        # Schnittliste
 python3 render.py preview 5 30 # Standbilder
 ```
+
+## ice-video.mp4 – „Der ICE“ (Satire-Kurzfilm)
+
+**Hook:** „Heute war ich pünktlich. Deutschland ist in Panik.“ – der ICE erzählt selbst, todernst.
+Länge ca. 66 s · 1080×1920 · 30 fps · Cartoon-Look: ICE mit Glupschaugen, blaue Anzeigetafel oben
+(Verspätung grün „+0“ blinkt panisch → rot „+70“ = Ordnung wiederhergestellt), Lauftext-Gags, Wort-für-Wort-Untertitel.
+
+| Szene | Inhalt |
+|---|---|
+| Hook | Zug-Gesicht close-up, roter Alarm, Screen-Shake auf „Panik“ |
+| 6:12 Uhr | Bahnhofsuhr springt auf 6:12, Gong, Zug fährt auf die Minute ein, Stempel „AUF DIE MINUTE“ |
+| Bahnsteig | Stille (Grillen), Kaffee fällt, Mann ruft Mama an |
+| Nachrichten | „EILMELDUNG“, Prof. Dr. Gleis: „Ein Systemfehler.“ |
+| Kassel | Schild Kassel-Wilhelmshöhe, Handys filmen, Blitzlichter |
+| Kind & Papa | eigene Stimmen, Sprechblasen, Grillen-Pause |
+| Kuh vor Fulda | Bremsfunken, Muh, Western-Duell im Splitscreen, gemeinsames Blinzeln 🤝 |
+| 70 Minuten | Zeitraffer, Zähler +0 → +70, Kuh schläft |
+| Ende | „Ordnung wiederhergestellt“, alle atmen auf, Kommentar-Frage „Was war eure längste Verspätung?“ |
+
+Stimmen (edge-tts): Zug `de-DE-ConradNeural`, Kind `de-DE-KatjaNeural` (hoch gepitcht), Papa `de-DE-KillianNeural` (langsam).
+Comedy-Pausen werden in `render.py` (`BEATS`, `PAD`) direkt in die Tonspur geschnitten.
+
+```bash
+cd src/ice
+python3 tts.py                 # Stimmen + Wort-Timings -> build/ice/
+python3 render.py              # rendert ../../ice-video.mp4
+python3 render.py times        # Szenen-Zeiten
+python3 render.py preview 5 30 # Standbilder
+```
