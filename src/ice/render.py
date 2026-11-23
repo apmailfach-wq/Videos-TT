@@ -314,7 +314,7 @@ def blink(t, period=3.7, phase=0.0):
 # ------------------------------------------------------------------ train (front view)
 def train_front(ex, t=0.0, look=(0, 0), extra_lid=0.0, scale=1.0):
     e = EXPR[ex]
-    lid = max(e["lid"], blink(t, 3.3), extra_lid)
+    lid = max(e["lid"], blink(t + 1.6, 3.3), extra_lid)
 
     def fn(d, s):
         s = s * scale
@@ -921,32 +921,129 @@ def train_y(sc=1.0):
     return RAIL_Y - int(385 * sc)
 
 
+def boxed(text, size, fg, bg, rot=0, pad=(34, 16), jitter=0.0, t=0.0):
+    """TikTok-style label: bold text on a rounded colour box with hard drop shadow."""
+    f = font(F_HEAD, size)
+    tw = f.getlength(text)
+    w, h = int(tw + 2 * pad[0]), int(size * 1.25 + 2 * pad[1])
+    im = Image.new("RGBA", (w + 16, h + 16), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    d.rounded_rectangle([12, 12, w + 12, h + 12], radius=22, fill=INK)
+    d.rounded_rectangle([0, 0, w, h], radius=22, fill=bg, outline=INK, width=6)
+    x = pad[0]
+    for i, ch in enumerate(text):
+        dy = jitter * math.sin(t * 47 + i * 2.3)
+        dx = jitter * 0.6 * math.cos(t * 39 + i * 1.7)
+        d.text((x + dx, pad[1] + dy), ch, font=f, fill=fg)
+        x += f.getlength(ch)
+    return im.rotate(rot, expand=True, resample=Image.BICUBIC) if rot else im
+
+
+def rays(frame, cx, cy, n, ang0, c1, c2, alpha=255):
+    lay = Image.new("RGBA", (W, H), c2 + (alpha,))
+    d = ImageDraw.Draw(lay)
+    R = 2600
+    for i in range(n):
+        a0 = ang0 + i * 2 * math.pi / n
+        a1 = a0 + math.pi / n
+        d.polygon([(cx, cy), (cx + R * math.cos(a0), cy + R * math.sin(a0)),
+                   (cx + R * math.cos(a1), cy + R * math.sin(a1))], fill=c1 + (alpha,))
+    frame.alpha_composite(lay)
+
+
+@lru_cache(maxsize=1)
+def vignette():
+    y, x = np.mgrid[0:H, 0:W]
+    r = np.sqrt(((x - W / 2) / (W * 0.75)) ** 2 + ((y - H * 0.5) / (H * 0.62)) ** 2)
+    a = (np.clip(r - 0.45, 0, 1) * 330).clip(0, 200).astype(np.uint8)
+    im = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    im.putalpha(Image.fromarray(a))
+    return im
+
+
+def siren(frame, x, y, t, col=(255, 40, 40)):
+    beam = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    bd = ImageDraw.Draw(beam)
+    a = t * 9
+    for k in (0, math.pi):
+        a0, a1 = a + k - 0.28, a + k + 0.28
+        bd.polygon([(x, y), (x + 1400 * math.cos(a0), y + 1400 * math.sin(a0) * 0.55),
+                    (x + 1400 * math.cos(a1), y + 1400 * math.sin(a1) * 0.55)], fill=col + (70,))
+    frame.alpha_composite(beam)
+    d = ImageDraw.Draw(frame)
+    d.rounded_rectangle([x - 70, y + 30, x + 70, y + 62], radius=8, fill=(50, 50, 60))
+    d.chord([x - 56, y - 50, x + 56, y + 62], 180, 360, fill=col, outline=INK, width=5)
+    on = (t * 4) % 1 < 0.5
+    d.ellipse([x - 26, y - 22, x + 4, y + 6], fill=(255, 220, 220) if on else (255, 120, 120))
+
+
+def runner(t, i, h=250):
+    cols = [(230, 120, 60), (80, 130, 200), (120, 170, 90), (180, 80, 160), (250, 200, 40)]
+    spec = dict(shirt=cols[i % 5], pants=(50, 54, 66), hair=[(70, 50, 40), (200, 170, 90), (40, 30, 30)][i % 3],
+                style=["short", "long", "bald"][i % 3], ph=i * 0.7)
+    sw = math.sin(t * 16 + i)
+    pose = dict(r=(-165 + 15 * sw, -20), l=(165 - 15 * sw, 20), mouth="o", look=(1, -1), eye=11)
+    return person(spec, pose, t, h=h)
+
+
 def sc_hook(fr, t, ts, te):
     u = t - ts
-    fr.alpha_composite(BG["platform"])
-    dark = Image.new("RGBA", (W, H), (60, 0, 10, 140))
-    fr.alpha_composite(dark)
-    # rotating alarm light glow
+    tdt = at("hook", "Deutschland")
     pan = at("hook", "Panik")
-    a = 0.5 + 0.5 * math.sin(u * 10)
-    glow = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    gd = ImageDraw.Draw(glow)
-    for cx in (0, W):
-        gd.ellipse([cx - 420, 300 - 420, cx + 420, 300 + 420], fill=(255, 30, 30, int(120 * a)))
-    fr.alpha_composite(glow.filter(ImageFilter.GaussianBlur(60)))
-    expr = "proud" if t < pan - 0.2 else "shock"
-    look = (math.sin(u * 7) * 0.8, 0.2) if t >= pan - 0.2 else (0, 0)
+    panic = t >= tdt - 0.08
+    if not panic:
+        rays(fr, W // 2, 1000, 18, u * 0.25, (60, 200, 120), (30, 160, 95))
+    else:
+        rays(fr, W // 2, 1000, 18, -u * 1.4, (215, 25, 40), (150, 10, 25))
+    fr.alpha_composite(vignette())
+    if panic:
+        siren(fr, 120, 520, t)
+        siren(fr, W - 120, 520, t + 0.35, col=(60, 140, 255))
+    # the train
+    expr = "proud" if not panic else ("shock" if t >= pan - 0.2 else "nervous")
+    look = (math.sin(u * 9) * 0.9, 0.1) if panic else (0.0, -0.1)
     tf = train_front(expr, t, look=look)
-    zoom = 1.18 + 0.08 * eo(u / 4)
-    paste(fr, scaled(tf, zoom), W // 2, 960 + 30 * (1 - eo(u / 0.4)))
+    zoom = 1.28 + 0.06 * eo(u / 4) + (0.05 * (1 - eo((t - pan) / 0.3)) if t >= pan else 0)
+    sx = 10 * math.sin(t * 70) if t >= pan else 0
+    paste(fr, scaled(tf, zoom), W // 2 + sx, 990)
+    if not panic:
+        # sparkle + "+0" badge: proud
+        b = boxed("+0 MIN", 62, WHITE, GREEN, rot=10)
+        paste(fr, scaled(b, 0.5 + 0.5 * eback((u - 0.5) / 0.3)), 840, 620, alpha=c01((u - 0.5) / 0.1))
+        for k in range(4):
+            a = (u * 2 + k * 0.25) % 1
+            sx_, sy_ = 160 + k * 250, 560 + 60 * (k % 2)
+            d = ImageDraw.Draw(fr)
+            r = 22 * math.sin(a * math.pi)
+            d.polygon([(sx_, sy_ - r * 2), (sx_ + r * 0.5, sy_), (sx_, sy_ + r * 2), (sx_ - r * 0.5, sy_)], fill=YEL)
+            d.polygon([(sx_ - r * 2, sy_), (sx_, sy_ - r * 0.5), (sx_ + r * 2, sy_), (sx_, sy_ + r * 0.5)], fill=YEL)
+    else:
+        v = t - (tdt - 0.08)
+        for i in range(5):
+            spd = 520 + 90 * i
+            x = (i * 260 + v * spd * (1 if i % 2 else -1)) % (W + 300) - 150
+            bob = -18 * abs(math.sin(t * 14 + i))
+            paste(fr, runner(t, i), x, 1330 + bob)
+        if v > 0.25:
+            d = ImageDraw.Draw(fr)
+            for i, (ax, ay, rot) in enumerate([(150, 760, 12), (900, 820, -10)]):
+                tx = boxed("AAAH!", 46, INK, WHITE, rot=rot)
+                paste(fr, tx, ax + 6 * math.sin(t * 40 + i), ay)
     # headline
-    l1 = headline(["HEUTE WAR ICH", "PÜNKTLICH."], size=84, cols=[WHITE, GREEN])
-    pop = eback(u / 0.25)
-    paste(fr, scaled(l1, 0.6 + 0.4 * pop), W // 2, 1450)
-    if t >= pan - 0.45:
-        v = t - (pan - 0.45)
-        l2 = headline(["DEUTSCHLAND", "IST IN PANIK."], size=84, cols=[WHITE, (255, 70, 70)])
-        paste(fr, scaled(l2, 0.6 + 0.4 * eback(v / 0.22)), W // 2, 1690)
+    if not panic:
+        l1 = boxed("HEUTE WAR ICH", 70, WHITE, INK, rot=-2)
+        paste(fr, scaled(l1, 0.9 + 0.1 * eback(u / 0.22)), W // 2, 1530)
+        tp = at("hook", "pünktlich") - 0.1
+        l2 = boxed("PÜNKTLICH.", 104, INK, GREEN, rot=3)
+        paste(fr, scaled(l2, 0.9 + 0.1 * eback((t - max(0, tp)) / 0.22)), W // 2, 1690)
+    else:
+        v = t - (tdt - 0.08)
+        l1 = boxed("DEUTSCHLAND IST IN", 58, WHITE, INK, rot=2)
+        paste(fr, scaled(l1, 0.7 + 0.3 * eback(v / 0.2)), W // 2, 1520)
+        if t >= pan - 0.1:
+            w_ = t - (pan - 0.1)
+            l2 = boxed("PANIK!", 150, WHITE, RED, rot=-4, jitter=5, t=t)
+            paste(fr, scaled(l2, 1.5 - 0.5 * eo(w_ / 0.16)), W // 2, 1710)
 
 
 def sc_einfahrt(fr, t, ts, te):
@@ -1330,6 +1427,50 @@ def sc_warten(fr, t, ts, te):
     paste(fr, z, 250 + 10 * math.sin(t * 3), 1000 - 20 * ((t * 0.8) % 1), alpha=0.9)
 
 
+def shades():
+    def fn(d, s):
+        for x in (0, 150):
+            d.polygon(S([(x + 10, 10), (x + 140, 10), (x + 130, 70), (x + 75, 95), (x + 22, 75)], s), fill=INK)
+            d.line(S([(x + 30, 22), (x + 60, 22)], s), fill=(120, 120, 140), width=int(6 * s))
+        d.rectangle([130 * s, 14 * s, 170 * s, 30 * s], fill=INK)
+        d.line([0, 22 * s, 10 * s, 22 * s], fill=INK, width=int(10 * s))
+        d.line([290 * s, 22 * s, 300 * s, 22 * s], fill=INK, width=int(10 * s))
+    return patch(300, 100, fn)
+
+
+def wall_chart(t, v):
+    cw, ch = 440, 300
+
+    def fn(d, s):
+        d.rounded_rectangle([0, 0, cw * s, ch * s], radius=12 * s, fill=(245, 242, 232), outline=(60, 40, 25),
+                            width=int(12 * s))
+        d.text((24 * s, 18 * s), "BILANZ 2026", font=font(F_HEAD, int(30 * s)), fill=INK)
+        d.line([40 * s, 250 * s, 410 * s, 250 * s], fill=INK, width=int(4 * s))
+        d.line([40 * s, 70 * s, 40 * s, 250 * s], fill=INK, width=int(4 * s))
+        g = eo(v / 1.2)
+        up = [(40 + 370 * k / 6, 235 - 160 * (k / 6) ** 1.6) for k in range(7)]
+        dn = [(40 + 370 * k / 6, 95 + 140 * (k / 6) ** 0.7) for k in range(7)]
+        n = max(2, int(2 + 5 * g))
+        d.line(S(up[:n], s), fill=GREEN, width=int(9 * s), joint="curve")
+        d.line(S(dn[:n], s), fill=RED, width=int(9 * s), joint="curve")
+        d.text((270 * s, 70 * s), "Boni", font=font(F_BODY_X, int(30 * s)), fill=GREEN)
+        d.text((180 * s, 200 * s), "Pünktlichkeit", font=font(F_BODY_X, int(26 * s)), fill=RED)
+    return patch(cw, ch, fn)
+
+
+def portrait(t):
+    pw, ph = 330, 300
+    im = Image.new("RGBA", (pw, ph), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    d.rectangle([0, 0, pw, ph], fill=(200, 160, 60))
+    d.rectangle([16, 16, pw - 16, ph - 70], fill=(150, 200, 240))
+    cf = cow_face(t, lid=0.4, scale=0.36, cap=True)
+    im.alpha_composite(cf, ((pw - cf.width) // 2, 22))
+    d.rectangle([16, ph - 66, pw - 16, ph - 16], fill=(250, 245, 225))
+    text_center(d, pw / 2, ph - 60, "Mitarbeiterin", font(F_HAND, 34), INK)
+    return im
+
+
 def sc_ende(fr, t, ts, te):
     u = t - ts
     t_atmet = at("ende", "atmet")
@@ -1359,50 +1500,80 @@ def sc_ende(fr, t, ts, te):
             fr.alpha_composite(wl)
             st = stamp("ORDNUNG WIEDERHERGESTELLT", RED, 44, rot=-6)
             paste(fr, st, W // 2, 690, alpha=c01(v / 0.15))
+            pu = boxed("PUUUH!", 80, INK, WHITE, rot=-5)
+            paste(fr, scaled(pu, 0.6 + 0.4 * eback(v / 0.25)), 760, 860)
         return
     # boardroom: the cow got promoted
     v = t - t_kuh
-    fr.alpha_composite(vgrad(W, H, (70, 50, 40), (40, 28, 22)))
+    fr.alpha_composite(vgrad(W, H, (92, 62, 44), (46, 30, 22)))
     d = ImageDraw.Draw(fr)
-    for x in range(0, W, 120):
-        d.rectangle([x, 420, x + 6, 1300], fill=(85, 62, 50))
-    # window with skyline
-    d.rounded_rectangle([140, 470, 940, 900], radius=10, fill=(150, 200, 240), outline=(30, 20, 15), width=14)
-    for i, (bx, bh) in enumerate([(170, 220), (300, 320), (430, 180), (560, 280), (700, 360), (830, 200)]):
-        d.rectangle([bx, 900 - bh, bx + 100, 890], fill=(120, 160, 200))
+    for x in range(0, W, 180):
+        d.rectangle([x + 10, 430, x + 170, 1380], outline=(110, 76, 54), width=6)
+    # spotlight
+    sp = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    ImageDraw.Draw(sp).polygon([(W // 2 - 80, 410), (W // 2 + 80, 410), (W // 2 + 430, 1400), (W // 2 - 430, 1400)],
+                               fill=(255, 230, 160, 50))
+    fr.alpha_composite(sp.filter(ImageFilter.GaussianBlur(25)))
+    paste(fr, shadowed(wall_chart(t, v)), 260, 610)
+    paste(fr, shadowed(portrait(t)), 860, 600)
+    # leather chair
+    d.rounded_rectangle([W // 2 - 330, 760, W // 2 + 330, 1420], radius=150, fill=(60, 22, 18), outline=INK, width=6)
+    for k in range(3):
+        for j in range(3):
+            d.ellipse([W // 2 - 200 + k * 200 - 8, 860 + j * 140 - 8, W // 2 - 200 + k * 200 + 8, 860 + j * 140 + 8],
+                      fill=(40, 12, 10))
     if t >= t_vor:
-        # suit
         sw = 520
-        d.rounded_rectangle([W // 2 - sw // 2, 1080, W // 2 + sw // 2, 1500], radius=120, fill=(30, 30, 40))
+        d.rounded_rectangle([W // 2 - sw // 2, 1080, W // 2 + sw // 2, 1520], radius=120, fill=(30, 30, 40))
         d.polygon([(W // 2 - 70, 1080), (W // 2 + 70, 1080), (W // 2, 1250)], fill=WHITE)
         d.polygon([(W // 2 - 20, 1090), (W // 2 + 20, 1090), (W // 2 + 28, 1220), (W // 2, 1260),
                    (W // 2 - 28, 1220)], fill=RED)
-    cf = cow_face(t, look=(0, 0.1), lid=0.35, chew=t * 1.3, scale=0.95)
-    paste(fr, cf, W // 2, 900 + 25 * (1 - eo(v / 0.4)))
-    # desk + nameplate
-    d.rectangle([0, 1380, W, H], fill=(110, 70, 40))
-    d.rectangle([0, 1380, W, 1400], fill=(140, 92, 56))
+        d.polygon([(W // 2 - 260, 1150), (W // 2 - 70, 1080), (W // 2 - 150, 1300)], fill=(45, 45, 58))
+        d.polygon([(W // 2 + 260, 1150), (W // 2 + 70, 1080), (W // 2 + 150, 1300)], fill=(45, 45, 58))
+    csc = 0.92
+    cy = 900 + 25 * (1 - eo(v / 0.4))
+    paste(fr, cow_face(t, look=(0, 0.1), lid=0.35, chew=t * 1.3, scale=csc), W // 2, cy)
+    # desk
+    d.rectangle([0, 1390, W, H], fill=(104, 64, 36))
+    d.rectangle([0, 1390, W, 1412], fill=(150, 98, 60))
     if t >= t_vor:
         pl = Image.new("RGBA", (560, 110), (0, 0, 0, 0))
         pd = ImageDraw.Draw(pl)
         pd.rounded_rectangle([0, 0, 560, 110], radius=10, fill=(220, 180, 60), outline=INK, width=5)
         text_center(pd, 280, 20, "VORSTAND", font(F_HEAD, 58), INK)
-        paste(fr, pl, W // 2, 1350, alpha=c01((t - t_vor) / 0.1))
+        paste(fr, pl, W // 2, 1360, alpha=c01((t - t_vor) / 0.1))
     if t >= t_bon:
         vb = t - t_bon
-        bag = emoji("💰", int(230 * eback(vb / 0.3)))
-        paste(fr, bag, 860, 1260)
-        for i in range(14):
-            mx = (i * 173) % W
-            my = (vb * 600 + i * 137) % 1300 + 300
-            paste(fr, emoji("💶", 80).rotate(int(i * 40 + vb * 200) % 360, expand=True), mx, my)
-        st = stamp("BONUS", GREEN, 80, rot=-12)
-        paste(fr, scaled(st, 1.6 - 0.6 * eo(vb / 0.18)), 250, 1180, alpha=c01(vb / 0.08))
+        # deal-with-it sunglasses drop onto the cow
+        sy = lerp(-200, cy + (265 - 280) * csc + 4, eo(vb / 0.45))
+        paste(fr, scaled(shades(), csc * 1.05), W // 2, sy)
+        # cash stacks on the desk
+        for i, x in enumerate((140, 250, 860, 960)):
+            hgt = int(min(5, 1 + vb * 6)) if i % 2 == 0 else int(min(4, 1 + vb * 5))
+            for j in range(hgt):
+                yy = 1385 - j * 26
+                d.rounded_rectangle([x - 60, yy - 24, x + 60, yy], radius=5, fill=(120, 190, 120), outline=INK,
+                                    width=3)
+                d.rectangle([x - 14, yy - 24, x + 14, yy], fill=(230, 220, 180))
+        rain = 1 - c01((t - t_end - 0.3) / 0.3)
+        for i in range(16 if rain > 0 else 0):
+            mx = (i * 173 + 40) % W
+            my = (vb * 650 + i * 137) % 1350 + 250
+            paste(fr, emoji("💶", 76).rotate(int(i * 40 + vb * 220) % 360, expand=True), mx, my, alpha=rain)
+        st = stamp("BONUS", GREEN, 84, rot=-12)
+        paste(fr, scaled(st, 1.7 - 0.7 * eo(vb / 0.18)), 230, 1180, alpha=c01(vb / 0.08))
     if t >= t_end + 0.3:
         vv = t - (t_end + 0.3)
-        b = bubble(CTA, w=860, hand=False, fsize=60, col=YEL)
-        paste(fr, scaled(b, 0.7 + 0.3 * eback(vv / 0.3)), W // 2, 1640)
-        paste(fr, emoji("👇", 110), W // 2, 1840 + 12 * math.sin(t * 6), alpha=c01(vv / 0.2))
+        fr.alpha_composite(Image.new("RGBA", (W, H), (0, 0, 0, int(110 * c01(vv / 0.3)))))
+        b = boxed("💬" if False else "EURE SCHLIMMSTE", 60, INK, YEL, rot=-2)
+        paste(fr, scaled(b, 0.7 + 0.3 * eback(vv / 0.25)), W // 2, 1530)
+        b2 = boxed("BAHN-STORY?", 92, WHITE, RED, rot=2)
+        paste(fr, scaled(b2, 0.6 + 0.4 * eback((vv - 0.15) / 0.25)), W // 2, 1670, alpha=c01((vv - 0.15) / 0.05))
+        paste(fr, emoji("👇", 90), W // 2 - 320, 1830 + 12 * math.sin(t * 6), alpha=c01(vv / 0.2))
+        paste(fr, emoji("👇", 90), W // 2 + 320, 1830 + 12 * math.sin(t * 6 + 1), alpha=c01(vv / 0.2))
+        if vv > 0.9:
+            f2 = boxed("FOLGEN FÜR TEIL 2", 40, INK, WHITE, rot=0)
+            paste(fr, f2, W // 2, 1830, alpha=c01((vv - 0.9) / 0.15))
 
 
 SCENE_FN = {"hook": sc_hook, "einfahrt": sc_einfahrt, "bahnsteig": sc_bahnsteig, "news": sc_news,

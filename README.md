@@ -86,7 +86,7 @@ Länge ca. 100 s · 1080×1920 · 30 fps · Cartoon-Look: ICE mit Glupschaugen, 
 
 | Szene | Gag |
 |---|---|
-| Hook | Zug-Gesicht close-up, roter Alarm, Screen-Shake auf „Panik“ |
+| Hook | Stolzer Zug vor grünem Strahlenkranz mit „+0 MIN“-Badge → Umschnitt auf rote Strahlen, Sirenen, rennende Menschen („AAAH!“), zitterndes „PANIK!“-Label |
 | 6:12 Uhr | Einfahrt auf die Minute + „richtige Wagenreihung“ (Wagen 1-2-3), zwei Stempel |
 | Bahnsteig | Stille (Grillen), Kaffee fällt, Mann verabschiedet sich von Mama, Rentner weint: „Warte seit 1998 auf Anschluss“ |
 | Nachrichten | EILMELDUNG → Prof. Dr. Gleis: „Systemfehler“ → Vorstand: Untersuchung … und Preiserhöhung (Stempel „PREISE +20 %“, Ka-Ching) |
@@ -94,7 +94,7 @@ Länge ca. 100 s · 1080×1920 · 30 fps · Cartoon-Look: ICE mit Glupschaugen, 
 | Kind & Papa | „Ist das ein Zug?“ – „Ich hab noch nie einen fahren sehen.“ |
 | Kuh vor Fulda | Western-Duell, gemeinsames Blinzeln, Kuh bekommt Schaffnermütze, zwinkert: „IM AUFTRAG DER BAHN“ |
 | 70 Minuten | Klima ❌ Bistro ❌ WC ❌ – „Endlich fühle ich mich wieder wie ich selbst.“ (Herzchen) |
-| Ende | Ordnung wiederhergestellt → Kuh sitzt im Vorstand, Geldregen, „BONUS“ → Frage „Eure schlimmste Bahn-Story?“ |
+| Ende | „PUUUH!“ am Bahnsteig → Vorstandsetage: Kuh im Ledersessel, Chart „Boni ↑ Pünktlichkeit ↓“, Porträt „Mitarbeiterin“, Sonnenbrille fällt bei „Bonus“, Geldstapel → „Eure schlimmste Bahn-Story?“ + „Folgen für Teil 2“ |
 
 Stimmen (edge-tts): Zug `de-DE-ConradNeural`, Kind `de-DE-KatjaNeural` (hoch gepitcht), Papa `de-DE-KillianNeural` (langsam).
 Comedy-Pausen werden in `render.py` (`BEATS`, `PAD`) direkt in die Tonspur geschnitten.
