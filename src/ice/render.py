@@ -83,19 +83,16 @@ def lcol(a, b, t):
 
 # ================================================================== timeline
 # extra silence (s) after a given word (scene, word, occurrence) -> comedy timing
-BEATS = {("einfahrt", "6 Uhr 12", 0): 0.3, ("einfahrt", "ein", 0): 0.2, ("einfahrt", "Minute", 0): 0.35,
-         ("bahnsteig", "Stille", 0): 0.9, ("bahnsteig", "fallen", 0): 1.9, ("bahnsteig", "verabschieden", 0): 0.3,
-         ("bahnsteig", "weint", 0): 0.45,
-         ("news", "Programm", 0): 0.3, ("news", "Systemfehler", 0): 0.2, ("news", "an", 0): 0.55,
-         ("kassel", "pünktlich", 0): 0.25, ("kassel", "mich", 0): 0.2, ("kassel", "funktioniert", 0): 0.55,
-         ("papa", "Sohn", 0): 0.5,
-         ("kuh", "Gleis", 0): 0.6, ("kuh", "an", 0): 0.5, ("kuh", "an", 1): 0.6, ("kuh", "uns", 0): 0.8,
-         ("warten", "70 Minuten", 0): 0.45, ("warten", "aus", 0): 0.2, ("warten", "geschlossen", 0): 0.2,
-         ("warten", "defekt", 0): 0.7,
-         ("ende", "auf", 0): 0.35, ("ende", "Kuh", 0): 0.55, ("ende", "Vorstand", 0): 0.3}
-PRE = {"durchsage": 1.5}
-PAD = {"hook": 0.25, "einfahrt": 0.25, "bahnsteig": 0.35, "news": 0.4, "kassel": 0.35,
-       "kind": 0.3, "papa": 1.1, "durchsage": 0.5, "kuh": 0.5, "warten": 0.6, "ende": 3.2}
+BEATS = {("einfahrt", "6 Uhr 12", 0): 0.15, ("einfahrt", "Minute", 0): 0.2,
+         ("bahnsteig", "Stille", 0): 0.6, ("bahnsteig", "fallen", 0): 1.45, ("bahnsteig", "weint", 0): 0.3,
+         ("news", "Eilmeldung", 0): 0.15, ("news", "an", 0): 0.35,
+         ("kassel", "pünktlich", 0): 0.15,
+         ("kuh", "Gleis", 0): 0.45, ("kuh", "an", 0): 0.35, ("kuh", "an", 1): 0.4, ("kuh", "uns", 0): 0.5,
+         ("warten", "70 Minuten", 0): 0.3, ("warten", "defekt", 0): 0.4,
+         ("ende", "auf", 0): 0.25, ("ende", "Kuh", 0): 0.4, ("ende", "Vorstand", 0): 0.25}
+PRE = {"durchsage": 0.8}
+PAD = {"hook": 0.15, "einfahrt": 0.15, "durchsage": 0.3, "bahnsteig": 0.2, "news": 0.25, "kassel": 0.6,
+       "kuh": 0.3, "warten": 0.3, "ende": 2.4}
 
 
 def norm(w):
@@ -1159,6 +1156,9 @@ def sc_hook(fr, t, ts, te):
             for i, (ax, ay, rot) in enumerate([(150, 760, 12), (900, 820, -10)]):
                 tx = boxed("AAAH!", 46, INK, WHITE, rot=rot)
                 paste(fr, tx, ax + 6 * math.sin(t * 40 + i), ay)
+    # retention teaser
+    tz = boxed("WARTE AUF DIE KUH …", 34, INK, YEL, rot=-3)
+    paste(OV[0], tz, W // 2, 470 + 5 * math.sin(t * 5), alpha=c01((u - 0.3) / 0.2))
     # headline
     if not panic:
         l1 = boxed("HEUTE WAR ICH", 70, WHITE, INK, rot=-2)
@@ -1284,7 +1284,7 @@ def sc_bahnsteig(fr, t, ts, te):
     t_still = at("bahnsteig", "Stille")
     t_frau = at("bahnsteig", "Eine")
     t_fall = at("bahnsteig", "fallen")
-    t_mut = at("bahnsteig", "Mutter")
+    t_mut = te + 99
     t_rent = at("bahnsteig", "Rentner")
     t_seit = at("bahnsteig", "seit")
     platform_with_train(fr, t, "proud" if t < t_fall else "awkward", (0.6, 0.5))
@@ -1297,16 +1297,16 @@ def sc_bahnsteig(fr, t, ts, te):
     paste(fr, person(MAN2, pm2, t, h=450), 535, 1520 - 235, center=True)
     pw = dict(r=(-20, -110) if t < t_fall else (-60, -20), l=(15, 0), hold="coffee" if t < t_fall else None,
               mouth="o" if shock else "smile", look=(-0.5, -0.3), eye=12 if shock else 9)
-    tc = t_fall + 0.55   # sign of the cross: forehead -> chest -> left shoulder -> right shoulder
-    if tc <= t < tc + 2.1:
+    tc = t_fall + 0.45   # sign of the cross: forehead -> chest -> left shoulder -> right shoulder
+    if tc <= t < tc + 1.5:
         pts = [(-20, 250), (0, 62), (0, 255), (52, 205), (-52, 205), (-30, 300)]
-        u_ = (t - tc) / 2.1 * (len(pts) - 1)
+        u_ = (t - tc) / 1.5 * (len(pts) - 1)
         i_ = min(int(u_), len(pts) - 2)
         f_ = eio(u_ - i_)
         tx_ = lerp(pts[i_][0], pts[i_ + 1][0], f_)
         ty_ = lerp(pts[i_][1], pts[i_ + 1][1], f_)
         pw.update(rt=(tx_, ty_), front=True, lid=1.0, mouth="flat", look=(0, -1))
-    elif t >= tc + 2.1:
+    elif t >= tc + 1.5:
         pw.update(r=(-15, 0), mouth="wavy", look=(-0.6, -0.5))
     paste(fr, person(WOMAN, pw, t, h=540), WX, 1520 - 281, center=True)
     if tc + 0.2 <= t < tc + 2.4:
@@ -1367,7 +1367,7 @@ def sc_bahnsteig(fr, t, ts, te):
 def sc_news(fr, t, ts, te):
     u = t - ts
     fr.alpha_composite(BG["news"])
-    t_exp = at("news", "Experten")
+    t_exp = at("news", "Der")
     t_vor = at("news", "Der")
     t_preis = at("news", "Preiserhöhung")
     tvw, tvh = 980, 700
@@ -1442,9 +1442,9 @@ def wifi_icon(sz=260):
 
 
 def sc_kassel(fr, t, ts, te):
-    t_film = at("kassel", "Leute")
+    t_film = at("kassel", "wieder")
     t_wlan = at("kassel", "WLAN")
-    t_exo = at("kassel", "Jemand")
+    t_exo = te + 99
     platform_with_train(fr, t, "shy" if t > t_film else "proud", (0.6, 0.6))
     sg = Image.new("RGBA", (760, 120), (0, 0, 0, 0))
     d = ImageDraw.Draw(sg)
@@ -1800,14 +1800,10 @@ def build_camera():
          ("durchsage", at("durchsage", "Verspätungen") - 0.05, pe("durchsage"), 560, 1100, 1.2, 2),
          ("bahnsteig", A("bahnsteig", "fallen") - 0.05, A("bahnsteig", "fallen") + 0.5, 300, 1360, 1.3, 2),
          ("bahnsteig", A("bahnsteig", "fallen") + 0.5, A("bahnsteig", "Ein") - 0.05, WX_W, 1130, 1.6, 0),
-         ("bahnsteig", A("bahnsteig", "Mutter") - 0.1, A("bahnsteig", "Ein", 1) - 0.1, 720, 1110, 1.5, 0),
          ("bahnsteig", A("bahnsteig", "weint") - 0.15, A("bahnsteig", "seit") - 0.1, 920, 1160, 1.65, -2),
          ("bahnsteig", A("bahnsteig", "seit"), pe("bahnsteig"), 820, 950, 1.25, 0),
-         ("news", A("news", "Experten"), A("news", "Der") - 0.05, 560, 820, 1.18, 0),
          ("news", A("news", "Preiserhöhung") - 0.05, pe("news"), 640, 800, 1.32, 3),
-         ("kassel", A("kassel", "Leute"), A("kassel", "Das") - 0.05, 540, 1380, 1.12, 0),
-         ("kassel", A("kassel", "WLAN") - 0.05, A("kassel", "Jemand") - 0.05, 760, 960, 1.25, 0),
-         ("kassel", A("kassel", "Jemand") + 0.4, pe("kassel"), 780, 1120, 1.38, -2),
+         ("kassel", A("kassel", "WLAN") - 0.05, pe("kassel"), 760, 960, 1.3, 0),
          ("kuh", A("kuh", "Kuh") - 0.05, A("kuh", "Sie") - 0.05, 420, 1100, 1.3, 0),
          ("kuh", A("kuh", "Sie") - 0.05, A("kuh", "Ich") - 0.05, 540, 760, 1.5, 0),
          ("kuh", A("kuh", "Ich") - 0.05, A("kuh", "Wir") - 0.05, 540, 1330, 1.5, 0),
@@ -1822,7 +1818,7 @@ def build_camera():
                     (A("einfahrt", "Wagenreihung") + 0.6, 8), (A("bahnsteig", "fallen") + 0.45, 7),
                     (A("news", "Preiserhöhung"), 12), (A("kuh", "Kuh") - 0.1, 10),
                     (A("warten", "aus"), 7), (A("warten", "geschlossen"), 7), (A("warten", "defekt"), 9),
-                    (A("ende", "atmet"), 6), (A("ende", "Mit"), 14), (A("kassel", "Jemand"), 6)]:
+                    (A("ende", "atmet"), 6), (A("ende", "Mit"), 14)]:
         SHAKE.append((t0, amp))
 
 
@@ -2217,7 +2213,7 @@ def make_audio(path):
     put(splash(rng), at("bahnsteig", "fallen") + 0.45, 1.0)
     put(news_sting(), SEG["news"][0], 0.9)
     for i in range(6):
-        put(shutter(rng), at("kassel", "Leute") + 0.3 + i * 0.27 + 0.05 * (i % 2), 1.0)
+        put(shutter(rng), at("kassel", "wieder") + 0.3 + i * 0.27 + 0.05 * (i % 2), 1.0)
     put(horn(1.2), at("kuh", "Kuh") - 0.2, 0.8)
     put(moo(1.6), at("kuh", "Gleis") + 0.25, 1.0)
     put(standoff(), at("kuh", "Sie") - 0.2, 1.0)
@@ -2233,7 +2229,7 @@ def make_audio(path):
     put(vine_boom(), at("durchsage", "Verspätungen") - 0.05, 0.7)
     put(sob(rng), at("bahnsteig", "weint") - 0.1, 1.0)
     put(boing(), at("bahnsteig", "fallen") + 0.1, 0.9)
-    put(choir(1.9), at("bahnsteig", "fallen") + 0.75, 0.9)
+    put(choir(1.5), at("bahnsteig", "fallen") + 0.6, 0.9)
     put(vine_boom(), at("bahnsteig", "weint") - 0.15, 0.8)
     put(slide_whistle(1900, 450, 0.7), at("kuh", "Kuh") - 0.3, 1.0)
     put(vine_boom(), at("kuh", "Sie") - 0.05, 0.8)
@@ -2242,7 +2238,6 @@ def make_audio(path):
     put(airhorn(), at("ende", "Mit") + 0.15, 1.0)
     put(kaching(rng), at("news", "Preiserhöhung") + 0.05, 1.0)
     put(tone(1760, 0.5, 0.002, 0.2, harm=(1, .4)) * 0.35, at("kassel", "WLAN") + 0.1)
-    put(choir(1.8), at("kassel", "Jemand") + 0.2, 1.0)
     put(tone(2400, 0.3, 0.002, 0.1) * 0.3, at("kuh", "glaube") + 0.6)
     for w_ in ("aus", "geschlossen", "defekt"):
         put(thud(rng), at("warten", w_), 1.0)
