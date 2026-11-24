@@ -77,3 +77,25 @@ python3 render.py              # rendert ../../fuehrerschein-video-neon.mp4
 python3 render.py shots        # Schnittliste
 python3 render.py preview 5 30 # Standbilder
 ```
+
+## radfahrer-video.mp4 (Autofahrer vs. Radfahrer)
+
+**Thema:** Crash zwischen Auto und Fahrrad, danach Schlägerei – was droht beiden? Ca. 47 s · Erklär-Look wie das Notwehr-Video ·
+Stimme `de-AT-JonasNeural` (+20 %) · Autofahrer türkis, Radfahrer orange.
+
+| Abschnitt | Inhalt |
+|---|---|
+| Hook | Auto und Fahrrad crashen („KRACH!“), Fäuste fliegen, „Wer wird jetzt bestraft?“ + Akte mit allen Paragrafen |
+| 1 Der Unfall | § 229 StGB fahrlässige Körperverletzung – bis 3 Jahre oder Geldstrafe |
+| 2 Die Schlägerei | § 223 StGB Körperverletzung (bis 5 J.) · § 32 Notwehr · Fahrradschloss = gefährliches Werkzeug → § 224 (6 Mon.–10 J.) |
+| 3 Der Hammer | Führerschein in Gefahr: Aggressionspotenzial → MPU-Anordnung (§ 11 Abs. 3 FeV) |
+| Frage | „Wer hat hier mehr Schuld – Autofahrer oder Radfahrer?“ (Abstimm-Pills + Kommentar-Aufruf) |
+
+Angaben ohne Gewähr, keine Rechtsberatung.
+
+```bash
+cd src/radfahrer
+python3 tts.py       # Voiceover -> build/radfahrer/
+python3 render.py    # rendert ../../radfahrer-video.mp4
+python3 render.py preview 2 20 40   # Standbilder
+```
