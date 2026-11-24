@@ -1,7 +1,7 @@
-"""Frieda an der Supermarktkasse – 3D-Spielzeug-Look, 1080x1920, 30 fps, ~10,6 s.
+"""Frieda an der Supermarktkasse – 3D-Spielzeug-Look, 1080x1920, 30 fps, ~46 s.
 
 python3 tts.py && python3 render.py            -> ../../frieda-supermarkt.mp4
-python3 render.py preview 1 4.6 5.5 7.5 9.6    -> build/frieda/stills/
+python3 render.py preview 2 14.9 18 22 30 40.9 44    -> build/frieda/stills/
 """
 import json
 import math
@@ -18,7 +18,7 @@ from PIL import Image, ImageDraw, ImageFilter
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "fuehrerschein"))
 import fchars  # Oma Frieda Faust – Original-Figur (Folge 1) mit aktuellem Outfit
-from core import (F_BLACK, F_INTER, W, H, FPS, capsule, clamp01, ease_back, ease_io, ease_out, emoji, font,  # noqa
+from core import (F_BLACK, F_INTER, W, H, FPS, capsule, gradient, clamp01, ease_back, ease_io, ease_out, emoji, font,  # noqa
                   lerp, mixc, paste_c, sphere, text_img, zoom_frame)
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -27,17 +27,34 @@ OUT = Path(os.environ.get("VIDEO_OUT", ROOT / "frieda-supermarkt.mp4"))
 SR = 48000
 
 # ------------------------------------------------------------------ timeline (seconds)
-T_LINE = {"typ1": 1.30, "fr1": 3.50, "kas1": 7.35, "fr2": 8.85}
-T_GRAB, T_THROW, T_FLY, T_LAND, T_SLOW_END = 4.30, 4.75, 5.15, 6.20, 6.55
-T_CLAP0, T_CLAP1 = 6.45, 7.70
-T_CUKE = 6.95
-T_CLOSE = 8.55
-T_WINK = 9.55
-T_END_TXT = 9.75
-TOTAL = 11.0
-NF = int(TOTAL * FPS)
-
 LINES = {l["id"]: l for l in json.loads((BUILD / "lines.json").read_text())}
+
+T_LINE = {
+    "kas0": 2.2, "fr0": 3.9, "typ0": 6.6, "k2a": 9.5, "typ1": 11.9,
+    "fr1": 14.75, "typ2": 15.85,
+    "k3a": 21.55, "typ3": 24.4,
+    "kas2": 26.3, "fr3": 28.75,
+    "kas3": 34.2, "kas1": 38.05,
+    "fr2": 39.95, "typ4": 41.85,
+}
+T_K0_LEAVE = 3.0                      # Kunde vor Frieda geht
+T_GUY_IN0, T_GUY_IN1 = 6.5, 9.4       # Drängler läuft rein (telefoniert)
+T_PUSH = 13.9                         # Musik weg, Kamera drückt rein
+T_CLOSE1A, T_CLOSE1B = 14.45, 15.7    # Close-up "Ich auch."
+T_GRAB, T_THROW, T_FLY, T_LAND, T_SLOW_END = 16.3, 16.95, 17.45, 19.6, 20.0
+T_IPPON = 19.7
+T_CLAP0, T_CLAP1 = 20.0, 22.2
+T_BACK1A, T_BACK1B = 21.25, 26.0      # Ende der Schlange: Herr + benommener Typ
+T_FLASH_A, T_FLASH_B = 28.45, 33.0    # Rückblende 1974
+T_CUKE = 33.35                        # Gurke aufs Band
+T_BEEP = 33.95
+T_CLOSE2A = 39.6                      # Close-up "Mit Stil."
+T_WINK = 40.95
+T_BACK2A, T_BACK2B = 41.6, 43.45      # Typ hinten am Handy
+T_END_TXT = 43.75
+T_CLOSE = T_CLOSE2A
+TOTAL = 46.0
+NF = int(TOTAL * FPS)
 
 SKIN = (247, 200, 170)
 DARK = (48, 36, 52)
@@ -75,6 +92,7 @@ def rot_paste(dst, img, cx, cy, ang):
 PEOPLE = {
     "typ": dict(body=(250, 196, 30), hair=(92, 56, 32), legs=(60, 90, 160), shoes=(240, 240, 245)),
     "kasse": dict(body=(40, 190, 170), hair=(150, 70, 40), legs=(40, 60, 90), shoes=(40, 40, 50)),
+    "k0": dict(body=(255, 160, 60), hair=(205, 205, 212), legs=(70, 70, 90), shoes=(60, 40, 30), style="short"),
     "k1": dict(body=(110, 140, 255), hair=(40, 30, 25), legs=(60, 60, 80), shoes=(30, 30, 30), style="short"),
     "k2": dict(body=(255, 120, 150), hair=(230, 170, 60), legs=(90, 70, 120), shoes=(250, 250, 250),
                style="long"),
@@ -209,6 +227,19 @@ def person(who, R=1.0, al=8, ar=-8, m=0.0, eye="open", item=None, cuke=True, sq=
     # held items
     if False:
         pass
+    elif item == "phone":
+        x, y = hand_r
+        ph = Image.new("RGBA", (int(50 * k), int(96 * k)), (0, 0, 0, 0))
+        ImageDraw.Draw(ph).rounded_rectangle([0, 0, 50 * k - 1, 96 * k - 1], radius=10 * k, fill=(30, 30, 40))
+        rot_paste(im, ph, x - 18 * k, y - 10 * k, -20)
+        paste_c(im, sphere(int(th), SKIN, None, 0.3), x, y)
+    elif item == "bag":
+        x, y = hand_l
+        bg = capsule(int(120 * k), int(130 * k), (205, 160, 110), None, radius=int(14 * k)).copy()
+        paste_c(bg, sphere(int(46 * k), (240, 60, 60), None, 0.4), 40 * k, 14 * k)
+        paste_c(bg, capsule(int(30 * k), int(70 * k), (250, 220, 80), None), 80 * k, 10 * k)
+        paste_c(im, bg, x, y + 60 * k)
+        paste_c(im, sphere(int(th), SKIN, None, 0.3), x, y)
     elif item == "can":
         x, y = hand_r
         can = capsule(int(52 * k), int(110 * k), (30, 40, 70), None, radius=int(14 * k))
@@ -337,48 +368,59 @@ def draw_counter(frame, t):
 
 
 # ------------------------------------------------------------------ positions (x, feet_y, scale)
-FRIEDA = (420, 1650, 0.95)
+FRIEDA = (575, 1645, 0.95)
 CASH = (150, 1620, 0.82)
-GUY_SPOT = (770, 1690, 0.98)
-QUEUE = [("k1", 680, 1360, 0.70), ("k2", 470, 1180, 0.57), ("k3", 650, 1040, 0.47), ("k4", 500, 940, 0.39)]
-LAND = (720, 870, 0.34)
+K0 = (330, 1665, 0.9)
+GUY_SPOT = (300, 1695, 0.95)
+QUEUE = [("k1", 790, 1360, 0.70), ("k2", 580, 1180, 0.57), ("k4", 760, 1040, 0.47), ("k3", 590, 940, 0.39)]
+LAND = (800, 878, 0.34)
+HEAD_TOY = 690   # Kopf-Oberkante über den Füßen (Spielzeugfiguren, Skalierung 1)
+
+
+def k0_state(t):
+    if t >= T_K0_LEAVE + 1.6:
+        return None
+    p = ease_io(seg(t, T_K0_LEAVE, T_K0_LEAVE + 1.6))
+    bob = abs(math.sin(t * 13)) * 12 if 0 < p < 1 else 0
+    return K0[0] - 560 * p, K0[1] - bob, K0[2], ("k0", 1.0, 8, -8, 0.0, "happy" if t < 2.0 else "open", "bag")
 
 
 def guy_state(t):
-    """Returns dict(x, y, s, rot, key, trail)."""
-    if t < 0.55:
+    """dict(x, y, s, rot, key)"""
+    if t < T_GUY_IN0:
         return None
-    if t < 1.35:  # strolls in from the right
-        p = ease_out(seg(t, 0.55, 1.35))
-        bob = abs(math.sin(t * 14)) * 14 * (1 - p)
-        return dict(x=lerp(1250, GUY_SPOT[0], p), y=GUY_SPOT[1] - bob, s=GUY_SPOT[2], rot=0,
-                    key=("typ", 1.0, 10, -25, 0.0, "open", "can"))
+    if t < T_GUY_IN1:  # telefoniert, läuft an der Schlange vorbei bis ganz vorne
+        p = ease_io(seg(t, T_GUY_IN0, T_GUY_IN1))
+        bob = abs(math.sin(t * 13)) * 14 * (1 if p < 0.97 else 0)
+        m = round(speaking("typ0", t), 1)
+        return dict(x=lerp(1260, GUY_SPOT[0], p), y=GUY_SPOT[1] - bob, s=GUY_SPOT[2], rot=0,
+                    key=("typ", 1.0, int(10 * math.sin(t * 13)), -165, m, "open", "phone"))
     if t < T_GRAB + 0.2:
-        m = speaking("typ1", t)
-        ar = -25 - 15 * math.sin(t * 3) if line_on("typ1", t, 0) else -25
-        return dict(x=GUY_SPOT[0], y=GUY_SPOT[1], s=GUY_SPOT[2], rot=0,
-                    key=("typ", 1.0, 10 if t < 3.4 else 40, int(ar), round(m, 1), "open", "can"))
-    if t < T_FLY:  # lifted over Frieda's hip (slow-mo)
+        m = round(max(speaking("typ1", t), speaking("typ2", t)), 1)
+        ar = -25
+        if line_on("typ1", t, 0):
+            ar = int(-40 - 25 * abs(math.sin(t * 4)))
+        eye = "open"
+        al = 10
+        if line_on("typ2", t, 0.3):
+            al, ar = 35, -35
+        return dict(x=GUY_SPOT[0], y=GUY_SPOT[1], s=GUY_SPOT[2], rot=0, key=("typ", 1.0, al, ar, m, eye, "can"))
+    if t < T_FLY:  # wird über Friedas Hüfte gehebelt (Zeitlupe)
         p = ease_io(seg(t, T_GRAB + 0.2, T_FLY))
-        x = lerp(GUY_SPOT[0], 470, p)
-        y = lerp(GUY_SPOT[1], 1180, p) - math.sin(p * math.pi) * 120
-        return dict(x=x, y=y, s=GUY_SPOT[2], rot=lerp(0, 170, p),
-                    key=("typ", 1.0, 120, -120, 0.9, "open", "can"))
-    if t < T_LAND:  # big arc to the back of the queue
+        x = lerp(GUY_SPOT[0], FRIEDA[0], p)
+        y = lerp(GUY_SPOT[1], 1250, p) - math.sin(p * math.pi) * 140
+        return dict(x=x, y=y, s=GUY_SPOT[2], rot=lerp(0, -170, p), key=("typ", 1.0, 120, -120, 0.9, "open", "can"))
+    if t < T_LAND:  # hoher Bogen ans Ende der Schlange
         p = seg(t, T_FLY, T_LAND)
         pe = ease_io(p)
-        x0, y0, s0 = 470, 1180, GUY_SPOT[2]
-        x = (1 - pe) ** 2 * x0 + 2 * (1 - pe) * pe * 640 + pe ** 2 * LAND[0]
-        y = (1 - pe) ** 2 * y0 + 2 * (1 - pe) * pe * 180 + pe ** 2 * LAND[1]
-        s = lerp(s0, LAND[2], ease_io(p))
-        return dict(x=x, y=y, s=s, rot=lerp(170, 360, pe), trail=True,
+        x0, y0 = FRIEDA[0], 1250
+        x = (1 - pe) ** 2 * x0 + 2 * (1 - pe) * pe * 700 + pe ** 2 * LAND[0]
+        y = (1 - pe) ** 2 * y0 + 2 * (1 - pe) * pe * 150 + pe ** 2 * LAND[1]
+        return dict(x=x, y=y, s=lerp(GUY_SPOT[2], LAND[2], pe), rot=lerp(-170, -360, pe), trail=True,
                     key=("typ", 1.0, 150, -150, 0.9, "open", "can"))
-    # landed softly, a little dazed
     p = seg(t, T_LAND, T_LAND + 0.45)
-    sq = 1 - 0.28 * math.sin(p * math.pi) if p < 1 else 1.0
-    eye = "dazed" if t < T_LAND + 1.6 else "open"
-    return dict(x=LAND[0], y=LAND[1], s=LAND[2], rot=0,
-                key=("typ", 1.0, 25, -25, 0.0, eye, "can", True, round(sq, 2)))
+    sq = round(1 - 0.28 * math.sin(p * math.pi), 2) if p < 1 else 1.0
+    return dict(x=LAND[0], y=LAND[1], s=LAND[2], rot=0, key=("typ", 1.0, 25, -25, 0.0, "dazed", "can", True, sq))
 
 
 FRIEDA_D = 200  # Kopf-Einheit bei Szenen-Skalierung 1.0
@@ -403,28 +445,30 @@ def basket(cuke):
 
 def frieda_state(t):
     """pose, expr, mouth, mirror, basket?"""
-    m = round(max(speaking("fr1", t), speaking("fr2", t)) * 0.8, 1)
+    m = round(max(speaking("fr0", t), speaking("fr1", t)) * 0.8, 1)
     if T_GRAB <= t < T_THROW:
-        return "oma_grab", "glare", 0.0, True, False
+        return "oma_grab", "glare", 0.0, False, False
     if T_THROW <= t < T_FLY + 0.35:
-        return "oma_throw", "strain", 0.0, True, False
+        return "oma_throw", "strain", 0.0, False, False
     if T_CUKE - 0.15 <= t < T_CUKE + 0.45:
         return "oma_offer", "smile", 0.0, False, False
-    if line_on("fr1", t, 0.25):
+    if line_on("fr0", t, 0.2):
+        return "oma_stand", "smile", m, False, True
+    if T_GUY_IN0 + 1.0 < t < T_LINE["typ1"]:
+        return "oma_stand", "neutral", 0.0, False, True
+    if T_LINE["typ1"] <= t < T_GRAB:
         return "oma_stand", "warm", m, False, True
     if T_FLY + 0.35 <= t < T_CUKE:
         return "oma_stand", "proud", 0.0, False, True
-    if T_LINE["typ1"] + 0.3 < t < T_GRAB:
-        return "oma_stand", "smirk", 0.0, False, True
     return "oma_stand", "smile", 0.0, False, True
 
 
 @lru_cache(maxsize=512)
-def frieda_sprite(D, pose, expr, m, mirror=False, items=(), blink=False, wink=False, knit_phase=0.0):
-    im, (nx, ny), sc = fchars.person("oma", D, pose, expr=expr, mouth=m, gl=0.03, items=items, blink=blink,
+def frieda_sprite(D, pose, expr, m, mirror=False, items=(), blink=False, wink=False, knit_phase=0.0, who="oma"):
+    im, (nx, ny), sc = fchars.person(who, D, pose, expr=expr, mouth=m, gl=0.03, items=items, blink=blink,
                                      knit_phase=knit_phase)
     if wink:  # nur das (vom Betrachter aus) rechte Auge zu
-        cl, _, _ = fchars.person("oma", D, pose, expr=expr, mouth=m, gl=0.03, items=items, blink=True,
+        cl, _, _ = fchars.person(who, D, pose, expr=expr, mouth=m, gl=0.03, items=items, blink=True,
                                  knit_phase=knit_phase)
         diff = np.abs(np.asarray(im).astype(np.int16) - np.asarray(cl).astype(np.int16)).sum(axis=2) > 6
         diff[:, : int(nx)] = False
@@ -455,26 +499,31 @@ def draw_frieda(frame, t, x, y, s, rot=0.0):
 
 def frieda_rot(t):
     if T_GRAB + 0.35 <= t < T_FLY + 0.5:
-        p = seg(t, T_GRAB + 0.35, T_FLY + 0.5)
-        return -10 * math.sin(p * math.pi)
+        return 10 * math.sin(seg(t, T_GRAB + 0.35, T_FLY + 0.5) * math.pi)
     return 0.0
 
 
 def cash_key(t):
-    m = speaking("kas1", t)
+    m = round(max(speaking(l, t) for l in ("kas0", "kas2", "kas3", "kas1")), 1)
     eye = "happy" if T_CLAP0 < t < T_CLAP1 else "open"
     al, ar = 10, -10
     if T_CLAP0 < t < T_CLAP1:
         c = abs(math.sin((t - T_CLAP0) * 16))
         al, ar = int(-30 - 20 * c), int(30 + 20 * c)
-    return ("kasse", 1.0, al, ar, round(m, 1), eye)
+    elif line_on("kas0", t, 0):
+        ar = -60
+    return ("kasse", 1.0, al, ar, m, eye)
 
 
 def cust_key(who, t, i):
     al, ar, eye, m = 8, -8, "open", 0.0
-    if T_FLY < t < T_LAND:
-        m, eye = 0.8, "open"
-        al, ar = 40, -40
+    if who == "k2" and line_on("k2a", t, 0.2):
+        m = round(speaking("k2a", t), 1)
+        al, ar = 8, -150  # zeigt nach hinten
+    if who == "k3":
+        m = round(speaking("k3a", t), 1)
+    if T_GRAB < t < T_LAND:
+        m, al, ar = 0.8, 40, -40
     if T_CLAP0 + i * 0.05 < t < T_CLAP1:
         c = abs(math.sin((t - T_CLAP0 + i * 0.3) * 16))
         al, ar = int(-28 - 18 * c), int(28 + 18 * c)
@@ -482,22 +531,373 @@ def cust_key(who, t, i):
     return (who, 1.0, al, ar, m, eye)
 
 
+# ------------------------------------------------------------------ camera (world shots)
+CAM_KEYS = [  # t, zoom, cx, cy
+    (0.0, 1.0, 540, 1150), (1.6, 1.0, 540, 1150), (3.6, 1.12, 480, 1360),
+    (6.4, 1.12, 480, 1360), (7.2, 1.1, 760, 1320), (9.4, 1.16, 470, 1360),
+    (11.8, 1.16, 470, 1360), (13.4, 1.22, 450, 1330), (14.4, 1.42, 450, 1260),
+    (15.7, 1.4, 330, 1270), (16.3, 1.32, 400, 1260), (17.6, 1.0, 560, 1100),
+    (20.0, 1.0, 560, 1100), (21.25, 1.0, 560, 1100),
+    (26.0, 1.22, 420, 1380), (28.45, 1.28, 400, 1360),
+    (33.0, 1.12, 470, 1330), (34.2, 1.22, 380, 1400), (39.6, 1.3, 360, 1380),
+]
+
+
+def camera(t):
+    for (t0, z0, x0, y0), (t1, z1, x1, y1) in zip(CAM_KEYS, CAM_KEYS[1:]):
+        if t0 <= t < t1:
+            p = ease_io(seg(t, t0, t1))
+            z, cx, cy = lerp(z0, z1, p), lerp(x0, x1, p), lerp(y0, y1, p)
+            break
+    else:
+        _, z, cx, cy = CAM_KEYS[-1]
+    hw, hh = W / (2 * z), H / (2 * z)
+    return z, min(max(cx, hw), W - hw), min(max(cy, hh), H - hh)
+
+
+def to_screen(cam, x, y):
+    z, cx, cy = cam
+    return (x - cx) * z + W / 2, (y - cy) * z + H / 2
+
+
+# ------------------------------------------------------------------ extra UI
+@lru_cache(maxsize=4)
+def stamp(text, size, col):
+    im = text_img(text, size, col, F_BLACK, stroke=int(size * 0.13), stroke_fill=(30, 26, 40), max_w=1000)
+    return im.rotate(-8, resample=Image.BICUBIC, expand=True)
+
+
+def bubble_at(frame, lid, text, ax, ay, t, size=62):
+    """Sprechblase über einem Kopf (Bildschirm-Koordinaten), innerhalb der TikTok-Safe-Zone."""
+    b = bubble(text, "left", size)
+    bw = b.width
+    x = min(max(ax + bw * 0.5 - 70, bw / 2 + 30), W - bw / 2 - 110)
+    tail = "left" if ax < x else "right"
+    if tail == "right":
+        x = min(max(ax - bw * 0.5 + 70, bw / 2 + 30), W - bw / 2 - 110)
+    y = max(ay - b.height / 2 - 10, 260)
+    t0 = T_LINE[lid] - 0.08
+    t1 = t0 + LINES[lid]["speech"] + 0.5
+    if not (t0 <= t <= t1):
+        return
+    p = ease_back(seg(t, t0, t0 + 0.22))
+    a = 1 - seg(t, t1 - 0.15, t1)
+    paste_c(frame, bubble(text, tail, size), x, y, scale=max(0.05, p), alpha=a)
+
+
+TEXT = {l: LINES[l]["text"].replace(" … ", "… ") for l in LINES}
+
+
+# ------------------------------------------------------------------ world shot
+def world(t, with_ui=True):
+    frame = background().copy()
+    gs = guy_state(t)
+    flying = gs is not None and (T_GRAB + 0.2 <= t < T_LAND)
+    items = []
+    for i, (who, x, y, s) in enumerate(QUEUE):
+        items.append((y, ("c", who, x, y, s, i)))
+    if gs and not flying:
+        items.append((gs["y"], ("g",)))
+    items.append((CASH[1], ("cash",)))
+    items.append((FRIEDA[1], ("frieda",)))
+    k0 = k0_state(t)
+    if k0:
+        items.append((k0[1], ("k0",)))
+    items.sort(key=lambda z: z[0])
+    fx = FRIEDA[0] - 40 * ease_io(seg(t, T_CUKE - 0.3, T_CUKE + 0.2))
+    for _, it in items:
+        if it[0] == "c":
+            _, who, x, y, s, i = it
+            hop = abs(math.sin((t - T_CLAP0) * 9)) * 10 * s if T_CLAP0 < t < T_CLAP1 else 0
+            draw_person(frame, cust_key(who, t, i), x, y - hop, s)
+        elif it[0] == "g":
+            draw_person(frame, gs["key"], gs["x"], gs["y"], gs["s"], gs["rot"])
+        elif it[0] == "cash":
+            draw_person(frame, cash_key(t), *CASH)
+        elif it[0] == "k0":
+            draw_person(frame, k0[3], k0[0], k0[1], k0[2])
+        else:
+            draw_frieda(frame, t, fx, FRIEDA[1], FRIEDA[2], frieda_rot(t))
+    draw_counter(frame, t)
+    if t >= T_CUKE:
+        p = ease_io(seg(t, T_CUKE, T_CUKE + 0.4))
+        x = lerp(fx - 220, 520, p)
+        y = lerp(1500, 1630, p) - math.sin(p * math.pi) * 90
+        x -= max(0.0, t - T_CUKE - 0.5) * 140
+        rot_paste(frame, capsule(42, 150, (60, 150, 50), None), max(x, 200), y, lerp(-28, 90, p))
+    if gs and flying:
+        if gs.get("trail"):
+            for k in (3, 2, 1):
+                g2 = guy_state(t - k * 0.05)
+                if g2:
+                    draw_person(frame, g2["key"], g2["x"], g2["y"], g2["s"], g2["rot"], alpha=0.12 * (4 - k))
+        draw_person(frame, gs["key"], gs["x"], gs["y"], gs["s"], gs["rot"])
+    return frame, gs
+
+
+def world_shot(t):
+    frame, gs = world(t)
+    cam = camera(t)
+    z, cx, cy = cam
+    shake = 0
+    if T_LAND <= t < T_LAND + 0.3:
+        shake = 12 * (1 - seg(t, T_LAND, T_LAND + 0.3))
+    frame = zoom_frame(frame, z, cx + math.sin(t * 90) * shake, cy + math.cos(t * 70) * shake)
+    slow = seg(t, T_GRAB, T_GRAB + 0.15) * (1 - seg(t, T_SLOW_END - 0.15, T_SLOW_END))
+    tense = seg(t, T_PUSH, T_PUSH + 0.3) * (1 - seg(t, T_CLOSE1A - 0.05, T_CLOSE1A))
+    frame = grade(frame, max(slow * 0.9, tense * 0.5, seg(t, 15.7, 15.8) * (1 - seg(t, T_GRAB, T_GRAB + 0.01)) * 0.5))
+    speed_lines(frame, t, slow * seg(t, T_THROW, T_FLY))
+    if slow > 0.02:
+        paste_c(frame, slowmo_badge(), 540, 330, scale=0.6 + 0.4 * ease_back(seg(t, T_GRAB, T_GRAB + 0.25)),
+                alpha=slow * (0.75 + 0.25 * (int(t * 4) % 2)))
+    # IPPON!
+    if T_IPPON <= t < T_BACK1A:
+        q = seg(t, T_IPPON, T_IPPON + 0.25)
+        sc = 2.2 - 1.2 * ease_out(q)
+        a = 1 - seg(t, T_BACK1A - 0.25, T_BACK1A)
+        paste_c(frame, stamp("IPPON!", 190, (255, 70, 70)), 540, 560, scale=sc, alpha=a)
+    # Applaus-Emojis
+    if T_CLAP0 < t < T_CLAP1 + 0.4:
+        rng = random.Random(3)
+        for i in range(10):
+            t0 = T_CLAP0 + rng.uniform(0, 1.2)
+            q = seg(t, t0, t0 + 0.9)
+            if 0 < q < 1:
+                paste_c(frame, emoji("👏", 110), rng.uniform(160, 880), rng.uniform(900, 1400) - q * 300,
+                        alpha=math.sin(q * math.pi), rot=rng.uniform(-20, 20))
+    # 0,49-Anzeige blinkt nach dem Scan
+    # Titel
+    if t < 2.7:
+        a = 1 - seg(t, 2.4, 2.7)
+        sc = ease_back(seg(t, 0.1, 0.45))
+        paste_c(frame, title_full(), 540, 300, scale=max(0.05, sc), alpha=a)
+    # Sprechblasen über den Köpfen
+    def head(x, y, s, frieda=False):
+        hy = y - (FEET * FRIEDA_D * s + 1.35 * FRIEDA_D * s if frieda else HEAD_TOY * s)
+        return to_screen(cam, x, hy)
+    sp = {
+        "kas0": head(*CASH), "kas2": head(*CASH), "kas3": head(*CASH), "kas1": head(*CASH),
+        "fr0": head(*FRIEDA, frieda=True),
+        "k2a": head(*QUEUE[1][1:]),
+    }
+    if gs:
+        sp["typ0"] = head(gs["x"], gs["y"], gs["s"])
+        sp["typ1"] = sp["typ2"] = head(gs["x"], gs["y"], gs["s"])
+    sizes = {"typ1": 54, "typ0": 52, "k2a": 58, "kas3": 54, "typ2": 90}
+    for lid, (ax, ay) in sp.items():
+        bubble_at(frame, lid, TEXT[lid], ax, ay, t, sizes.get(lid, 62))
+    return frame
+
+
+# ------------------------------------------------------------------ close-ups
+@lru_cache(maxsize=4)
+def blurred_world(t, z, cx, cy, blur=18):
+    f, _ = world(t)
+    return zoom_frame(f, z, cx, cy).filter(ImageFilter.GaussianBlur(blur))
+
+
+def flash(frame, t, t0, dur=0.12):
+    fl = 1 - seg(t, t0, t0 + dur)
+    if fl > 0:
+        frame.alpha_composite(Image.new("RGBA", (W, H), (255, 255, 255, int(255 * fl))))
+
+
+def closeup_ich_auch(t):
+    frame = blurred_world(16.0, 1.4, 470, 1250).copy()
+    p = ease_out(seg(t, T_CLOSE1A, T_CLOSE1B))
+    m = round(speaking("fr1", t) * 0.8, 1)
+    expr = "warm"
+    D = 470
+    im, nx, ny = frieda_sprite(D, "oma_stand", expr, m)
+    s = lerp(1.0, 1.08, p)
+    im = im.resize((int(im.width * s), int(im.height * s)), Image.BICUBIC)
+    nx, ny = nx * s, ny * s
+    paste_c(frame, im, 560 - nx + im.width / 2, 1010 - ny + im.height / 2)
+    bubble_at(frame, "fr1", TEXT["fr1"], 420, 470, t, 96)
+    frame = grade(frame, 0.35)
+    flash(frame, t, T_CLOSE1A, 0.08)
+    return frame
+
+
+def closeup_end(t):
+    frame = blurred_world(36.0, 1.5, 520, 1250).copy()
+    p = ease_out(seg(t, T_CLOSE, T_CLOSE + 0.5))
+    m = speaking("fr2", t)
+    wink = T_WINK - 0.05 <= t < T_WINK + 0.45
+    expr = "smirk" if t >= T_WINK - 0.05 else "smile"
+    D = 430
+    im, nx, ny = frieda_sprite(D, "oma_knit_stand", expr, round(m * 0.8, 1), False, (("knit", (0.0, 1.1)),),
+                               False, wink, round((t * 1.5) % 1, 1))
+    s = lerp(1.08, 1.0, p)
+    if abs(s - 1) > 0.005:
+        im = im.resize((int(im.width * s), int(im.height * s)), Image.BICUBIC)
+        nx, ny = nx * s, ny * s
+    im = im.rotate(lerp(-4, 0, p), resample=Image.BICUBIC, center=(nx, ny + 3 * D))
+    paste_c(frame, im, 540 - nx + im.width / 2, 860 + 40 * (1 - p) - ny + im.height / 2)
+    if wink:
+        q = seg(t, T_WINK, T_WINK + 0.45)
+        paste_c(frame, emoji("✨", int(130 + 60 * math.sin(q * math.pi))), 770, 610, alpha=math.sin(q * math.pi))
+    bubble_at(frame, "fr2", TEXT["fr2"], 420, 470, t, 84)
+    if t >= T_END_TXT:
+        q = ease_back(seg(t, T_END_TXT, T_END_TXT + 0.35))
+        paste_c(frame, end_text(), 540, 1430, scale=max(0.05, q))
+    flash(frame, t, T_CLOSE if t < T_BACK2A else T_BACK2B)
+    return frame
+
+
+# ------------------------------------------------------------------ Ende der Schlange
+def back_shot(t):
+    frame = blurred_world(23.0, 2.4, 690, 760, 14).copy()
+    # Boden-Schatten
+    sh = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    ImageDraw.Draw(sh).ellipse([120, 1880, 980, 1990], fill=(60, 40, 60, 70))
+    frame.alpha_composite(sh.filter(ImageFilter.GaussianBlur(30)))
+    second = t >= T_BACK2A
+    m3 = round(speaking("k3a", t), 1)
+    draw_person(frame, ("k3", 2.0, 8, -8 if not line_on("k3a", t, 0) else -40, m3, "open"), 330, 1930, 0.72)
+    mt = round(max(speaking("typ3", t), speaking("typ4", t)), 1)
+    if second:
+        key = ("typ", 2.0, 8, -165, mt, "open", "phone")
+        wob = 0
+    else:
+        key = ("typ", 2.0, 25, -25, mt, "dazed", "can")
+        wob = 5 * math.sin(t * 5)
+    draw_person(frame, key, 760, 1960, 0.72, rot=wob)
+    if not second:  # Sternchen kreisen
+        for i in range(4):
+            a = t * 4 + i * math.tau / 4
+            paste_c(frame, emoji("⭐", 60), 760 + math.cos(a) * 130, 930 + math.sin(a) * 30)
+    bubble_at(frame, "k3a", TEXT["k3a"], 330, 900, t, 62)
+    bubble_at(frame, "typ3", TEXT["typ3"], 760, 860, t, 66)
+    bubble_at(frame, "typ4", TEXT["typ4"], 760, 860, t, 66)
+    flash(frame, t, T_BACK1A if not second else T_BACK2A, 0.08)
+    return frame
+
+
+# ------------------------------------------------------------------ Rückblende 1974
+@lru_cache(maxsize=1)
+def dojo_bg():
+    img = gradient(W, H, (236, 222, 190), (200, 170, 120))
+    d = ImageDraw.Draw(img)
+    for i in range(0, W, 120):  # Holzwand
+        d.line([(i, 0), (i, 1100)], fill=(190, 150, 100), width=4)
+    d.rectangle([0, 1100, W, H], fill=(120, 150, 90))
+    for r in range(6):  # Tatami
+        y0 = 1100 + r * 140
+        for c in range(-1, 6):
+            x0 = c * 260 + (130 if r % 2 else 0)
+            d.rounded_rectangle([x0 + 6, y0 + 6, x0 + 254, y0 + 134], radius=10,
+                                fill=(150, 170, 90) if (r + c) % 2 else (196, 186, 110))
+    ban = capsule(860, 170, (200, 40, 40), None, radius=30)
+    paste_c(img, ban, 540, 330)
+    d.text((540, 300), "DEUTSCHE MEISTERSCHAFT", font=font(F_BLACK, 46), fill=(255, 240, 220), anchor="mm")
+    d.text((540, 362), "JUDO · DAMEN · 1974", font=font(F_BLACK, 40), fill=(255, 210, 90), anchor="mm")
+    return img
+
+
+def sepia(frame, amt=1.0, t=0.0):
+    arr = np.asarray(frame.convert("RGB")).astype(np.float32)
+    lum = arr @ np.array([0.3, 0.59, 0.11], np.float32)
+    sep = np.stack([lum * 1.07 + 20, lum * 0.92 + 10, lum * 0.72], axis=2)
+    arr = arr * (1 - amt) + sep * amt
+    rng = np.random.default_rng(int(t * 30))
+    arr += rng.normal(0, 10, arr.shape[:2])[..., None] * amt
+    arr = arr * (1 - vign()[..., None] * 1.3 * amt)
+    return Image.fromarray(arr.clip(0, 255).astype(np.uint8)).convert("RGBA")
+
+
+def flashback(t):
+    p = seg(t, T_FLASH_A, T_FLASH_B)
+    frame = dojo_bg().copy()
+    # Publikum unten
+    rng = random.Random(11)
+    for i in range(9):
+        x = 60 + i * 120 + rng.uniform(-20, 20)
+        up = abs(math.sin(t * 8 + i)) * 30
+        paste_c(frame, sphere(150, (90, 70, 60), None, 0.2), x, 1900 - up)
+        paste_c(frame, capsule(46, 160, (90, 70, 60), None), x + 70, 1760 - up, rot=-20)
+    im, nx, ny = frieda_sprite(250, "young_trophy", "laugh", round(abs(math.sin(t * 6)) * 0.4, 1), False,
+                               (("trophy", (0.7, -0.55)),), who="young")
+    z = lerp(1.0, 1.1, ease_io(p))
+    im = im.resize((int(im.width * z), int(im.height * z)), Image.BICUBIC)
+    paste_c(frame, im, 520 - nx * z + im.width / 2, 1010 - ny * z + im.height / 2)
+    # Konfetti
+    for i in range(40):
+        r2 = random.Random(i)
+        x = r2.uniform(0, W)
+        y = (r2.uniform(-400, 1900) + (t - T_FLASH_A) * r2.uniform(180, 320)) % 2000 - 80
+        ImageDraw.Draw(frame).rectangle([x, y, x + 16, y + 9], fill=r2.choice([(255, 220, 80), (240, 80, 80),
+                                                                               (255, 255, 255)]))
+    frame = sepia(frame, 0.85, t)
+    # Kamerablitze
+    for tb in (T_FLASH_A + 0.5, T_FLASH_A + 1.9, T_FLASH_A + 3.1):
+        fl = 1 - seg(t, tb, tb + 0.15)
+        if 0 < fl < 1:
+            frame.alpha_composite(Image.new("RGBA", (W, H), (255, 250, 235, int(170 * fl))))
+    # Stempel "1974"
+    if t > T_FLASH_A + 0.4:
+        q = seg(t, T_FLASH_A + 0.4, T_FLASH_A + 0.65)
+        paste_c(frame, stamp("1974", 170, (255, 214, 60)), 540, 1560, scale=2.0 - ease_out(q), alpha=1)
+    bubble_at(frame, "fr3", TEXT["fr3"].replace("Neunzehnhundertvierundsiebzig", "1974"), 300, 560, t, 56)
+    # weiche Ein-/Ausblendung
+    a_in = 1 - seg(t, T_FLASH_A, T_FLASH_A + 0.25)
+    a_out = seg(t, T_FLASH_B - 0.25, T_FLASH_B)
+    fl = max(a_in, a_out)
+    if fl > 0:
+        frame.alpha_composite(Image.new("RGBA", (W, H), (255, 255, 255, int(255 * fl))))
+    return frame
+
+
+# ------------------------------------------------------------------ dispatcher
+def render_frame(fi):
+    t = fi / FPS
+    if T_CLOSE1A <= t < T_CLOSE1B:
+        return closeup_ich_auch(t)
+    if T_BACK1A <= t < T_BACK1B or T_BACK2A <= t < T_BACK2B:
+        return back_shot(t)
+    if T_FLASH_A <= t < T_FLASH_B:
+        return flashback(t)
+    if t >= T_CLOSE:
+        return closeup_end(t)
+    f = world_shot(t)
+    if T_BACK1B <= t:
+        flash(f, t, T_BACK1B, 0.08)
+    if T_FLASH_B <= t:
+        flash(f, t, T_FLASH_B, 0.2)
+    return f
+
+
+def _rgb(fi):
+    return np.asarray(render_frame(fi).convert("RGB")).tobytes()
+
+
 # ------------------------------------------------------------------ UI elements
 @lru_cache(maxsize=32)
-def bubble(text, tail="left", size=62):
+def bubble(text, tail="left", size=62, max_w=780):
     f = font(F_INTER, size)
-    tw = f.getlength(text)
-    pw, ph = int(tw + 80), int(size * 1.7)
+    words, lines, cur = text.split(), [], ""
+    for w in words:
+        tt = (cur + " " + w).strip()
+        if cur and f.getlength(tt) > max_w:
+            lines.append(cur)
+            cur = w
+        else:
+            cur = tt
+    lines.append(cur)
+    tw = max(f.getlength(l) for l in lines)
+    lh = size * 1.18
+    pw, ph = int(tw + 80), int(size * 0.55 + lh * len(lines))
+    rad = min(ph / 2, size * 0.85)
     im = Image.new("RGBA", (pw + 20, ph + 70), (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
-    d.rounded_rectangle([10, 14, pw + 10, ph + 14], radius=ph / 2, fill=(30, 26, 40))
-    d.rounded_rectangle([4, 4, pw + 4, ph + 4], radius=ph / 2, fill=(255, 255, 255), outline=(30, 26, 40), width=6)
+    d.rounded_rectangle([10, 14, pw + 10, ph + 14], radius=rad, fill=(30, 26, 40))
+    d.rounded_rectangle([4, 4, pw + 4, ph + 4], radius=rad, fill=(255, 255, 255), outline=(30, 26, 40), width=6)
     tx = 70 if tail == "left" else pw - 70
-    d.polygon([(tx - 26, ph), (tx + 26, ph), (tx + (-30 if tail == "left" else 30), ph + 58)], fill=(255, 255, 255),
-              outline=None)
+    d.polygon([(tx - 26, ph), (tx + 26, ph), (tx + (-30 if tail == "left" else 30), ph + 58)], fill=(255, 255, 255))
     d.line([(tx - 26, ph + 2), (tx + (-30 if tail == "left" else 30), ph + 58), (tx + 26, ph + 2)], fill=(30, 26, 40),
            width=6)
-    d.text((pw / 2 + 4, ph / 2 + 6), text, font=f, fill=(30, 26, 40), anchor="mm")
+    for k, l in enumerate(lines):
+        d.text((pw / 2 + 4, 4 + ph / 2 + (k - (len(lines) - 1) / 2) * lh), l, font=f, fill=(30, 26, 40), anchor="mm")
     return im
 
 
@@ -534,50 +934,6 @@ def slowmo_badge():
     d.ellipse([34, 36, 72, 74], fill=(255, 60, 70))
     d.text((240, 56), "ZEITLUPE", font=font(F_BLACK, 50), fill=(255, 255, 255), anchor="mm")
     return im
-
-
-# ------------------------------------------------------------------ frame rendering
-def world(t):
-    frame = background().copy()
-    gs = guy_state(t)
-    flying = gs is not None and (T_GRAB + 0.2 <= t < T_LAND)
-    items = []
-    for i, (who, x, y, s) in enumerate(QUEUE):
-        items.append((y, ("c", who, x, y, s, i)))
-    if gs and not flying:
-        items.append((gs["y"], ("g",)))
-    items.sort(key=lambda z: z[0])
-    for _, it in items:
-        if it[0] == "c":
-            _, who, x, y, s, i = it
-            hop = abs(math.sin((t - T_CLAP0) * 9)) * 10 * s if T_CLAP0 < t < T_CLAP1 else 0
-            draw_person(frame, cust_key(who, t, i), x, y - hop, s)
-        else:
-            draw_person(frame, gs["key"], gs["x"], gs["y"], gs["s"], gs["rot"])
-    # cashier + Frieda behind the counter
-    draw_person(frame, cash_key(t), *CASH)
-    fx = FRIEDA[0] - 50 * ease_io(seg(t, T_CUKE - 0.3, T_CUKE + 0.2))
-    draw_frieda(frame, t, fx, FRIEDA[1], FRIEDA[2], frieda_rot(t))
-    draw_counter(frame, t)
-    # cucumber travelling to the belt, then towards the scanner
-    if t >= T_CUKE:
-        p = ease_io(seg(t, T_CUKE, T_CUKE + 0.4))
-        x = lerp(fx - 120, 520, p)
-        y = lerp(1560, 1630, p) - math.sin(p * math.pi) * 90
-        x -= max(0.0, t - T_CUKE - 0.5) * 120
-        cu = capsule(42, 150, (60, 150, 50), None)
-        rot_paste(frame, cu, max(x, 200), y, lerp(-28, 90, p))
-    if gs and flying:
-        if gs.get("trail"):
-            for k in (3, 2, 1):
-                g2 = guy_state(t - k * 0.05)
-                if g2:
-                    draw_person(frame, g2["key"], g2["x"], g2["y"], g2["s"], g2["rot"], alpha=0.12 * (4 - k))
-        if t < T_FLY:  # guy goes over Frieda's hip: in front of the counter
-            draw_person(frame, gs["key"], gs["x"], gs["y"], gs["s"], gs["rot"])
-        else:
-            draw_person(frame, gs["key"], gs["x"], gs["y"], gs["s"], gs["rot"])
-    return frame, gs
 
 
 def speed_lines(frame, t, amt):
@@ -618,105 +974,10 @@ def vign():
 
 
 @lru_cache(maxsize=1)
-def blurred_bg():
-    t = T_CLAP1 + 0.3
-    f, _ = world(t)
-    f = zoom_frame(f, 1.5, 420, 1250)
-    return f.filter(ImageFilter.GaussianBlur(18))
-
-
-def closeup(t):
-    frame = blurred_bg().copy()
-    p = ease_out(seg(t, T_CLOSE, T_CLOSE + 0.5))
-    m = speaking("fr2", t)
-    wink = T_WINK - 0.05 <= t < T_WINK + 0.45
-    expr = "smirk" if t >= T_WINK - 0.05 else "smile"
-    D = 430
-    im, nx, ny = frieda_sprite(D, "oma_knit_stand", expr, round(m * 0.8, 1), False, (("knit", (0.0, 1.1)),),
-                               False, wink, round((t * 1.5) % 1, 1))
-    s = lerp(1.08, 1.0, p)
-    if abs(s - 1) > 0.005:
-        im = im.resize((int(im.width * s), int(im.height * s)), Image.BICUBIC)
-        nx, ny = nx * s, ny * s
-    im = im.rotate(lerp(-4, 0, p), resample=Image.BICUBIC, center=(nx, ny + 3 * D))
-    paste_c(frame, im, 540 - nx + im.width / 2, 860 + 40 * (1 - p) - ny + im.height / 2)
-    eye = "wink" if wink else "open"
-    # wink sparkle
-    if eye == "wink":
-        q = seg(t, T_WINK, T_WINK + 0.45)
-        sp = emoji("✨", int(130 + 60 * math.sin(q * math.pi)))
-        paste_c(frame, sp, 770, 610, alpha=math.sin(q * math.pi))
-    draw_bubble(frame, "fr2", "Mit Stil.", 300, 300, t, "right", 84)
-    if t >= T_END_TXT:
-        q = ease_back(seg(t, T_END_TXT, T_END_TXT + 0.35))
-        paste_c(frame, end_text(), 540, 1430, scale=max(0.05, q))
-    # flash on the cut
-    fl = 1 - seg(t, T_CLOSE, T_CLOSE + 0.12)
-    if fl > 0:
-        frame.alpha_composite(Image.new("RGBA", (W, H), (255, 255, 255, int(255 * fl))))
-    return frame
-
-
 @lru_cache(maxsize=1)
 def end_text():
     return text_img("Das ist Frieda.", 118, (255, 214, 60), F_BLACK, stroke=18, stroke_fill=(30, 26, 40),
                     max_w=1000)
-
-
-def render_frame(fi):
-    t = fi / FPS
-    if t >= T_CLOSE:
-        return closeup(t)
-    frame, gs = world(t)
-    # camera: gentle push-in on the dialogue, wide for the throw, push to the belt for the cashier
-    z = 1.0
-    cx, cy = 540, 1300
-    if t < T_GRAB:
-        z = 1.0 + 0.10 * ease_io(seg(t, 1.0, 2.2)) + 0.06 * ease_io(seg(t, 3.3, 3.8))
-        cx, cy = 560, 1420
-    elif t < T_SLOW_END:
-        z = 1.16 - 0.16 * ease_io(seg(t, T_GRAB, T_FLY + 0.2))
-        cx, cy = 560, lerp(1420, 1100, ease_io(seg(t, T_GRAB, T_FLY + 0.2)))
-    elif t < T_CUKE:
-        z, cx, cy = 1.0, 540, 1100
-    else:
-        q = ease_io(seg(t, T_CUKE, T_CUKE + 0.6))
-        z, cx, cy = lerp(1.0, 1.22, q), lerp(540, 330, q), lerp(1100, 1380, q)
-    shake = 0
-    if T_LAND <= t < T_LAND + 0.25:
-        shake = 10 * (1 - seg(t, T_LAND, T_LAND + 0.25))
-    hw, hh = W / (2 * z), H / (2 * z)
-    cx, cy = min(max(cx, hw), W - hw), min(max(cy, hh), H - hh)
-    frame = zoom_frame(frame, z, cx + math.sin(t * 90) * shake, cy + math.cos(t * 70) * shake)
-    slow = seg(t, T_GRAB, T_GRAB + 0.15) * (1 - seg(t, T_SLOW_END - 0.15, T_SLOW_END))
-    frame = grade(frame, slow * 0.9)
-    speed_lines(frame, t, slow * seg(t, T_THROW, T_FLY))
-    if slow > 0.02:
-        paste_c(frame, slowmo_badge(), 540, 300, scale=0.6 + 0.4 * ease_back(seg(t, T_GRAB, T_GRAB + 0.25)),
-                alpha=slow * (0.75 + 0.25 * (int(t * 4) % 2)))
-    # applause emojis
-    if T_CLAP0 < t < T_CLAP1 + 0.4:
-        rng = random.Random(3)
-        for i in range(9):
-            t0 = T_CLAP0 + rng.uniform(0, 0.8)
-            q = seg(t, t0, t0 + 0.9)
-            if 0 < q < 1:
-                paste_c(frame, emoji("👏", 110), rng.uniform(180, 900), rng.uniform(800, 1300) - q * 300,
-                        alpha=math.sin(q * math.pi), rot=rng.uniform(-20, 20))
-    # title
-    if t < 2.6:
-        a = 1 - seg(t, 2.3, 2.6)
-        sc = ease_back(seg(t, 0.1, 0.45))
-        paste_c(frame, title_full(), 540, 270, scale=max(0.05, sc), alpha=a)
-    # dialogue bubbles (screen space)
-    draw_bubble(frame, "typ1", "Sorry Oma, ich hab nur eine Sache.", 560, 620, t, "right", 50)
-    draw_bubble(frame, "fr1", "Ich auch.", 330, 760, t, "left", 76)
-    draw_bubble(frame, "kas1", "Mit Karte oder bar?", 430, 600, t, "left", 64)
-    return frame
-
-
-def _rgb(fi):
-    return np.asarray(render_frame(fi).convert("RGB")).tobytes()
 
 
 # ------------------------------------------------------------------ audio
@@ -752,27 +1013,36 @@ def lp_fast(x, k):
 
 
 def build_audio(path):
+    import wave
     n = int(TOTAL * SR)
     mix = np.zeros(n)
     rng = np.random.default_rng(5)
+    tt = np.arange(n) / SR
 
     def add(sig, t0, g=1.0):
         i = int(t0 * SR)
-        if i >= n:
+        if i >= n or i + len(sig) <= 0:
             return
+        if i < 0:
+            sig, i = sig[-i:], 0
         j = min(n, i + len(sig))
         mix[i:j] += sig[: j - i] * g
 
-    # --- music: bouncy pluck loop, 128 bpm, ducked in slow-mo
-    bpm = 128
-    beat = 60 / bpm
+    def noise(dur):
+        return rng.standard_normal(int(dur * SR))
+
+    def env_win(a, b, fade=0.15):
+        return np.clip((tt - a) / fade, 0, 1) * np.clip((b - tt) / fade, 0, 1)
+
+    # --- Musik: fröhlicher Pluck-Loop, 128 bpm
+    beat = 60 / 128
     music = np.zeros(n)
     mel = [72, 76, 79, 76, 74, 77, 81, 77, 72, 76, 79, 84, 83, 79, 77, 74]
     bass = [48, 48, 53, 53, 55, 55, 48, 48]
-    k = 0
-    tb = 0.0
+    k, tb = 0, 0.0
     while tb < TOTAL:
         i = int(tb * SR)
+
         def put(sig, g):
             j = min(n, i + len(sig))
             music[i:j] += sig[: j - i] * g
@@ -781,82 +1051,115 @@ def build_audio(path):
         if k % 2 == 0:
             fb = 440 * 2 ** ((bass[(k // 2) % 8] - 69) / 12)
             put(tone(fb, 0.4, 0.004, 0.18), 0.22)
-            put(tone(110, 0.15, 0.001, 0.05, f_end=45), 0.35)  # kick
+            put(tone(110, 0.15, 0.001, 0.05, f_end=45), 0.35)
         else:
             hh = rng.standard_normal(int(0.05 * SR)) * np.exp(-np.arange(int(0.05 * SR)) / (0.01 * SR))
             put(np.diff(hh, prepend=0), 0.05)
         k += 1
         tb += beat / 2
-    tt = np.arange(n) / SR
+    on = np.ones(n)
+    on *= 1 - env_win(T_PUSH, T_LAND + 0.15, 0.12)          # Spannung + Zeitlupe: Musik weg
+    on *= 1 - env_win(T_FLASH_A - 0.1, T_FLASH_B, 0.2)      # Rückblende: eigene Atmo
     duck = np.ones(n)
-    duck *= 1 - 0.95 * np.clip((tt - T_GRAB) / 0.15, 0, 1) * np.clip((T_LAND + 0.1 - tt) / 0.15, 0, 1)
     for lid in LINES:
         t0 = T_LINE[lid]
-        t1 = t0 + LINES[lid]["speech"]
-        duck *= 1 - 0.55 * np.clip((tt - t0 + 0.1) / 0.1, 0, 1) * np.clip((t1 + 0.15 - tt) / 0.15, 0, 1)
-    duck *= np.clip((TOTAL - tt) / 0.6, 0, 1)
-    mix += music * duck
+        duck *= 1 - 0.55 * env_win(t0 - 0.1, t0 + LINES[lid]["speech"] + 0.15, 0.1)
+    on *= np.clip((TOTAL - tt) / 0.8, 0, 1)
+    mix += music * on * duck
 
-    # --- store ambience
+    # --- Supermarkt-Atmo
     amb = lp_fast(rng.standard_normal(n), 60) * 0.25 + 0.01 * np.sin(2 * np.pi * 100 * tt)
-    mix += amb * 0.4 * np.clip(1 - (tt > T_CLOSE) * 0.6, 0, 1)
-    for tb in (0.7, 2.4):
-        add(tone(1900, 0.12, 0.002, 0.05), tb, 0.12)  # distant scanner beeps
+    amb *= 1 - env_win(T_FLASH_A, T_FLASH_B, 0.2)
+    mix += amb * 0.35
+    for tb in (0.6, 1.3, 1.9):
+        add(tone(1900, 0.12, 0.002, 0.05), tb, 0.12)     # Kunde vor Frieda wird abkassiert
+    add(tone(1400, 0.08, 0.002, 0.04), 1.95, 0.08)
 
-    # --- footsteps of the guy
-    for tb in np.arange(0.6, 1.35, 0.19):
-        add(lp_fast(rng.standard_normal(int(0.06 * SR)), 8) * np.exp(-np.arange(int(0.06 * SR)) / 600), tb, 0.5)
-    # slurp/can click when he arrives
-    add(tone(2600, 0.05, 0.001, 0.01), 1.32, 0.2)
+    # --- Schritte
+    for tb in np.arange(T_K0_LEAVE, T_K0_LEAVE + 1.5, 0.23):
+        add(lp_fast(noise(0.06), 8) * np.exp(-np.arange(int(0.06 * SR)) / 600), tb, 0.35)
+    for tb in np.arange(T_GUY_IN0, T_GUY_IN1, 0.24):
+        add(lp_fast(noise(0.06), 8) * np.exp(-np.arange(int(0.06 * SR)) / 600), tb, 0.5)
+    add(tone(2600, 0.05, 0.001, 0.01), T_GUY_IN1, 0.2)   # Dose klackt
+    # Empörtes Raunen
+    add(lp_fast(noise(0.9), 40) * np.sin(np.linspace(0, np.pi, int(0.9 * SR))), T_LINE["k2a"] - 0.5, 0.6)
 
-    # --- slow-mo: deep whoosh, sleeve grab, big swish, heartbeat
+    # --- Spannung: "Dun-dun" + Drone
+    add(ssum(tone(98, 0.9, 0.005, 0.5), tone(196, 0.6, 0.005, 0.3) * 0.4), T_PUSH, 0.5)
+    add(ssum(tone(92, 1.0, 0.005, 0.6), tone(184, 0.6, 0.005, 0.3) * 0.4), T_PUSH + 0.45, 0.5)
+    L = int((T_GRAB - T_PUSH) * SR)
+    add(np.sin(2 * np.pi * 55 * np.arange(L) / SR) * np.linspace(0, 1, L) * 0.3, T_PUSH, 0.4)
+    add(lp_fast(noise(0.25), 6) * np.linspace(0, 1, int(0.25 * SR)), T_CLOSE1A - 0.2, 0.2)  # Schnitt-Whoosh
+
+    # --- Zeitlupe: Griff, Schwung, Flug, Landung
     add(tone(80, 0.5, 0.002, 0.3, f_end=40), T_GRAB, 0.6)
-    grab = lp_fast(rng.standard_normal(int(0.12 * SR)), 4) * np.exp(-np.arange(int(0.12 * SR)) / 1500)
-    add(grab, T_GRAB + 0.32, 0.6)
+    add(lp_fast(noise(0.12), 4) * np.exp(-np.arange(int(0.12 * SR)) / 1500), T_GRAB + 0.32, 0.6)
     L = int((T_LAND - T_THROW) * SR)
-    sw = lp_fast(rng.standard_normal(L), 25)
-    env = np.sin(np.linspace(0, np.pi, L)) ** 1.5
-    add(sw * env * 3.0, T_THROW, 0.9)
+    add(lp_fast(rng.standard_normal(L), 25) * np.sin(np.linspace(0, np.pi, L)) ** 1.5 * 3.0, T_THROW, 0.9)
     add(tone(60, 0.25, 0.005, 0.12), T_GRAB + 0.1, 0.5)
-    add(tone(60, 0.25, 0.005, 0.12), T_FLY + 0.35, 0.5)
-    add(tone(300, 1.0, 0.05, 0.6, f_end=120) * 0.3, T_FLY, 0.4)  # descending "wuuu"
-    # soft landing: boing
+    add(tone(60, 0.25, 0.005, 0.12), T_FLY + 0.4, 0.5)
+    add(tone(60, 0.25, 0.005, 0.12), T_FLY + 1.2, 0.5)
+    add(tone(300, 1.4, 0.05, 0.8, f_end=110) * 0.3, T_FLY, 0.4)
     bo = tone(220, 0.5, 0.003, 0.25, f_end=420) * (1 + 0.4 * np.sin(2 * np.pi * 14 * np.arange(int(0.5 * SR)) / SR))
     add(bo, T_LAND, 0.35)
     add(tone(90, 0.2, 0.002, 0.08, f_end=50), T_LAND, 0.6)
-    # dazed tweets
-    for i in range(3):
-        add(tone(2400 + i * 300, 0.12, 0.003, 0.05, f_end=2900 + i * 300), T_LAND + 0.4 + i * 0.18, 0.08)
+    # IPPON: Gong
+    gong = ssum(tone(130, 2.5, 0.004, 1.2), 0.6 * tone(262, 2.0, 0.004, 0.9), 0.35 * tone(347, 1.6, 0.004, 0.7),
+                0.2 * tone(521, 1.2, 0.004, 0.5))
+    add(gong, T_IPPON, 0.45)
 
-    # --- applause
+    # --- Applaus + "Wooo"
     L = int((T_CLAP1 - T_CLAP0 + 0.6) * SR)
     ap = np.zeros(L)
-    for _ in range(140):
+    for _ in range(220):
         i = rng.integers(0, L - 3000)
         ap[i:i + 2400] += rng.standard_normal(2400) * np.exp(-np.arange(2400) / 300)
     ap = np.diff(ap, prepend=0)
-    env = np.clip(np.arange(L) / (0.15 * SR), 0, 1) * np.clip((L - np.arange(L)) / (0.5 * SR), 0, 1)
-    add(ap * env, T_CLAP0, 0.18)
-    # "Wooo"
-    add(lp_fast(rng.standard_normal(int(0.8 * SR)), 30) * np.sin(np.linspace(0, np.pi, int(0.8 * SR))), T_CLAP0 + 0.1, 0.5)
+    ap *= np.clip(np.arange(L) / (0.15 * SR), 0, 1) * np.clip((L - np.arange(L)) / (0.6 * SR), 0, 1)
+    add(ap, T_CLAP0, 0.18)
+    add(lp_fast(noise(0.8), 30) * np.sin(np.linspace(0, np.pi, int(0.8 * SR))), T_CLAP0 + 0.1, 0.5)
+    # benommen: Vögelchen
+    for r in range(3):
+        for i in range(3):
+            add(tone(2400 + i * 300, 0.12, 0.003, 0.05, f_end=2900 + i * 300), T_BACK1A + 0.3 + r * 1.4 + i * 0.18,
+                0.07)
 
-    # --- cucumber on the belt + scanner beep
+    # --- Rückblende: Whoosh, Knistern, Jubel, Kamerablitze
+    add(lp_fast(noise(0.4), 5) * np.linspace(0, 1, int(0.4 * SR)), T_FLASH_A - 0.35, 0.3)
+    L = int((T_FLASH_B - T_FLASH_A) * SR)
+    crack = np.zeros(L)
+    idx = rng.integers(0, L, 400)
+    crack[idx] = rng.uniform(-1, 1, 400)
+    add(lp_fast(crack, 3) * 1.5 + lp_fast(rng.standard_normal(L), 4) * 0.03, T_FLASH_A, 0.5)
+    cheer = lp_fast(rng.standard_normal(L), 18) * (0.6 + 0.4 * np.sin(np.linspace(0, 9, L)) ** 2)
+    cheer *= np.clip(np.arange(L) / (0.3 * SR), 0, 1) * np.clip((L - np.arange(L)) / (0.4 * SR), 0, 1)
+    add(cheer, T_FLASH_A, 0.9)
+    for tb in (T_FLASH_A + 0.5, T_FLASH_A + 1.9, T_FLASH_A + 3.1):
+        add(np.diff(lp_fast(noise(0.05), 2), prepend=0) * np.exp(-np.arange(int(0.05 * SR)) / 300), tb, 0.6)
+    # nostalgische Fanfare
+    for i, f in enumerate((523, 659, 784, 1047)):
+        add(tone(f, 0.5, 0.01, 0.3, kind="saw") * 0.15, T_FLASH_A + 0.4 + i * 0.12, 0.35)
+
+    # --- Gurke, Scanner, Kasse
     add(tone(500, 0.1, 0.002, 0.04, f_end=250), T_CUKE + 0.38, 0.3)
-    add(tone(1900, 0.14, 0.002, 0.08), 7.25, 0.18)
-    # --- cut whoosh + wink "pling"
-    add(lp_fast(rng.standard_normal(int(0.25 * SR)), 6) * np.linspace(0, 1, int(0.25 * SR)), T_CLOSE - 0.22, 0.25)
-    add(tone(1568, 0.6, 0.002, 0.3) + 0.5 * tone(2349, 0.6, 0.002, 0.25), T_WINK, 0.22)
-    add(ssum(tone(523, 0.5, 0.003, 0.3), tone(659, 0.5, 0.003, 0.3), tone(784, 0.6, 0.003, 0.35)), T_END_TXT, 0.14)
+    add(tone(1900, 0.14, 0.002, 0.08), T_BEEP, 0.2)
+    add(ssum(tone(2093, 0.25, 0.002, 0.12), tone(2637, 0.4, 0.002, 0.2)), T_LINE["kas1"] - 0.25, 0.12)  # Ka-ching
+    # --- Close-up: Whoosh + Zwinker-Pling + Schluss-Akkord
+    add(lp_fast(noise(0.25), 6) * np.linspace(0, 1, int(0.25 * SR)), T_CLOSE - 0.22, 0.25)
+    add(lp_fast(noise(0.25), 6) * np.linspace(0, 1, int(0.25 * SR)), T_BACK2A - 0.2, 0.2)
+    add(ssum(tone(1568, 0.6, 0.002, 0.3), 0.5 * tone(2349, 0.6, 0.002, 0.25)), T_WINK, 0.22)
+    add(ssum(tone(523, 0.6, 0.003, 0.35), tone(659, 0.6, 0.003, 0.35), tone(784, 0.8, 0.003, 0.45)), T_END_TXT,
+        0.14)
 
-    # --- voices
-    import wave
+    # --- Stimmen
     for lid, l in LINES.items():
         with wave.open(l["wav"]) as wf:
             v = np.frombuffer(wf.readframes(wf.getnframes()), np.int16).astype(np.float64) / 32768
         add(v * 1.15, T_LINE[lid] - l["lead"])
 
     mix = np.tanh(mix * 1.1) * 0.92
-    pcm = (mix * 32767).astype(np.int16)
+    fade = np.clip(tt / 0.05, 0, 1) * np.clip((TOTAL - tt) / 0.3, 0, 1)
+    pcm = (mix * fade * 32767).astype(np.int16)
     with wave.open(str(path), "wb") as wf:
         wf.setnchannels(1)
         wf.setsampwidth(2)

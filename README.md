@@ -78,20 +78,28 @@ python3 render.py shots        # Schnittliste
 python3 render.py preview 5 30 # Standbilder
 ```
 
-## frieda-supermarkt.mp4 (Oma Frieda – Kurzclip, 11 s)
+## frieda-supermarkt.mp4 (Oma Frieda an der Kasse, 46 s)
 
 3D-Spielzeug-Look (weich schattierte Figuren), Supermarktkasse. Frieda ist die Original-Figur aus „Oma Frieda Faust“
 (`src/frieda/fchars.py` + `fgfx.py`, übernommen aus `src/omafrieda/`, Branch `claude/oma-frieda-faust-tiktok-vicu2i`)
-im aktuellen Outfit: korallrote Bluse, Perlenkette, rote Blumenbrosche, roter Blümchenrock, rote Schuhe, rosa Strickzeug. Ein Drängler mit Sonnenbrille und Energy-Drink:
-„Sorry Oma, ich hab nur eine Sache.“ – Frieda: „Ich auch.“ – Zeitlupe, Judo-Hüftwurf, er landet sanft am Ende
-der Schlange – Applaus – Gurke aufs Band – „Mit Karte oder bar?“ – Close-up, Zwinkern: „Mit Stil.“
-Einblendungen: „Frieda geht einkaufen 🛒“ (Anfang), „Das ist Frieda.“ (Ende).
+im aktuellen Outfit: korallrote Bluse, Perlenkette, rote Blumenbrosche, roter Blümchenrock, rote Schuhe, rosa Strickzeug.
+
+| Zeit | Inhalt |
+|---|---|
+| 0–6 s | „Frieda geht einkaufen 🛒“ – Kunde vor ihr zahlt, „Der Nächste, bitte!“ – Frieda: „Na endlich. Nur eine Gurke.“ |
+| 6–14 s | Typ mit Sonnenbrille telefoniert, drängelt sich ganz nach vorn, Kundin protestiert, „Sorry Oma, ich hab nur eine Sache.“ |
+| 14–16 s | Musik weg, Close-up: „Ich auch.“ – „Hä?“ |
+| 16–21 s | Zeitlupe: Judo-Hüftwurf, hoher Bogen ans Ende der Schlange, **IPPON!** + Gong, Applaus |
+| 21–26 s | Ende der Schlange: „Willkommen am Ende der Schlange, junger Mann.“ – „Was … war das denn?“ |
+| 26–33 s | „Wo haben Sie das denn gelernt?“ – Rückblende in Sepia: junge Frieda, Deutsche Meisterin 1974 |
+| 33–40 s | Gurke aufs Band, „Respekt! Das macht neunundvierzig Cent.“ – „Mit Karte oder bar?“ |
+| 40–46 s | Close-up mit Strickzeug: „Mit Stil.“ + Zwinkern – Typ hinten: „Bro … wird doch länger.“ – „Das ist Frieda.“ |
 
 Caption: `Vordrängeln? Nicht bei Frieda 🥋 #omafrieda #judooma #supermarkt #oma #comedy #fyp`
 
 ```bash
 cd src/frieda
 python3 tts.py       # Stimmen (script.py: Frieda = Ingrid + Vibrato wie in Oma Frieda Faust, Typ = Jonas, Kassiererin = Tanja)
-python3 render.py    # -> ../../frieda-supermarkt.mp4  (Timing oben in render.py: T_LINE, T_GRAB …)
+python3 render.py    # -> ../../frieda-supermarkt.mp4  (Timing oben in render.py: T_LINE, T_GRAB, CAM_KEYS …)
 python3 render.py preview 4.6 5.6 9.6   # Standbilder
 ```
