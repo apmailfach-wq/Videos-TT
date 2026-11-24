@@ -80,7 +80,9 @@ python3 render.py preview 5 30 # Standbilder
 
 ## frieda-supermarkt.mp4 (Oma Frieda – Kurzclip, 11 s)
 
-3D-Spielzeug-Look (weich schattierte Figuren), Supermarktkasse. Ein Drängler mit Sonnenbrille und Energy-Drink:
+3D-Spielzeug-Look (weich schattierte Figuren), Supermarktkasse. Frieda ist die Original-Figur aus „Oma Frieda Faust“
+(`src/frieda/fchars.py` + `fgfx.py`, übernommen aus `src/omafrieda/`, Branch `claude/oma-frieda-faust-tiktok-vicu2i`)
+im aktuellen Outfit: korallrote Bluse, Perlenkette, rote Blumenbrosche, roter Blümchenrock, rote Schuhe, rosa Strickzeug. Ein Drängler mit Sonnenbrille und Energy-Drink:
 „Sorry Oma, ich hab nur eine Sache.“ – Frieda: „Ich auch.“ – Zeitlupe, Judo-Hüftwurf, er landet sanft am Ende
 der Schlange – Applaus – Gurke aufs Band – „Mit Karte oder bar?“ – Close-up, Zwinkern: „Mit Stil.“
 Einblendungen: „Frieda geht einkaufen 🛒“ (Anfang), „Das ist Frieda.“ (Ende).
@@ -89,7 +91,7 @@ Caption: `Vordrängeln? Nicht bei Frieda 🥋 #omafrieda #judooma #supermarkt #o
 
 ```bash
 cd src/frieda
-python3 tts.py       # Stimmen (script.py: Frieda = Ingrid tief, Typ = Jonas, Kassiererin = Tanja)
+python3 tts.py       # Stimmen (script.py: Frieda = Ingrid + Vibrato wie in Oma Frieda Faust, Typ = Jonas, Kassiererin = Tanja)
 python3 render.py    # -> ../../frieda-supermarkt.mp4  (Timing oben in render.py: T_LINE, T_GRAB …)
 python3 render.py preview 4.6 5.6 9.6   # Standbilder
 ```

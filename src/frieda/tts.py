@@ -14,7 +14,7 @@ if os.path.exists(_ca):
 
 
 async def synth(lid, spk, text):
-    voice, rate, pitch = VOICES[spk]
+    voice, rate, pitch, *flt = VOICES[spk]
     mp3, wav = OUT / f"{lid}.mp3", OUT / f"{lid}.wav"
     words = []
     comm = edge_tts.Communicate(text, voice, rate=rate, pitch=pitch, boundary="WordBoundary", proxy=PROXY)
@@ -25,7 +25,8 @@ async def synth(lid, spk, text):
             elif c["type"] == "WordBoundary":
                 words.append({"text": c["text"], "start": c["offset"] / 1e7,
                               "end": (c["offset"] + c["duration"]) / 1e7})
-    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(mp3), "-ar", "48000", "-ac", "1", str(wav)],
+    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(mp3), "-ar", "48000", "-ac", "1"]
+                   + (["-af", flt[0]] if flt else []) + [str(wav)],
                    check=True)
     first = words[0]["start"] if words else 0.0
     last = words[-1]["end"] + 0.1 if words else 1.0

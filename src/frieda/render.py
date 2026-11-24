@@ -17,6 +17,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "fuehrerschein"))
+import fchars  # Oma Frieda Faust – Original-Figur (Folge 1) mit aktuellem Outfit
 from core import (F_BLACK, F_INTER, W, H, FPS, capsule, clamp01, ease_back, ease_io, ease_out, emoji, font,  # noqa
                   lerp, mixc, paste_c, sphere, text_img, zoom_frame)
 
@@ -72,7 +73,6 @@ def rot_paste(dst, img, cx, cy, ang):
 
 # ------------------------------------------------------------------ characters
 PEOPLE = {
-    "frieda": dict(body=(232, 214, 182), hair=(246, 246, 250), legs=SKIN, shoes=(150, 60, 70)),
     "typ": dict(body=(250, 196, 30), hair=(92, 56, 32), legs=(60, 90, 160), shoes=(240, 240, 245)),
     "kasse": dict(body=(40, 190, 170), hair=(150, 70, 40), legs=(40, 60, 90), shoes=(40, 40, 50)),
     "k1": dict(body=(110, 140, 255), hair=(40, 30, 25), legs=(60, 60, 80), shoes=(30, 30, 30), style="short"),
@@ -143,51 +143,13 @@ def person(who, R=1.0, al=8, ar=-8, m=0.0, eye="open", item=None, cuke=True, sq=
         sh = capsule(int(84 * k), int(46 * k), c["shoes"], None)
         paste_c(im, sh, cx + sx * 48 * k, fy - 10 * k)
     body_top = fy - 380 * k
-    if who == "frieda":
-        # red flower skirt
-        sk = Image.new("RGBA", (int(320 * k), int(190 * k)), (0, 0, 0, 0))
-        sd = ImageDraw.Draw(sk)
-        sd.rounded_rectangle([40 * k, 0, 280 * k, 80 * k], radius=30 * k, fill=(214, 40, 52))
-        sd.polygon([(40 * k, 30 * k), (280 * k, 30 * k), (318 * k, 176 * k), (2 * k, 176 * k)], fill=(214, 40, 52))
-        sd.rounded_rectangle([0, 150 * k, 320 * k, 188 * k], radius=18 * k, fill=(214, 40, 52))
-        rng = random.Random(4)
-        for _ in range(16):
-            x, y = rng.uniform(30, 290) * k, rng.uniform(30, 170) * k
-            for a in range(5):
-                px, py = x + math.cos(a * 1.256) * 9 * k, y + math.sin(a * 1.256) * 9 * k
-                sd.ellipse([px - 6 * k, py - 6 * k, px + 6 * k, py + 6 * k], fill=(255, 235, 240))
-            sd.ellipse([x - 5 * k, y - 5 * k, x + 5 * k, y + 5 * k], fill=(255, 205, 40))
-        # simple shading on skirt
-        sh = Image.new("RGBA", sk.size, (60, 0, 20, 0))
-        g = np.linspace(0, 70, sk.width)[None, :].repeat(sk.height, 0)
-        sh.putalpha(Image.fromarray(g.astype(np.uint8)).point(lambda v: v) )
-        sk_a = sk.getchannel("A")
-        shade = Image.new("RGBA", sk.size, (0, 0, 0, 0))
-        shade.paste(sh, (0, 0), Image.fromarray(np.minimum(np.asarray(sk_a), g.astype(np.uint8))))
-        sk.alpha_composite(shade)
-        paste_c(im, sk, cx, fy - 200 * k)
     # body
     bw, bh = 260 * k, 270 * k
     body = capsule(int(bw), int(bh), c["body"], None, radius=int(bw * 0.4))
     by = body_top + bh / 2
     paste_c(im, body, cx, by)
-    if who == "frieda":
-        d.polygon([(cx - 46 * k, body_top + 18 * k), (cx + 46 * k, body_top + 18 * k), (cx, body_top + 130 * k)],
-                  fill=(255, 250, 244))
-        d.line([(cx, body_top + 130 * k), (cx, body_top + 250 * k)], fill=(190, 168, 136), width=int(5 * k))
-        for i in range(3):
-            y = body_top + (150 + i * 36) * k
-            paste_c(im, sphere(int(20 * k), (160, 120, 90), None, 0.5), cx + 14 * k, y)
-        # pocket with pink knitting
-        d.rounded_rectangle([cx + 40 * k, body_top + 150 * k, cx + 110 * k, body_top + 215 * k], radius=10 * k,
-                            fill=(214, 196, 162))
-        paste_c(im, sphere(int(64 * k), (250, 110, 180), None, 0.35), cx + 76 * k, body_top + 148 * k)
-        for a in (-24, 18):
-            nd = capsule(int(9 * k), int(110 * k), (220, 220, 230), None)
-            rot_paste(im, nd, cx + 76 * k + a * 1.2 * k, body_top + 110 * k, a)
-        for a in (-1, 1):  # stitches
-            d.arc([cx + 52 * k, body_top + (120 + a * 8) * k, cx + 100 * k, body_top + (170 + a * 8) * k], 200, 340,
-                  fill=(220, 70, 150), width=int(4 * k))
+    if False:
+        pass
     elif who == "typ":
         d.line([(cx - 30 * k, body_top + 20 * k), (cx - 34 * k, body_top + 100 * k)], fill=(255, 255, 255), width=int(6 * k))
         d.line([(cx + 30 * k, body_top + 20 * k), (cx + 34 * k, body_top + 100 * k)], fill=(255, 255, 255), width=int(6 * k))
@@ -204,8 +166,8 @@ def person(who, R=1.0, al=8, ar=-8, m=0.0, eye="open", item=None, cuke=True, sq=
     # head
     D = 300 * k
     hx, hy = cx, body_top - 95 * k
-    if who == "frieda" or c.get("style") == "bun":
-        paste_c(im, sphere(int(130 * k), c["hair"] if who == "frieda" else c["hair"], None, 0.3), hx, hy - D * 0.55)
+    if c.get("style") == "bun":
+        paste_c(im, sphere(int(130 * k), c["hair"], None, 0.3), hx, hy - D * 0.55)
     if c.get("style") == "long" or who == "kasse":
         hairback = capsule(int(D * 1.02), int(D * 1.05), c["hair"], None)
         paste_c(im, hairback, hx, hy + D * 0.12)
@@ -214,15 +176,8 @@ def person(who, R=1.0, al=8, ar=-8, m=0.0, eye="open", item=None, cuke=True, sq=
     paste_c(im, sphere(int(D), SKIN, None, 0.22), hx, hy)
     d = ImageDraw.Draw(im)
     st = c.get("style", who)
-    if who == "frieda":
-        d.chord([hx - D * 0.52, hy - D * 0.56, hx + D * 0.52, hy + D * 0.26], 180, 360, fill=c["hair"])
-        for sx in (-1, 1):
-            d.ellipse([hx + sx * D * 0.42 - D * 0.1, hy - D * 0.2, hx + sx * D * 0.42 + D * 0.1, hy + D * 0.08],
-                      fill=c["hair"])
-        # hair strands
-        for a in range(-3, 4):
-            d.arc([hx - D * 0.4 + a * D * 0.08, hy - D * 0.5, hx + a * D * 0.08 + D * 0.1, hy - D * 0.05], 200, 280,
-                  fill=(215, 215, 225), width=int(3 * k))
+    if False:
+        pass
     elif who == "typ":
         d.chord([hx - D * 0.51, hy - D * 0.56, hx + D * 0.51, hy + D * 0.2], 180, 360, fill=c["hair"])
         d.ellipse([hx - D * 0.15, hy - D * 0.68, hx + D * 0.42, hy - D * 0.3], fill=c["hair"])
@@ -248,35 +203,12 @@ def person(who, R=1.0, al=8, ar=-8, m=0.0, eye="open", item=None, cuke=True, sq=
                    width=int(5 * k))
         d.line([(hx - D * 0.05, ey - D * 0.04), (hx + D * 0.05, ey - D * 0.04)], fill=(20, 20, 28), width=int(7 * k))
     else:
-        eyes(d, hx, ey, D, eye, (60, 140, 230) if who == "frieda" else (70, 45, 30))
-    if who == "frieda":
-        gold = (222, 170, 40)
-        for sx in (-1, 1):
-            x = hx + sx * D * 0.17
-            d.ellipse([x - D * 0.12, ey - D * 0.12, x + D * 0.12, ey + D * 0.12], outline=gold, width=int(7 * k))
-        d.arc([hx - D * 0.06, ey - D * 0.06, hx + D * 0.06, ey + D * 0.04], 200, 340, fill=gold, width=int(6 * k))
+        eyes(d, hx, ey, D, eye, (70, 45, 30))
     paste_c(im, sphere(int(D * 0.13), mixc(SKIN, (235, 130, 110), 0.35), None, 0.35), hx, ey + D * 0.1)
     mouth(ImageDraw.Draw(im), hx, ey + D * 0.25, D, m, smirk=(who == "typ"))
-    if who == "frieda":
-        # pearl necklace
-        for i in range(11):
-            a = math.pi * (0.15 + 0.7 * i / 10)
-            px, py = hx + math.cos(a) * D * 0.3, body_top + 8 * k + math.sin(a) * D * 0.18
-            paste_c(im, sphere(int(24 * k), (250, 246, 238), None, 0.7), px, py)
     # held items
-    if item == "basket":
-        x, y = hand_l
-        bk = Image.new("RGBA", (int(190 * k), int(190 * k)), (0, 0, 0, 0))
-        bd = ImageDraw.Draw(bk)
-        bd.arc([30 * k, 0, 160 * k, 140 * k], 180, 360, fill=(150, 95, 45), width=int(12 * k))
-        if cuke:
-            cu = capsule(int(42 * k), int(150 * k), (60, 150, 50), None)
-            rot_paste(bk, cu, 110 * k, 70 * k, -28)
-        bd.rounded_rectangle([10 * k, 70 * k, 180 * k, 180 * k], radius=24 * k, fill=(196, 132, 64))
-        for j in range(4):
-            bd.line([(14 * k, (92 + j * 24) * k), (176 * k, (92 + j * 24) * k)], fill=(160, 100, 45), width=int(5 * k))
-        paste_c(im, bk, x - 10 * k, y + 50 * k)
-        paste_c(im, sphere(int(th), SKIN, None, 0.3), x, y)
+    if False:
+        pass
     elif item == "can":
         x, y = hand_r
         can = capsule(int(52 * k), int(110 * k), (30, 40, 70), None, radius=int(14 * k))
@@ -449,35 +381,82 @@ def guy_state(t):
                 key=("typ", 1.0, 25, -25, 0.0, eye, "can", True, round(sq, 2)))
 
 
-def frieda_key(t, R=1.0):
-    m = max(speaking("fr1", t), speaking("fr2", t))
-    eye = "open"
-    if line_on("fr1", t, 0.2):
-        eye = "happy"
-    al, ar = 8, -8
-    item = "basket"
-    cuke = t < T_CUKE
-    if T_GRAB <= t < T_FLY + 0.3:
-        p = seg(t, T_GRAB, T_GRAB + 0.4)
-        ar = -lerp(8, 80, ease_out(p))
-        if t > T_GRAB + 0.45:
-            q = seg(t, T_GRAB + 0.45, T_FLY)
-            ar = -lerp(80, 170, ease_io(q))
-            al = lerp(8, 40, q)
-        eye = "closed" if t > T_THROW else "open"
-    elif T_FLY + 0.3 <= t < T_CUKE:
-        ar = -lerp(170, 12, ease_out(seg(t, T_FLY + 0.3, T_FLY + 0.8)))
-        al = lerp(40, 8, ease_out(seg(t, T_FLY + 0.3, T_FLY + 0.8)))
-        eye = "happy"
-    elif T_CUKE <= t < T_CUKE + 0.6:
-        ar = -lerp(12, 55, math.sin(seg(t, T_CUKE - 0.1, T_CUKE + 0.6) * math.pi))
-    return ("frieda", R, int(al), int(ar), round(m, 1), eye, item, cuke)
+FRIEDA_D = 200  # Kopf-Einheit bei Szenen-Skalierung 1.0
+FEET = 2.867    # Füße liegen 2,867 D unter dem Nackenpunkt
+
+
+@lru_cache(maxsize=8)
+def basket(cuke):
+    bk = Image.new("RGBA", (190, 190), (0, 0, 0, 0))
+    bd = ImageDraw.Draw(bk)
+    bd.arc([30, 0, 160, 140], 180, 360, fill=(150, 95, 45), width=12)
+    if cuke:
+        rot_paste(bk, capsule(42, 150, (60, 150, 50), None), 110, 70, -28)
+    rot_paste(bk, capsule(8, 110, (215, 218, 228), None), 50, 48, -20)
+    paste_c(bk, sphere(22, (255, 150, 190), None, 0.5), 32, 2)
+    paste_c(bk, sphere(62, (247, 140, 182), None, 0.35), 58, 82)
+    bd.rounded_rectangle([10, 70, 180, 180], radius=24, fill=(196, 132, 64))
+    for j in range(4):
+        bd.line([(14, 92 + j * 24), (176, 92 + j * 24)], fill=(160, 100, 45), width=5)
+    return bk
+
+
+def frieda_state(t):
+    """pose, expr, mouth, mirror, basket?"""
+    m = round(max(speaking("fr1", t), speaking("fr2", t)) * 0.8, 1)
+    if T_GRAB <= t < T_THROW:
+        return "oma_grab", "glare", 0.0, True, False
+    if T_THROW <= t < T_FLY + 0.35:
+        return "oma_throw", "strain", 0.0, True, False
+    if T_CUKE - 0.15 <= t < T_CUKE + 0.45:
+        return "oma_offer", "smile", 0.0, False, False
+    if line_on("fr1", t, 0.25):
+        return "oma_stand", "warm", m, False, True
+    if T_FLY + 0.35 <= t < T_CUKE:
+        return "oma_stand", "proud", 0.0, False, True
+    if T_LINE["typ1"] + 0.3 < t < T_GRAB:
+        return "oma_stand", "smirk", 0.0, False, True
+    return "oma_stand", "smile", 0.0, False, True
+
+
+@lru_cache(maxsize=512)
+def frieda_sprite(D, pose, expr, m, mirror=False, items=(), blink=False, wink=False, knit_phase=0.0):
+    im, (nx, ny), sc = fchars.person("oma", D, pose, expr=expr, mouth=m, gl=0.03, items=items, blink=blink,
+                                     knit_phase=knit_phase)
+    if wink:  # nur das (vom Betrachter aus) rechte Auge zu
+        cl, _, _ = fchars.person("oma", D, pose, expr=expr, mouth=m, gl=0.03, items=items, blink=True,
+                                 knit_phase=knit_phase)
+        diff = np.abs(np.asarray(im).astype(np.int16) - np.asarray(cl).astype(np.int16)).sum(axis=2) > 6
+        diff[:, : int(nx)] = False
+        mask = Image.fromarray((diff * 255).astype(np.uint8)).filter(ImageFilter.MaxFilter(9)).filter(
+            ImageFilter.GaussianBlur(2))
+        im = Image.composite(cl, im, mask)
+    if abs(sc - 1) > 0.01:
+        im = im.resize((int(im.width * sc), int(im.height * sc)), Image.LANCZOS)
+        nx, ny = nx * sc, ny * sc
+    if mirror:
+        im = im.transpose(Image.FLIP_LEFT_RIGHT)
+        nx = im.width - nx
+    return im, nx, ny
+
+
+def draw_frieda(frame, t, x, y, s, rot=0.0):
+    pose, expr, m, mirror, has_basket = frieda_state(t)
+    D = int(round(FRIEDA_D * s))
+    im, nx, ny = frieda_sprite(D, pose, expr, m, mirror)
+    feet_y = ny + FEET * D
+    if rot:
+        im = im.rotate(rot, resample=Image.BICUBIC, center=(nx, feet_y))
+    paste_c(frame, im, x - nx + im.width / 2, y - feet_y + im.height / 2)
+    if has_basket:
+        hx, hy = x - 0.6 * D, y - FEET * D + 1.3 * D
+        paste_c(frame, basket(t < T_CUKE), hx - 6 * s, hy + 50 * s, scale=s * 0.95)
 
 
 def frieda_rot(t):
     if T_GRAB + 0.35 <= t < T_FLY + 0.5:
         p = seg(t, T_GRAB + 0.35, T_FLY + 0.5)
-        return 14 * math.sin(p * math.pi)
+        return -10 * math.sin(p * math.pi)
     return 0.0
 
 
@@ -578,7 +557,7 @@ def world(t):
     # cashier + Frieda behind the counter
     draw_person(frame, cash_key(t), *CASH)
     fx = FRIEDA[0] - 50 * ease_io(seg(t, T_CUKE - 0.3, T_CUKE + 0.2))
-    draw_person(frame, frieda_key(t), fx, FRIEDA[1], FRIEDA[2], frieda_rot(t))
+    draw_frieda(frame, t, fx, FRIEDA[1], FRIEDA[2], frieda_rot(t))
     draw_counter(frame, t)
     # cucumber travelling to the belt, then towards the scanner
     if t >= T_CUKE:
@@ -650,22 +629,27 @@ def closeup(t):
     frame = blurred_bg().copy()
     p = ease_out(seg(t, T_CLOSE, T_CLOSE + 0.5))
     m = speaking("fr2", t)
-    eye = "wink" if T_WINK - 0.05 <= t < T_WINK + 0.45 else "open"
-    ar = -8
-    if t > T_WINK - 0.25:  # finger-gun / thumbs gesture
-        ar = -int(lerp(8, 135, ease_back(seg(t, T_WINK - 0.25, T_WINK + 0.05))))
-    key = ("frieda", 2.3, 8, ar, round(m, 1), eye, None)
-    s = lerp(1.1, 1.0, p)
-    draw_person(frame, key, 540, 2090 + 40 * (1 - p), s * 1.0, rot=lerp(-4, 0, p))
+    wink = T_WINK - 0.05 <= t < T_WINK + 0.45
+    expr = "smirk" if t >= T_WINK - 0.05 else "smile"
+    D = 430
+    im, nx, ny = frieda_sprite(D, "oma_knit_stand", expr, round(m * 0.8, 1), False, (("knit", (0.0, 1.1)),),
+                               False, wink, round((t * 1.5) % 1, 1))
+    s = lerp(1.08, 1.0, p)
+    if abs(s - 1) > 0.005:
+        im = im.resize((int(im.width * s), int(im.height * s)), Image.BICUBIC)
+        nx, ny = nx * s, ny * s
+    im = im.rotate(lerp(-4, 0, p), resample=Image.BICUBIC, center=(nx, ny + 3 * D))
+    paste_c(frame, im, 540 - nx + im.width / 2, 860 + 40 * (1 - p) - ny + im.height / 2)
+    eye = "wink" if wink else "open"
     # wink sparkle
     if eye == "wink":
         q = seg(t, T_WINK, T_WINK + 0.45)
         sp = emoji("✨", int(130 + 60 * math.sin(q * math.pi)))
-        paste_c(frame, sp, 790, 830, alpha=math.sin(q * math.pi))
-    draw_bubble(frame, "fr2", "Mit Stil.", 300, 330, t, "right", 84)
+        paste_c(frame, sp, 770, 610, alpha=math.sin(q * math.pi))
+    draw_bubble(frame, "fr2", "Mit Stil.", 300, 300, t, "right", 84)
     if t >= T_END_TXT:
         q = ease_back(seg(t, T_END_TXT, T_END_TXT + 0.35))
-        paste_c(frame, end_text(), 540, 1500, scale=max(0.05, q))
+        paste_c(frame, end_text(), 540, 1430, scale=max(0.05, q))
     # flash on the cut
     fl = 1 - seg(t, T_CLOSE, T_CLOSE + 0.12)
     if fl > 0:
