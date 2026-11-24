@@ -38,6 +38,8 @@ T_LINE = {
     "kas3": 46.45, "kas4": 49.95, "fr6": 51.75, "kas1": 53.35,
     "fr2": 55.3, "typ4": 57.2, "tel": 59.5,
 }
+for _k in LINES:                      # Zeilen anderer Fassungen hier stumm schalten
+    T_LINE.setdefault(_k, 999.0)
 T_K0_LEAVE = 2.5                      # Kunde vor Frieda geht
 T_GUY_IN0, T_GUY_IN1 = 6.1, 9.3       # Drängler läuft rein (telefoniert)
 T_PUSH = 14.3                         # Musik weg, Kamera drückt rein
@@ -46,6 +48,7 @@ T_GRAB, T_THROW, T_FLY, T_LAND, T_SLOW_END = 26.45, 27.1, 27.6, 29.75, 30.15
 T_IPPON = 29.85
 T_CARDS = 30.1                        # Wertungstafeln hoch
 T_TITLE_END = 2.7                     # Titel "Frieda geht einkaufen"
+T_IPPON_END = None                    # None = bis kurz nach den Wertungstafeln
 T_CLAP0, T_CLAP1 = 30.15, 32.5
 T_MUSK0, T_MUSK1 = 31.0, 32.8         # Muskelprotz schleicht nach hinten
 T_CATCH = T_LAND + 0.3                # Frieda fängt die Dose
@@ -112,6 +115,8 @@ for name, legs in (("", _STL), ("kid_", _KIDL)):
 fchars.POSES["g_phone"] = dict(lower="pants", legs=_STL, arms=(_HANG_L, ((0.86, 0.45), (0.44, -0.36), "front")))
 fchars.POSES["g_shrug"] = dict(lower="pants", legs=_STL, arms=(((-0.85, 0.55), (-1.12, 0.3), "front"),
                                                                ((0.85, 0.55), (1.12, 0.3), "front")))
+fchars.POSES["g_film"] = dict(lower="pants", legs=_STL, arms=(_HANG_L, ((0.86, 0.35), (0.66, -0.18), "front")))
+GUY_LIVE = False   # Kurzfassung: der Drängler filmt sich im Livestream
 fchars.POSES["c_wave"] = dict(lower="pants", legs=_STL, arms=(_HANG_L, ((0.85, 0.2), (0.95, -0.45), "front")))
 KIDS = {"girl", "kid3", "kid4", "kleiner"}
 SER_D = 200   # Kopf-Einheit bei Szenen-Skalierung 1.0
@@ -418,8 +423,9 @@ def guy_state(t):
         p = ease_io(seg(t, T_GUY_IN0, T_GUY_IN1))
         bob = abs(math.sin(t * 13)) * 14 * (1 if p < 0.97 else 0)
         m = speaking("typ0", t)
+        m = max(m, speaking("typL", t))
         return dict(x=lerp(1260, GUY_SPOT[0], p), y=GUY_SPOT[1] - bob, s=GUY_SPOT[2], rot=0,
-                    key=K(GUY, "g_phone", "smirk", m, shades=shades, can=True, phone=True))
+                    key=K(GUY, "g_film" if GUY_LIVE else "g_phone", "smirk", m, shades=shades, can=True, phone=True))
     if t < T_GRAB + 0.2:
         m = max(speaking("typ1", t), speaking("typ2", t), speaking("typ1b", t))
         pose, expr = "b_stand", "arrogant"
@@ -429,8 +435,11 @@ def guy_state(t):
             pose, expr = "b_hold", "glare"
         if t >= T_GRAB:
             pose, expr = "pass_shock", "shock"
+        live = GUY_LIVE and pose in ("b_stand", "g_shrug")
+        if live:
+            pose = "g_film"
         return dict(x=GUY_SPOT[0], y=GUY_SPOT[1], s=GUY_SPOT[2], rot=0,
-                    key=K(GUY, pose, expr, m, shades=shades, can=pose != "pass_shock"))
+                    key=K(GUY, pose, expr, m, shades=shades, can=pose != "pass_shock", phone=live))
     if t < T_FLY:  # wird über Friedas Hüfte gehebelt (Zeitlupe)
         p = ease_io(seg(t, T_GRAB + 0.2, T_FLY))
         x = lerp(GUY_SPOT[0], FRIEDA[0], p)
@@ -481,6 +490,8 @@ def frieda_state(t):
         return "oma_offer", "smile", 0.0, False, False
     if line_on("fr0", t, 0.2):
         return "oma_stand", "smile", m, False, True
+    if line_on("frS", t, 0.3):
+        return "oma_stand", "smirk", round(speaking("frS", t) * 0.8, 1), False, True
     if line_on("fr6", t, 0.3):
         return "oma_point", "smirk", round(speaking("fr6", t) * 0.8, 1), False, True
     if line_on("kas4", t, 0):
@@ -774,9 +785,10 @@ def world_shot(t):
     if slow > 0.02:
         paste_c(frame, slowmo_badge(), 540, 330, scale=0.6 + 0.4 * ease_back(seg(t, T_GRAB, T_GRAB + 0.25)),
                 alpha=slow * (0.75 + 0.25 * (int(t * 4) % 2)))
-    if T_IPPON <= t < T_CARDS + 0.7:
+    ipp_end = T_IPPON_END if T_IPPON_END else T_CARDS + 0.7
+    if T_IPPON <= t < ipp_end:
         q = seg(t, T_IPPON, T_IPPON + 0.25)
-        a = 1 - seg(t, T_CARDS + 0.35, T_CARDS + 0.7)
+        a = 1 - seg(t, ipp_end - 0.35, ipp_end)
         paste_c(frame, stamp("IPPON!", 190, (255, 70, 70)), 540, 560, scale=2.2 - 1.2 * ease_out(q), alpha=a)
     if T_CLAP0 < t < T_CLAP1 + 0.4:
         rng = random.Random(3)
@@ -798,8 +810,9 @@ def world_shot(t):
           "kas4": head(*CASH), "fr0": head(*FRIEDA, frieda=True), "fr6": head(*FRIEDA, frieda=True),
           "k2a": head(*QUEUE[0][1:]), "mk1": head(*cust_pos("musk1", *QUEUE[1][1:], t))}
     if gs:
-        sp["typ0"] = sp["typ1"] = sp["typ1b"] = head(gs["x"], gs["y"], gs["s"])
-    sizes = {"typ1": 54, "typ1b": 52, "typ0": 52, "k2a": 58, "kas3": 58, "mk1": 50}
+        sp["typ0"] = sp["typ1"] = sp["typ1b"] = sp["typL"] = head(gs["x"], gs["y"], gs["s"])
+    sp["frS"] = head(*FRIEDA, frieda=True)
+    sizes = {"typ1": 54, "typ1b": 52, "typL": 52, "frS": 96, "typ0": 52, "k2a": 58, "kas3": 58, "mk1": 50}
     for lid, (ax, ay) in sp.items():
         bubble_at(frame, lid, TEXT[lid], ax, ay, t, sizes.get(lid, 62))
     return frame
@@ -853,7 +866,8 @@ def conf_shot(t):
     else:
         frame = blurred_world(5.0, 1.45, 330, 1250, 18, False).copy()
         if lid in ("typ2", "typ2b", "typ6"):
-            key = K(GUY, "g_shrug", "smirk", speaking(lid, t), shades=True, can=True)
+            key = K(GUY, "g_film" if GUY_LIVE else "g_shrug", "smirk", speaking(lid, t), shades=True, can=True,
+                    phone=GUY_LIVE)
             s, rot = lerp(1.0, 1.05, p), 0
         else:  # Brille ab, Faust, beugt sich bedrohlich vor
             key = K(GUY, "b_hold", "glare", speaking(lid, t))
@@ -911,9 +925,9 @@ def back_shot(t):
     m3 = speaking("k3a", t)
     k3 = K("pass2", "b_point" if line_on("k3a", t, 0) else "b_stand", "smirk", m3, mirror=True)
     draw_series(frame, k3, 320, 2050, 1.75)
-    mt = max(speaking("typ3", t), speaking("typ4", t))
+    mt = max(speaking("typ3", t), speaking("typ4", t), speaking("typ7", t))
     if second:
-        key, wob = K(GUY, "g_phone", "scared" if t > T_LINE["tel"] else "sad", mt, phone=True), 0
+        key, wob = K(GUY, "g_film" if GUY_LIVE else "g_phone", "scared" if t > T_LINE["tel"] else "sad", mt, phone=True), 0
     else:
         key, wob = K(GUY, "b_stand", "shock" if mt < 0.05 else "scared", mt), 4 * math.sin(t * 5)
     draw_series(frame, key, 770, 2080, 1.75, rot=wob)
@@ -924,6 +938,7 @@ def back_shot(t):
     bubble_at(frame, "k3a", TEXT["k3a"], 320, 760, t, 62)
     bubble_at(frame, "typ3", TEXT["typ3"], 770, 660, t, 66)
     bubble_at(frame, "typ4", TEXT["typ4"], 770, 660, t, 66)
+    bubble_at(frame, "typ7", TEXT["typ7"], 770, 660, t, 64)
     bubble_at(frame, "tel", "📱 " + TEXT["tel"] if False else TEXT["tel"], 820, 620, t, 70)
     flash(frame, t, T_BACK1A if not second else T_BACK2A, 0.08)
     return frame

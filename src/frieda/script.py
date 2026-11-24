@@ -54,6 +54,10 @@ LINES = [
     ("typ2b", "typ", "Oma, chill. Du hast doch den ganzen Tag Zeit."),
     ("fr7", "frieda", "Junge, ich bin achtzig. Ich hab am wenigsten Zeit von allen."),
     ("typ6", "typ", "Ja und? Was willst du machen – mich wegstricken?"),
+    # 45-s-Fassung: Livestream, Aura, Gen-Z-Frieda
+    ("typL", "typ", "Chat, guckt mal – ich skip die ganze Schlange."),
+    ("frS", "frieda", "Skill Ischu.", "Skill issue."),
+    ("typ7", "typ_k", "Chat … ich wurde grad von 'ner Oma gefaltet."),
     ("kas4", "kasse", "Und sein Energy-Drink?"),
     ("fr6", "frieda", "Den zahlt er … hinten."),
     ("kas1", "kasse", "Mit Karte oder bar?"),
