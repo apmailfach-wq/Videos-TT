@@ -104,11 +104,11 @@ Scanner, Kassenmonitor, Kartenterminal (zeigt Summe/„Karte?“), Kassenlicht �
 | Zeit | Inhalt |
 |---|---|
 | 0–2 s | **Cold Open:** Wurf in Zeitlupe, Freeze – „Er hat sich vor der falschen Oma vorgedrängelt 😳“ – Rückspulen „⏪ Kurz vorher …“ |
-| 2–9 s | Typ kommt **live streamend** rein (🔴 LIVE · 👁 1,2k, Live-Chat): „Chat, guckt mal – ich skip die ganze Schlange.“ – zur Schlange: „Ihr seid aber zu viele. Ich zahl schnell – ich hab keine Zeit!“ |
-| 9–27 s | Gespräch: „Ich auch nicht, junger Mann.“ – „Junge, ich bin achtzig. Ich hab am wenigsten Zeit von allen.“ – „Was willst du machen – noch mehr Achtzigjährige holen? Ha ha ha!“ – „Letzte Chance, Bürschchen. Ab nach hinten.“ – (Brille ab, Faust) „Sonst was … Oma?“ – „Sonst … das hier.“ |
+| 2–10 s | Typ kommt **live streamend** rein (🔴 LIVE · 👁 1,2k, Live-Chat): „Chat, passt auf – Schlangen sind was für NPCs.“ – drängelt sich vor: „Rück mal, Oma. Ich hab keine Zeit – Main Character geht vor.“ |
+| 10–27 s | Gespräch: „Junge, ich bin achtzig. Ich hab am wenigsten Zeit von allen.“ – „Achtzig? Dann bist du Warten ja gewohnt. Ha!“ – „Letzte Chance, Bürschchen. Ab nach hinten.“ – (Brille ab, Faust) „Sonst was, Oma? Haust du mich mit der Gurke?“ – „Sonst … das hier.“ |
 | 27–32 s | Wurf, **IPPON!**, **+1000 AURA ✨** für Frieda, **−1000 AURA 💀** für ihn, Chat eskaliert („OMA GOAT 🐐“, „W Oma“, „L Bro 😭“), Zuschauer 1,9k → 48,9k, Wertungstafeln (10 – 10 – 9,5) |
 | 32–38 s | Frieda: **„Skill issue.“** (Vine-Boom) – „Und sein Energy-Drink?“ – „Den zahlt er … hinten.“ – „Mit Karte oder bar?“ |
-| 38–45 s | „Mit Stil.“ + Zwinkern – Typ hinten: „Chat … ich wurde grad von 'ner Oma gefaltet.“ – Chat: „Frieda?! Bro … lauf! 💀“ – „Das ist Frieda.“ – harter Schnitt |
+| 38–45 s | „Mit Stil.“ + Zwinkern – Typ hinten: „Chat … löscht den Stream. Bitte.“ – Chat: „zu spät, 48k haben's gesehen 💀“ – „Frieda?! Bro … lauf!“ – „Das ist Frieda.“ – harter Schnitt |
 
 Quelle: `src/frieda/render_short.py` (nutzt Figuren/Sets aus `render.py`, eigene Zeitleiste):
 `cd src/frieda && python3 tts.py && python3 render_short.py`

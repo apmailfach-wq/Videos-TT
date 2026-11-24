@@ -59,6 +59,12 @@ LINES = [
     ("frS", "frieda", "Skill Ischu.", "Skill issue."),
     ("typ1c", "typ", "Ihr seid aber zu viele. Ich zahl schnell – ich hab keine Zeit!"),
     ("typ8", "typ", "Was willst du machen – noch mehr Achtzigjährige holen? Ha ha ha!"),
+    # Neue Sprüche für den Drängler (TikTok-Fassung)
+    ("typL2", "typ", "Chat, passt auf – Schlangen sind was für NPCs."),
+    ("typ1d", "typ", "Rück mal, Oma. Ich hab keine Zeit – Main Character geht vor."),
+    ("typ9", "typ", "Achtzig? Dann bist du Warten ja gewohnt. Ha!"),
+    ("typ5b", "typ_b", "Sonst was, Oma? Haust du mich mit der Gurke?"),
+    ("typ7b", "typ_k", "Chat … löscht den Stream. Bitte."),
     ("typ7", "typ_k", "Chat … ich wurde grad von 'ner Oma gefaltet."),
     ("kas4", "kasse", "Und sein Energy-Drink?"),
     ("fr6", "frieda", "Den zahlt er … hinten."),

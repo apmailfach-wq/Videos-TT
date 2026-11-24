@@ -418,20 +418,21 @@ def guy_state(t):
     """dict(x, y, s, rot, key[, trail, squash])"""
     if t < T_GUY_IN0:
         return None
-    shades = t < T_LINE["typ5"]
+    t_off = min(T_LINE["typ5"], T_LINE.get("typ5b", 999.0))   # Brille ab
+    shades = t < t_off
     if t < T_GUY_IN1:  # telefoniert, läuft an der Schlange vorbei bis ganz vorne
         p = ease_io(seg(t, T_GUY_IN0, T_GUY_IN1))
         bob = abs(math.sin(t * 13)) * 14 * (1 if p < 0.97 else 0)
-        m = speaking("typ0", t)
+        m = max(speaking("typ0", t), speaking("typL2", t))
         m = max(m, speaking("typL", t))
         return dict(x=lerp(1260, GUY_SPOT[0], p), y=GUY_SPOT[1] - bob, s=GUY_SPOT[2], rot=0,
                     key=K(GUY, "g_film" if GUY_LIVE else "g_phone", "smirk", m, shades=shades, can=True, phone=True))
     if t < T_GRAB + 0.2:
-        m = max(speaking("typ1", t), speaking("typ2", t), speaking("typ1b", t), speaking("typ1c", t))
+        m = max(speaking(l, t) for l in ("typ1", "typ2", "typ1b", "typ1c", "typ1d"))
         pose, expr = "b_stand", "arrogant"
-        if line_on("typ1", t, 0) or line_on("typ1b", t, 0) or line_on("typ1c", t, 0):
+        if any(line_on(l, t, 0) for l in ("typ1", "typ1b", "typ1c", "typ1d")):
             pose, expr = "g_shrug", "smirk"
-        if t >= T_LINE["typ5"]:
+        if t >= t_off:
             pose, expr = "b_hold", "glare"
         if t >= T_GRAB:
             pose, expr = "pass_shock", "shock"
@@ -810,9 +811,10 @@ def world_shot(t):
           "kas4": head(*CASH), "fr0": head(*FRIEDA, frieda=True), "fr6": head(*FRIEDA, frieda=True),
           "k2a": head(*QUEUE[0][1:]), "mk1": head(*cust_pos("musk1", *QUEUE[1][1:], t))}
     if gs:
-        sp["typ0"] = sp["typ1"] = sp["typ1b"] = sp["typ1c"] = sp["typL"] = head(gs["x"], gs["y"], gs["s"])
+        for lid in ("typ0", "typ1", "typ1b", "typ1c", "typ1d", "typL", "typL2"):
+            sp[lid] = head(gs["x"], gs["y"], gs["s"])
     sp["frS"] = head(*FRIEDA, frieda=True)
-    sizes = {"typ1": 54, "typ1b": 52, "typ1c": 52, "typL": 52, "frS": 96, "typ0": 52, "k2a": 58, "kas3": 58, "mk1": 50}
+    sizes = {"typ1": 54, "typ1b": 52, "typ1c": 52, "typ1d": 52, "typL2": 52, "typL": 52, "frS": 96, "typ0": 52, "k2a": 58, "kas3": 58, "mk1": 50}
     for lid, (ax, ay) in sp.items():
         bubble_at(frame, lid, TEXT[lid], ax, ay, t, sizes.get(lid, 62))
     return frame
@@ -865,8 +867,9 @@ def conf_shot(t):
             frame = red_tension(frame, 0.5 * p)
     else:
         frame = blurred_world(5.0, 1.45, 330, 1250, 18, False).copy()
-        if lid in ("typ2", "typ2b", "typ6", "typ8"):
-            key = K(GUY, "g_film" if GUY_LIVE else "g_shrug", "laugh" if lid == "typ8" else "smirk",
+        threat = lid in ("typ5", "typ5b")
+        if lid in ("typ2", "typ2b", "typ6", "typ8", "typ9"):
+            key = K(GUY, "g_film" if GUY_LIVE else "g_shrug", "laugh" if lid in ("typ8", "typ9") else "smirk",
                     speaking(lid, t), shades=True, can=True, phone=GUY_LIVE)
             s, rot = lerp(1.0, 1.05, p), 0
         else:  # Brille ab, Faust, beugt sich bedrohlich vor
@@ -879,11 +882,11 @@ def conf_shot(t):
         nx, ny = nx * s, ny * s
         if rot:
             im = im.rotate(rot, resample=Image.BICUBIC, center=(nx, ny))
-        shake = 6 * math.sin(t * 60) * p if lid == "typ5" else 0
+        shake = 6 * math.sin(t * 60) * p if threat else 0
         paste_c(frame, im, 520 - nx + im.width / 2 + shake, 1050 - ny + im.height / 2)
-        bubble_at(frame, lid, TEXT[lid], 560, 430, t, 92 if lid == "typ5" else 64)
+        bubble_at(frame, lid, TEXT[lid], 560, 430, t, {"typ5": 92, "typ5b": 74}.get(lid, 64))
         frame = grade(frame, 0.35)
-        if lid == "typ5":
+        if threat:
             frame = red_tension(frame, 0.3 + 0.6 * p)
     flash(frame, t, t0, 0.06)
     return frame
@@ -925,7 +928,7 @@ def back_shot(t):
     m3 = speaking("k3a", t)
     k3 = K("pass2", "b_point" if line_on("k3a", t, 0) else "b_stand", "smirk", m3, mirror=True)
     draw_series(frame, k3, 320, 2050, 1.75)
-    mt = max(speaking("typ3", t), speaking("typ4", t), speaking("typ7", t))
+    mt = max(speaking(l, t) for l in ("typ3", "typ4", "typ7", "typ7b"))
     if second:
         key, wob = K(GUY, "g_film" if GUY_LIVE else "g_phone", "scared" if t > T_LINE["tel"] else "sad", mt, phone=True), 0
     else:
@@ -939,6 +942,7 @@ def back_shot(t):
     bubble_at(frame, "typ3", TEXT["typ3"], 770, 660, t, 66)
     bubble_at(frame, "typ4", TEXT["typ4"], 770, 660, t, 66)
     bubble_at(frame, "typ7", TEXT["typ7"], 770, 660, t, 64)
+    bubble_at(frame, "typ7b", TEXT["typ7b"], 770, 660, t, 66)
     bubble_at(frame, "tel", "📱 " + TEXT["tel"] if False else TEXT["tel"], 820, 620, t, 70)
     flash(frame, t, T_BACK1A if not second else T_BACK2A, 0.08)
     return frame
