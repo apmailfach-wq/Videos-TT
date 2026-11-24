@@ -78,12 +78,12 @@ python3 render.py shots        # Schnittliste
 python3 render.py preview 5 30 # Standbilder
 ```
 
-## frieda-supermarkt.mp4 (Oma Frieda an der Kasse, 57 s)
+## frieda-supermarkt.mp4 (Oma Frieda an der Kasse, 64 s)
 
 Alle Figuren im Stil von „Oma Frieda Faust“ (`src/frieda/fchars.py` + `fgfx.py`, übernommen aus `src/omafrieda/`,
 Branch `claude/oma-frieda-faust-tiktok-vicu2i`). Frieda im aktuellen Outfit (korallrote Bluse, Perlenkette, rote
 Blumenbrosche, roter Blümchenrock, rote Schuhe, rosa Strickzeug). Drängler: Cap + Kopfhörer, „NO RULES“-Hoodie,
-Sonnenbrille, Energy-Drink. Dazu Kassiererin, Kundin in Orange, junger Typ, Mädchen, älterer Herr, Kunde vorne.
+Sonnenbrille, Energy-Drink. Dazu Kassiererin, Kundin in Orange, Muskelprotz, Mädchen, älterer Herr, Kunde vorne.
 Supermarkt mit Deckenlicht, Gang-Schildern, Regalen mit Preisschildern, Obststand; Kasse mit Laufband, Warentrenner,
 Scanner, Kassenmonitor, Kartenterminal (zeigt Summe/„Karte?“), Kassenlicht „1“ und Quengelregal.
 
@@ -92,11 +92,12 @@ Scanner, Kassenmonitor, Kartenterminal (zeigt Summe/„Karte?“), Kassenlicht �
 | 0–6 s | „Frieda geht einkaufen 🛒“ – „Der Nächste!“ – Frieda: „Eine Gurke. Was soll da schon schiefgehen?“ |
 | 6–14 s | Typ am Handy: „Bro, zwei Minuten. Ich drängel mich vor.“ – „Hallo?! Hier ist 'ne Schlange!“ – „Sorry Oma, ich hab nur eine Sache.“ |
 | 14–26 s | Schuss/Gegenschuss: „Ich auch.“ – „Hä? Was willst du machen – mich wegstricken?“ – „Letzte Chance, Bürschchen. Ab nach hinten.“ – (Brille ab, Faust, rotes Licht) „Sonst was … Oma?“ – „Sonst … das hier.“ |
-| 26–32 s | Zeitlupe: Judo-Hüftwurf ans Ende der Schlange, **IPPON!** + Gong, Applaus |
-| 31–38 s | „Hinten anstellen, Junge. Ach – bist ja schon da.“ – „Hat mich grad 'ne Oma geworfen?“ |
-| 38–44 s | „Wo lernt man denn so was?“ – Rückblende (Sepia): „Deutsche Meisterin. 1974.“ |
-| 44–50 s | Gurke aufs Band – „Respekt! 0,49 €.“ – „Mit Karte oder bar?“ |
-| 50–57 s | Close-up mit Strickzeug: „Mit Stil.“ + Zwinkern – „Bro … die Oma ist Endgegner.“ – „Das ist Frieda.“ |
+| 26–30 s | Zeitlupe: Judo-Hüftwurf ans Ende der Schlange, die Energy-Drink-Dose fliegt weg – Frieda fängt sie blind. **IPPON!** + Gong |
+| 30–33 s | Wertungstafeln wie bei Olympia: „10“, „10“, „10“ … das Mädchen: „9,5“. Muskelprotz: „Ich … stell mich mal hinten an.“ |
+| 33–40 s | „Hinten anstellen, Junge. Ach – bist ja schon da.“ – „Hat mich grad 'ne Oma geworfen?“ |
+| 40–46 s | „Wo lernt man denn so was?“ – Rückblende (Sepia): „Deutsche Meisterin. 1974.“ |
+| 46–55 s | Gurke + Dose aufs Band – „Respekt! 0,49 €.“ – „Und sein Energy-Drink?“ – „Den zahlt er … hinten.“ – „Mit Karte oder bar?“ |
+| 55–64 s | Close-up: „Mit Stil.“ + Zwinkern – „Bro … die Oma ist Endgegner.“ – Kumpel am Handy: „Frieda?! Bro … lauf!“ – „Das ist Frieda.“ |
 
 Caption: `Vordrängeln? Nicht bei Frieda 🥋 #omafrieda #judooma #supermarkt #oma #comedy #fyp`
 

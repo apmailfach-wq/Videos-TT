@@ -32,10 +32,11 @@ LINES = {l["id"]: l for l in json.loads((BUILD / "lines.json").read_text())}
 T_LINE = {
     "kas0": 2.0, "fr0": 3.0, "typ0": 6.3, "k2a": 9.45, "typ1": 12.1,
     "fr1": 14.85, "typ2": 15.75, "fr4": 19.0, "typ5": 22.6, "fr5": 25.2,
-    "k3a": 31.5, "typ3": 35.7,
-    "kas2": 38.25, "fr3": 40.45,
-    "kas3": 44.75, "kas1": 48.25,
-    "fr2": 50.2, "typ4": 52.1,
+    "mk1": 31.3,
+    "k3a": 33.2, "typ3": 37.4,
+    "kas2": 39.95, "fr3": 42.15,
+    "kas3": 46.45, "kas4": 49.95, "fr6": 51.75, "kas1": 53.35,
+    "fr2": 55.3, "typ4": 57.2, "tel": 59.5,
 }
 T_K0_LEAVE = 2.5                      # Kunde vor Frieda geht
 T_GUY_IN0, T_GUY_IN1 = 6.1, 9.3       # Drängler läuft rein (telefoniert)
@@ -43,17 +44,20 @@ T_PUSH = 14.3                         # Musik weg, Kamera drückt rein
 T_CONF_A, T_CONF_B = 14.6, 26.45      # Schuss/Gegenschuss vor dem Wurf
 T_GRAB, T_THROW, T_FLY, T_LAND, T_SLOW_END = 26.45, 27.1, 27.6, 29.75, 30.15
 T_IPPON = 29.85
-T_CLAP0, T_CLAP1 = 30.15, 32.35
-T_BACK1A, T_BACK1B = 31.2, 37.95      # Ende der Schlange: Herr + benommener Typ
-T_FLASH_A, T_FLASH_B = 40.15, 44.0    # Rückblende 1974
-T_CUKE = 44.15                        # Gurke aufs Band
-T_BEEP = 44.5
-T_CLOSE2A = 50.0                      # Close-up "Mit Stil."
-T_WINK = 51.3
-T_BACK2A, T_BACK2B = 51.9, 54.45      # Typ hinten am Handy
-T_END_TXT = 54.75
+T_CARDS = 30.1                        # Wertungstafeln hoch
+T_CLAP0, T_CLAP1 = 30.15, 32.5
+T_MUSK0, T_MUSK1 = 31.0, 32.8         # Muskelprotz schleicht nach hinten
+T_CATCH = T_LAND + 0.3                # Frieda fängt die Dose
+T_BACK1A, T_BACK1B = 33.1, 39.65      # Ende der Schlange: Herr + benommener Typ
+T_FLASH_A, T_FLASH_B = 41.85, 45.7    # Rückblende 1974
+T_CUKE = 45.85                        # Gurke + Dose aufs Band
+T_BEEP = 46.25
+T_CLOSE2A = 54.95                     # Close-up "Mit Stil."
+T_WINK = 56.4
+T_BACK2A, T_BACK2B = 57.0, 61.75      # Typ hinten am Handy (+ Kumpel antwortet)
+T_END_TXT = 62.05
 T_CLOSE = T_CLOSE2A
-TOTAL = 57.0
+TOTAL = 64.3
 NF = int(TOTAL * FPS)
 
 SKIN = (247, 200, 170)
@@ -89,8 +93,8 @@ def rot_paste(dst, img, cx, cy, ang):
 
 
 # ------------------------------------------------------------------ Figuren (Oma-Frieda-Faust-Stil für alle)
-fchars.person_raw = lru_cache(maxsize=4096)(fchars.person_raw.__wrapped__)
-fchars.head = lru_cache(maxsize=2048)(fchars.head.__wrapped__)
+fchars.person_raw = lru_cache(maxsize=500)(fchars.person_raw.__wrapped__)
+fchars.head = lru_cache(maxsize=500)(fchars.head.__wrapped__)
 fchars.CFG["kasse"] = dict(skin=(244, 200, 172), hair="pigtails", eye=(110, 72, 40), glasses=False, old=False,
                            female=True, brow=(70, 45, 35), body="kasse", lash=True)
 fchars.BODY["kasse"] = dict(sh=0.48, hip=0.5, tl=1.3, arm=0.28, hand=0.13, top=(30, 165, 150), leg=(50, 60, 90),
@@ -155,7 +159,7 @@ def bag_sprite(D):
     return bg
 
 
-@lru_cache(maxsize=2048)
+@lru_cache(maxsize=400)
 def series_sprite(key, D):
     who, pose, expr, m, mirror, shades, can, bag, phone, blink = key
     P = fchars.pose_dict(who, pose)
@@ -389,7 +393,7 @@ FRIEDA = (575, 1645, 0.95)
 CASH = (150, 1625, 0.86)
 K0 = (330, 1665, 0.9)
 GUY_SPOT = (300, 1700, 0.95)
-QUEUE = [("pass1", 790, 1365, 0.78), ("thief2", 585, 1190, 0.64), ("girl", 775, 1060, 0.56),
+QUEUE = [("pass1", 790, 1365, 0.78), ("musk1", 585, 1190, 0.6), ("girl", 775, 1060, 0.56),
          ("pass2", 600, 955, 0.46)]
 LAND = (790, 885, 0.4)
 GUY = "bully2"
@@ -475,6 +479,10 @@ def frieda_state(t):
         return "oma_offer", "smile", 0.0, False, False
     if line_on("fr0", t, 0.2):
         return "oma_stand", "smile", m, False, True
+    if line_on("fr6", t, 0.3):
+        return "oma_point", "smirk", round(speaking("fr6", t) * 0.8, 1), False, True
+    if line_on("kas4", t, 0):
+        return "oma_stand", "smirk", 0.0, False, True
     if T_GUY_IN0 + 1.0 < t < T_LINE["typ1"]:
         return "oma_stand", "neutral", 0.0, False, True
     if T_LINE["typ1"] <= t < T_GRAB:
@@ -484,7 +492,7 @@ def frieda_state(t):
     return "oma_stand", "smile", 0.0, False, True
 
 
-@lru_cache(maxsize=512)
+@lru_cache(maxsize=200)
 def frieda_sprite(D, pose, expr, m, mirror=False, items=(), blink=False, wink=False, knit_phase=0.0, who="oma",
                   gl=0.03):
     im, (nx, ny), sc = fchars.person(who, D, pose, expr=expr, mouth=m, gl=gl, items=items, blink=blink,
@@ -531,22 +539,49 @@ def clap_pose(t, i, kid=False):
 
 
 def cash_key(t):
-    m = max(speaking(l, t) for l in ("kas0", "kas2", "kas3", "kas1"))
+    m = max(speaking(l, t) for l in ("kas0", "kas2", "kas3", "kas4", "kas1"))
+    if cards_on(t):
+        return K("kasse", "b_hold", "laugh", 0.5)
     if T_CLAP0 < t < T_CLAP1:
         return K("kasse", clap_pose(t, 7), "laugh", 0.5)
     if line_on("kas0", t, 0):
         return K("kasse", "c_wave", "smile", m)
     if T_GRAB <= t < T_LAND:
         return K("kasse", "pass_shock", "shock", 0.8)
-    if line_on("kas2", t, 0) or line_on("kas3", t, 0):
+    if line_on("kas2", t, 0) or line_on("kas3", t, 0) or line_on("kas4", t, 0):
         return K("kasse", "b_stand", "warm", m)
     if T_LINE["typ0"] < t < T_GRAB:
         return K("kasse", "b_stand", "neutral", m)
     return K("kasse", "b_stand", "smile", m)
 
 
+CARDS = {"pass1": "10", "pass2": "10", "girl": "9,5", "kasse": "10"}
+MUSK_END = (935, 872, 0.36)
+
+
+def cust_pos(who, x, y, s, t):
+    if who != "musk1" or t < T_MUSK0:
+        return x, y, s
+    p = ease_io(seg(t, T_MUSK0, T_MUSK1))
+    bob = abs(math.sin(t * 12)) * 10 * s if 0 < p < 1 else 0
+    return lerp(x, MUSK_END[0], p), lerp(y, MUSK_END[1], p) - bob, lerp(s, MUSK_END[2], p)
+
+
+def cards_on(t):
+    return T_CARDS <= t < T_BACK1A
+
+
 def cust_key(who, t, i):
     kid = who in KIDS
+    if who == "musk1":
+        if T_GRAB < t < T_LAND:
+            return K(who, "musk_shock", "shock", 0.8)
+        if T_LAND <= t < T_BACK1A:
+            return K(who, "b_stand", "scared", speaking("mk1", t))
+        if t >= T_BACK1A:
+            return K(who, "b_stand", "sad")
+    if who in CARDS and cards_on(t):
+        return K(who, "kid_reach" if kid else "b_hold", "laugh", 0.5)
     if who == "pass1" and line_on("k2a", t, 0.3):
         return K(who, "b_point", "glare", speaking("k2a", t))
     if T_GRAB < t < T_LAND:
@@ -616,6 +651,50 @@ def bubble_at(frame, lid, text, ax, ay, t, size=62):
 TEXT = {l: LINES[l].get("display", LINES[l]["text"]).replace(" … ", "… ") for l in LINES}
 
 
+# ------------------------------------------------------------------ Gags: Wertungstafel, Energy-Drink
+@lru_cache(maxsize=8)
+def score_card(txt):
+    im = Image.new("RGBA", (190, 250), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    d.rounded_rectangle([86, 120, 104, 250], radius=6, fill=(150, 110, 70))
+    d.rounded_rectangle([8, 14, 182, 150], radius=16, fill=(30, 26, 40))
+    d.rounded_rectangle([2, 6, 176, 142], radius=16, fill=(255, 255, 255), outline=(30, 26, 40), width=6)
+    d.text((89, 76), txt, font=font(F_BLACK, 78 if len(txt) < 3 else 60), fill=(220, 40, 50), anchor="mm")
+    return im
+
+
+def frieda_hand_r(fx, s=FRIEDA[2]):
+    D = FRIEDA_D * s
+    return fx + 0.6 * D, FRIEDA[1] - FEET * D + 1.25 * D
+
+
+def can_draw(frame, t, fx):
+    """Die Dose fliegt beim Wurf weg, Frieda fängt sie blind – später kommt sie aufs Band."""
+    if t < T_GRAB or t >= T_CUKE + 6:
+        return
+    D = SER_D * GUY_SPOT[2]
+    c = can_sprite(int(D))
+    if t < T_CATCH:
+        p = seg(t, T_GRAB, T_CATCH)
+        x0, y0 = GUY_SPOT[0] - 0.58 * D, GUY_SPOT[1] - 2.9 * D + 1.18 * D
+        x1, y1 = frieda_hand_r(FRIEDA[0])
+        x = lerp(x0, x1, p)
+        y = (1 - p) ** 2 * y0 + 2 * (1 - p) * p * 420 + p ** 2 * (y1 - 0.12 * D)
+        rot_paste(frame, c, x, y, p * 900)
+    elif t < T_CUKE:
+        pose = frieda_state(t)[0]
+        if pose == "oma_stand":
+            x, y = frieda_hand_r(fx)
+            paste_c(frame, c, x, y - 0.12 * D)
+    else:
+        p = ease_io(seg(t, T_CUKE, T_CUKE + 0.45))
+        x0, y0 = frieda_hand_r(fx)
+        x = lerp(x0, 680, p) - max(0.0, t - T_CUKE - 0.5) * 140
+        y = lerp(y0, 1610, p) - math.sin(p * math.pi) * 70
+        if x > 200:
+            rot_paste(frame, c, x, y, lerp(0, 90, p) if p < 1 else 90)
+
+
 # ------------------------------------------------------------------ world shot
 def world(t, with_guy=True):
     frame = background().copy()
@@ -623,6 +702,7 @@ def world(t, with_guy=True):
     flying = gs is not None and (T_GRAB + 0.2 <= t < T_LAND)
     items = []
     for i, (who, x, y, s) in enumerate(QUEUE):
+        x, y, s = cust_pos(who, x, y, s, t)
         items.append((y, ("c", who, x, y, s, i)))
     if gs and not flying:
         items.append((gs["y"], ("g",)))
@@ -646,7 +726,21 @@ def world(t, with_guy=True):
             draw_series(frame, k0[3], k0[0], k0[1], k0[2])
         else:
             draw_frieda(frame, t, fx, FRIEDA[1], FRIEDA[2], frieda_rot(t))
+    # Wertungstafeln wie bei Olympia
+    if cards_on(t):
+        holders = [(w, x, y, s) for (w, x, y, s) in QUEUE if w in CARDS] + [("kasse",) + CASH]
+        for k, (w, x, y, s) in enumerate(holders):
+            q = ease_back(seg(t, T_CARDS + k * 0.12, T_CARDS + k * 0.12 + 0.3))
+            if q <= 0.02:
+                continue
+            D = SER_D * s
+            kid = w in KIDS
+            hx = x + (0.95 if kid else 0.8) * D
+            hy = y - (2.25 if kid else 2.9) * D + (-0.25 if kid else -0.55) * D
+            paste_c(frame, score_card(CARDS[w]), hx, hy - 0.75 * D, scale=max(0.05, q * max(s, 0.62) * 1.35),
+                    rot=4 * math.sin(t * 3 + k))
     draw_counter(frame, t)
+    can_draw(frame, t, fx)
     if t >= T_CUKE:
         p = ease_io(seg(t, T_CUKE, T_CUKE + 0.4))
         x = lerp(fx - 220, 600, p)
@@ -678,13 +772,13 @@ def world_shot(t):
     if slow > 0.02:
         paste_c(frame, slowmo_badge(), 540, 330, scale=0.6 + 0.4 * ease_back(seg(t, T_GRAB, T_GRAB + 0.25)),
                 alpha=slow * (0.75 + 0.25 * (int(t * 4) % 2)))
-    if T_IPPON <= t < T_BACK1A:
+    if T_IPPON <= t < T_CARDS + 0.7:
         q = seg(t, T_IPPON, T_IPPON + 0.25)
-        a = 1 - seg(t, T_BACK1A - 0.25, T_BACK1A)
+        a = 1 - seg(t, T_CARDS + 0.35, T_CARDS + 0.7)
         paste_c(frame, stamp("IPPON!", 190, (255, 70, 70)), 540, 560, scale=2.2 - 1.2 * ease_out(q), alpha=a)
     if T_CLAP0 < t < T_CLAP1 + 0.4:
         rng = random.Random(3)
-        for i in range(10):
+        for i in range(5):
             t0 = T_CLAP0 + rng.uniform(0, 1.2)
             q = seg(t, t0, t0 + 0.9)
             if 0 < q < 1:
@@ -699,10 +793,11 @@ def world_shot(t):
             return to_screen(cam, x, y - (FEET * FRIEDA_D * s + 1.35 * FRIEDA_D * s))
         return to_screen(cam, *head_top(x, y, s, who))
     sp = {"kas0": head(*CASH), "kas2": head(*CASH), "kas3": head(*CASH), "kas1": head(*CASH),
-          "fr0": head(*FRIEDA, frieda=True), "k2a": head(*QUEUE[0][1:])}
+          "kas4": head(*CASH), "fr0": head(*FRIEDA, frieda=True), "fr6": head(*FRIEDA, frieda=True),
+          "k2a": head(*QUEUE[0][1:]), "mk1": head(*cust_pos("musk1", *QUEUE[1][1:], t))}
     if gs:
         sp["typ0"] = sp["typ1"] = head(gs["x"], gs["y"], gs["s"])
-    sizes = {"typ1": 54, "typ0": 52, "k2a": 58, "kas3": 58}
+    sizes = {"typ1": 54, "typ0": 52, "k2a": 58, "kas3": 58, "mk1": 50}
     for lid, (ax, ay) in sp.items():
         bubble_at(frame, lid, TEXT[lid], ax, ay, t, sizes.get(lid, 62))
     return frame
@@ -816,7 +911,7 @@ def back_shot(t):
     draw_series(frame, k3, 320, 2050, 1.75)
     mt = max(speaking("typ3", t), speaking("typ4", t))
     if second:
-        key, wob = K(GUY, "g_phone", "sad", mt, phone=True), 0
+        key, wob = K(GUY, "g_phone", "scared" if t > T_LINE["tel"] else "sad", mt, phone=True), 0
     else:
         key, wob = K(GUY, "b_stand", "shock" if mt < 0.05 else "scared", mt), 4 * math.sin(t * 5)
     draw_series(frame, key, 770, 2080, 1.75, rot=wob)
@@ -827,6 +922,7 @@ def back_shot(t):
     bubble_at(frame, "k3a", TEXT["k3a"], 320, 760, t, 62)
     bubble_at(frame, "typ3", TEXT["typ3"], 770, 660, t, 66)
     bubble_at(frame, "typ4", TEXT["typ4"], 770, 660, t, 66)
+    bubble_at(frame, "tel", "📱 " + TEXT["tel"] if False else TEXT["tel"], 820, 620, t, 70)
     flash(frame, t, T_BACK1A if not second else T_BACK2A, 0.08)
     return frame
 
@@ -1183,6 +1279,13 @@ def build_audio(path):
                 0.2 * tone(521, 1.2, 0.004, 0.5))
     add(gong, T_IPPON, 0.45)
 
+    # --- Wertungstafeln: Gameshow-Ding, Dose gefangen, Muskelprotz-Schritte
+    for k in range(4):
+        add(ssum(tone(1318, 0.25, 0.002, 0.12), 0.5 * tone(1976, 0.2, 0.002, 0.1)), T_CARDS + k * 0.12 + 0.1, 0.12)
+    add(ssum(tone(900, 0.08, 0.001, 0.03), tone(450, 0.12, 0.001, 0.06)), T_CATCH, 0.35)
+    for tb in np.arange(T_MUSK0, T_MUSK1, 0.22):
+        add(lp_fast(noise(0.07), 8) * np.exp(-np.arange(int(0.07 * SR)) / 700), tb, 0.6)
+    add(tone(1900, 0.14, 0.002, 0.08), T_BEEP + 0.45, 0.2)   # Dose wird gescannt
     # --- Applaus + "Wooo"
     L = int((T_CLAP1 - T_CLAP0 + 0.6) * SR)
     ap = np.zeros(L)
@@ -1257,7 +1360,7 @@ def main():
            str(FPS), "-i", "-", "-i", str(wav), "-c:v", "libx264", "-preset", "medium", "-crf", "21", "-pix_fmt",
            "yuv420p", "-c:a", "aac", "-b:a", "192k", "-shortest", "-movflags", "+faststart", str(OUT)]
     p = subprocess.Popen(cmd, stdin=subprocess.PIPE)
-    with Pool(os.cpu_count()) as pool:
+    with Pool(min(4, os.cpu_count()), maxtasksperchild=40) as pool:
         for i, b in enumerate(pool.imap(_rgb, range(NF), chunksize=4)):
             p.stdin.write(b)
             if i % 30 == 0:

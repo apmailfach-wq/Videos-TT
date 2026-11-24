@@ -21,6 +21,9 @@ VOICES = {
     "typ":    ("de-AT-JonasNeural", "+3%", "+0Hz", ROOM),       # lässiger Drängler
     "typ_f":  ("de-AT-JonasNeural", "+12%", "+0Hz", ROOM),      # gehetzt am Handy
     "typ_b":  ("de-AT-JonasNeural", "-8%", "-8Hz", ROOM),      # leise-bedrohlich
+    "musk":   ("de-CH-JanNeural", "-6%", "-6Hz", ROOM),         # Muskelprotz, kleinlaut
+    "tel":    ("de-AT-JonasNeural", "+14%", "+18Hz",
+               "highpass=f=450,lowpass=f=3200,acrusher=bits=10:mix=0.25,volume=0.9"),  # Kumpel am Handy
     "typ_k":  ("de-AT-JonasNeural", "-12%", "+0Hz", ROOM),      # benommen / kleinlaut
     "kasse":  ("de-DE-TanjaNeural", "+0%", "+0Hz", ROOM),       # Kassiererin
     "k2":     ("de-CH-LeniNeural", "+4%", "+0Hz", ROOM_FAR),    # Kundin weiter hinten
@@ -39,14 +42,18 @@ LINES = [
     ("fr4", "frieda", "Letzte Chance, Bürschchen. Ab nach hinten."),
     ("typ5", "typ_b", "Sonst was … Oma?"),
     ("fr5", "frieda", "Sonst … das hier."),
+    ("mk1", "musk", "Ich … stell mich mal hinten an."),
     ("k3a", "k3", "Hinten anstellen, Junge. Ach – bist ja schon da.", "Hinten anstellen, Junge. Ach – bist ja schon da."),
     ("typ3", "typ_k", "Hat mich grad 'ne Oma geworfen?"),
     ("kas2", "kasse", "Wo lernt man denn so was?"),
     ("fr3", "frieda", "Deutsche Meisterin. Vierundsiebzig.", "Deutsche Meisterin. 1974."),
     ("kas3", "kasse", "Respekt! Neunundvierzig Cent.", "Respekt! 0,49 €."),
+    ("kas4", "kasse", "Und sein Energy-Drink?"),
+    ("fr6", "frieda", "Den zahlt er … hinten."),
     ("kas1", "kasse", "Mit Karte oder bar?"),
     ("fr2", "frieda", "Mit Stil."),
     ("typ4", "typ_k", "Bro … die Oma ist Endgegner."),
+    ("tel", "tel", "Frieda?! Bro … lauf!"),
 ]
 
 # Für später (ElevenLabs, Modell eleven_v4 mit Regie-Tags wie [sighs], [dryly], [smug]) – Besetzung:
