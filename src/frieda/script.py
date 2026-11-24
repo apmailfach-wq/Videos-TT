@@ -17,31 +17,32 @@ ROOM_FAR = ("highpass=f=110,lowpass=f=7500,"
 
 VOICES = {
     # speaker: (edge-tts voice, rate, pitch, ffmpeg-Filter)
-    "frieda": ("de-AT-IngridNeural", "-6%", "-3Hz", ROOM),      # ruhig, trocken
+    "frieda": ("de-AT-IngridNeural", "-2%", "-3Hz", ROOM),      # ruhig, trocken
     "typ":    ("de-AT-JonasNeural", "+3%", "+0Hz", ROOM),       # lässiger Drängler
+    "typ_f":  ("de-AT-JonasNeural", "+12%", "+0Hz", ROOM),      # gehetzt am Handy
     "typ_k":  ("de-AT-JonasNeural", "-12%", "+0Hz", ROOM),      # benommen / kleinlaut
     "kasse":  ("de-DE-TanjaNeural", "+0%", "+0Hz", ROOM),       # Kassiererin
     "k2":     ("de-CH-LeniNeural", "+4%", "+0Hz", ROOM_FAR),    # Kundin weiter hinten
     "k3":     ("de-DE-ChristophNeural", "-8%", "-4Hz", ROOM),   # älterer Herr, trocken
 }
 
-# (id, speaker, text) – Startzeiten legt render.py fest
+# (id, speaker, gesprochener Text[, Text in der Sprechblase]) – Startzeiten legt render.py fest
 LINES = [
-    ("kas0", "kasse", "Der Nächste, bitte!"),
-    ("fr0", "frieda", "Na endlich … Nur eine Gurke."),
-    ("typ0", "typ", "Ja, Bro – bin in zwei Minuten draußen."),
-    ("k2a", "k2", "Hey! Da ist 'ne Schlange!"),
-    ("typ1", "typ", "Sorry, Oma – ich hab nur eine Sache."),
+    ("kas0", "kasse", "Der Nächste!"),
+    ("fr0", "frieda", "Eine Gurke. Was soll da schon schiefgehen?"),
+    ("typ0", "typ_f", "Bro, zwei Minuten. Ich drängel mich vor."),
+    ("k2a", "k2", "Hallo?! Hier ist 'ne Schlange!"),
+    ("typ1", "typ", "Sorry, Oma – ich hab nur eine Sache.", "Sorry Oma, ich hab nur eine Sache."),
     ("fr1", "frieda", "Ich auch."),
     ("typ2", "typ", "Hä?"),
-    ("k3a", "k3", "Willkommen am Ende der Schlange, junger Mann."),
-    ("typ3", "typ_k", "Was … war das denn?"),
-    ("kas2", "kasse", "Wo haben Sie das denn gelernt?"),
-    ("fr3", "frieda", "Deutsche Meisterin. Neunzehnhundertvierundsiebzig."),
-    ("kas3", "kasse", "Respekt! Das macht neunundvierzig Cent."),
+    ("k3a", "k3", "Hinten anstellen, Junge. Ach – bist ja schon da.", "Hinten anstellen, Junge. Ach – bist ja schon da."),
+    ("typ3", "typ_k", "Hat mich grad 'ne Oma geworfen?"),
+    ("kas2", "kasse", "Wo lernt man denn so was?"),
+    ("fr3", "frieda", "Deutsche Meisterin. Vierundsiebzig.", "Deutsche Meisterin. 1974."),
+    ("kas3", "kasse", "Respekt! Neunundvierzig Cent.", "Respekt! 0,49 €."),
     ("kas1", "kasse", "Mit Karte oder bar?"),
     ("fr2", "frieda", "Mit Stil."),
-    ("typ4", "typ_k", "Bro … wird doch länger."),
+    ("typ4", "typ_k", "Bro … die Oma ist Endgegner."),
 ]
 
 # Für später (ElevenLabs, Modell eleven_v4 mit Regie-Tags wie [sighs], [dryly], [smug]) – Besetzung:

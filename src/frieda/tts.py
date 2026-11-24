@@ -13,7 +13,7 @@ if os.path.exists(_ca):
     _ec._SSL_CTX = ssl.create_default_context(cafile=_ca)
 
 
-async def synth(lid, spk, text):
+async def synth(lid, spk, text, display=None):
     voice, rate, pitch, *flt = VOICES[spk]
     mp3, wav = OUT / f"{lid}.mp3", OUT / f"{lid}.wav"
     words = []
@@ -30,7 +30,7 @@ async def synth(lid, spk, text):
                    check=True)
     first = words[0]["start"] if words else 0.0
     last = words[-1]["end"] + 0.1 if words else 1.0
-    return dict(id=lid, speaker=spk, text=text, wav=str(wav), lead=first, speech=last - first, words=words)
+    return dict(id=lid, speaker=spk, text=text, display=display or text, wav=str(wav), lead=first, speech=last - first, words=words)
 
 
 async def main():

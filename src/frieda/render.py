@@ -30,30 +30,30 @@ SR = 48000
 LINES = {l["id"]: l for l in json.loads((BUILD / "lines.json").read_text())}
 
 T_LINE = {
-    "kas0": 2.2, "fr0": 3.9, "typ0": 6.9, "k2a": 9.5, "typ1": 11.9,
-    "fr1": 14.75, "typ2": 15.85,
-    "k3a": 21.55, "typ3": 24.55,
-    "kas2": 26.3, "fr3": 28.75,
-    "kas3": 34.05, "kas1": 38.15,
-    "fr2": 39.95, "typ4": 41.85,
+    "kas0": 2.0, "fr0": 3.0, "typ0": 6.3, "k2a": 9.45, "typ1": 12.1,
+    "fr1": 15.15, "typ2": 16.25,
+    "k3a": 22.0, "typ3": 26.2,
+    "kas2": 28.75, "fr3": 30.95,
+    "kas3": 35.75, "kas1": 39.3,
+    "fr2": 41.25, "typ4": 43.15,
 }
-T_K0_LEAVE = 3.0                      # Kunde vor Frieda geht
-T_GUY_IN0, T_GUY_IN1 = 6.5, 9.4       # Drängler läuft rein (telefoniert)
-T_PUSH = 13.9                         # Musik weg, Kamera drückt rein
-T_CLOSE1A, T_CLOSE1B = 14.45, 15.7    # Close-up "Ich auch."
-T_GRAB, T_THROW, T_FLY, T_LAND, T_SLOW_END = 16.3, 16.95, 17.45, 19.6, 20.0
-T_IPPON = 19.7
-T_CLAP0, T_CLAP1 = 20.0, 22.2
-T_BACK1A, T_BACK1B = 21.25, 26.0      # Ende der Schlange: Herr + benommener Typ
-T_FLASH_A, T_FLASH_B = 28.45, 33.0    # Rückblende 1974
-T_CUKE = 33.35                        # Gurke aufs Band
-T_BEEP = 33.95
-T_CLOSE2A = 39.6                      # Close-up "Mit Stil."
-T_WINK = 40.95
-T_BACK2A, T_BACK2B = 41.6, 43.45      # Typ hinten am Handy
-T_END_TXT = 43.75
+T_K0_LEAVE = 2.5                      # Kunde vor Frieda geht
+T_GUY_IN0, T_GUY_IN1 = 6.1, 9.3       # Drängler läuft rein (telefoniert)
+T_PUSH = 14.3                         # Musik weg, Kamera drückt rein
+T_CLOSE1A, T_CLOSE1B = 14.85, 16.1    # Close-up "Ich auch."
+T_GRAB, T_THROW, T_FLY, T_LAND, T_SLOW_END = 16.75, 17.4, 17.9, 20.05, 20.45
+T_IPPON = 20.15
+T_CLAP0, T_CLAP1 = 20.45, 22.65
+T_BACK1A, T_BACK1B = 21.7, 28.45      # Ende der Schlange: Herr + benommener Typ
+T_FLASH_A, T_FLASH_B = 30.65, 34.7    # Rückblende 1974
+T_CUKE = 35.0                         # Gurke aufs Band
+T_BEEP = 35.6
+T_CLOSE2A = 40.9                      # Close-up "Mit Stil."
+T_WINK = 42.3
+T_BACK2A, T_BACK2B = 42.95, 45.45     # Typ hinten am Handy
+T_END_TXT = 45.75
 T_CLOSE = T_CLOSE2A
-TOTAL = 46.0
+TOTAL = 48.0
 NF = int(TOTAL * FPS)
 
 SKIN = (247, 200, 170)
@@ -533,13 +533,13 @@ def cust_key(who, t, i):
 
 # ------------------------------------------------------------------ camera (world shots)
 CAM_KEYS = [  # t, zoom, cx, cy
-    (0.0, 1.0, 540, 1150), (1.6, 1.0, 540, 1150), (3.6, 1.12, 480, 1360),
-    (6.4, 1.12, 480, 1360), (7.2, 1.1, 760, 1320), (9.4, 1.16, 470, 1360),
-    (11.8, 1.16, 470, 1360), (13.4, 1.22, 450, 1330), (14.4, 1.42, 450, 1260),
-    (15.7, 1.4, 330, 1270), (16.3, 1.32, 400, 1260), (17.6, 1.0, 560, 1100),
-    (20.0, 1.0, 560, 1100), (21.25, 1.0, 560, 1100),
-    (26.0, 1.22, 420, 1380), (28.45, 1.28, 400, 1360),
-    (33.0, 1.12, 470, 1330), (34.2, 1.22, 380, 1400), (39.6, 1.3, 360, 1380),
+    (0.0, 1.0, 540, 1150), (1.5, 1.0, 540, 1150), (3.38, 1.12, 480, 1360),
+    (6.01, 1.12, 480, 1360), (6.87, 1.1, 760, 1320), (9.3, 1.16, 470, 1360),
+    (11.97, 1.16, 470, 1360), (13.74, 1.22, 450, 1330), (14.8, 1.42, 450, 1260),
+    (16.1, 1.4, 330, 1270), (16.75, 1.32, 400, 1260), (18.05, 1.0, 560, 1100),
+    (20.45, 1.0, 560, 1100), (21.7, 1.0, 560, 1100),
+    (28.45, 1.22, 420, 1380), (30.65, 1.28, 400, 1360),
+    (34.7, 1.12, 470, 1330), (35.8, 1.22, 380, 1400), (40.9, 1.3, 360, 1380),
 ]
 
 
@@ -585,7 +585,7 @@ def bubble_at(frame, lid, text, ax, ay, t, size=62):
     paste_c(frame, bubble(text, tail, size), x, y, scale=max(0.05, p), alpha=a)
 
 
-TEXT = {l: LINES[l]["text"].replace(" … ", "… ") for l in LINES}
+TEXT = {l: LINES[l].get("display", LINES[l]["text"]).replace(" … ", "… ") for l in LINES}
 
 
 # ------------------------------------------------------------------ world shot
@@ -645,7 +645,7 @@ def world_shot(t):
     frame = zoom_frame(frame, z, cx + math.sin(t * 90) * shake, cy + math.cos(t * 70) * shake)
     slow = seg(t, T_GRAB, T_GRAB + 0.15) * (1 - seg(t, T_SLOW_END - 0.15, T_SLOW_END))
     tense = seg(t, T_PUSH, T_PUSH + 0.3) * (1 - seg(t, T_CLOSE1A - 0.05, T_CLOSE1A))
-    frame = grade(frame, max(slow * 0.9, tense * 0.5, seg(t, 15.7, 15.8) * (1 - seg(t, T_GRAB, T_GRAB + 0.01)) * 0.5))
+    frame = grade(frame, max(slow * 0.9, tense * 0.5, seg(t, T_CLOSE1B, T_CLOSE1B + 0.1) * (1 - seg(t, T_GRAB, T_GRAB + 0.01)) * 0.5))
     speed_lines(frame, t, slow * seg(t, T_THROW, T_FLY))
     if slow > 0.02:
         paste_c(frame, slowmo_badge(), 540, 330, scale=0.6 + 0.4 * ease_back(seg(t, T_GRAB, T_GRAB + 0.25)),
@@ -703,7 +703,7 @@ def flash(frame, t, t0, dur=0.12):
 
 
 def closeup_ich_auch(t):
-    frame = blurred_world(16.0, 1.4, 470, 1250).copy()
+    frame = blurred_world(T_CLOSE1A + 0.5, 1.4, 470, 1250).copy()
     p = ease_out(seg(t, T_CLOSE1A, T_CLOSE1B))
     m = round(speaking("fr1", t) * 0.8, 1)
     expr = "warm"
@@ -720,7 +720,7 @@ def closeup_ich_auch(t):
 
 
 def closeup_end(t):
-    frame = blurred_world(36.0, 1.5, 520, 1250).copy()
+    frame = blurred_world(T_CUKE + 2.0, 1.5, 520, 1250).copy()
     p = ease_out(seg(t, T_CLOSE, T_CLOSE + 0.5))
     m = speaking("fr2", t)
     wink = T_WINK - 0.05 <= t < T_WINK + 0.45
@@ -747,7 +747,7 @@ def closeup_end(t):
 
 # ------------------------------------------------------------------ Ende der Schlange
 def back_shot(t):
-    frame = blurred_world(23.0, 2.4, 690, 760, 14).copy()
+    frame = blurred_world(T_BACK1A + 1.5, 2.4, 690, 760, 14).copy()
     # Boden-Schatten
     sh = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     ImageDraw.Draw(sh).ellipse([120, 1880, 980, 1990], fill=(60, 40, 60, 70))
@@ -838,7 +838,7 @@ def flashback(t):
     if t > T_FLASH_A + 0.4:
         q = seg(t, T_FLASH_A + 0.4, T_FLASH_A + 0.65)
         paste_c(frame, stamp("1974", 170, (255, 214, 60)), 540, 1560, scale=2.0 - ease_out(q), alpha=1)
-    bubble_at(frame, "fr3", TEXT["fr3"].replace("Neunzehnhundertvierundsiebzig", "1974"), 300, 560, t, 56)
+    bubble_at(frame, "fr3", TEXT["fr3"], 300, 560, t, 56)
     # weiche Ein-/Ausblendung
     a_in = 1 - seg(t, T_FLASH_A, T_FLASH_A + 0.25)
     a_out = seg(t, T_FLASH_B - 0.25, T_FLASH_B)
@@ -1179,7 +1179,7 @@ def main():
     wav = BUILD / "mix.wav"
     build_audio(wav)
     cmd = ["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r",
-           str(FPS), "-i", "-", "-i", str(wav), "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt",
+           str(FPS), "-i", "-", "-i", str(wav), "-c:v", "libx264", "-preset", "medium", "-crf", "21", "-pix_fmt",
            "yuv420p", "-c:a", "aac", "-b:a", "192k", "-shortest", "-movflags", "+faststart", str(OUT)]
     p = subprocess.Popen(cmd, stdin=subprocess.PIPE)
     with Pool(os.cpu_count()) as pool:
