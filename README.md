@@ -99,7 +99,7 @@ Caption: `Vordrängeln? Nicht bei Frieda 🥋 #omafrieda #judooma #supermarkt #o
 
 ```bash
 cd src/frieda
-python3 tts.py       # Stimmen (script.py: Frieda = Ingrid + Vibrato wie in Oma Frieda Faust, Typ = Jonas, Kassiererin = Tanja)
+python3 tts.py       # Stimmen (script.py): edge-tts ohne Tonhöhen-Verbiegung + Supermarkt-Raumklang per ffmpeg
 python3 render.py    # -> ../../frieda-supermarkt.mp4  (Timing oben in render.py: T_LINE, T_GRAB, CAM_KEYS …)
 python3 render.py preview 4.6 5.6 9.6   # Standbilder
 ```

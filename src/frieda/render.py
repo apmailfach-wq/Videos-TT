@@ -30,11 +30,11 @@ SR = 48000
 LINES = {l["id"]: l for l in json.loads((BUILD / "lines.json").read_text())}
 
 T_LINE = {
-    "kas0": 2.2, "fr0": 3.9, "typ0": 6.6, "k2a": 9.5, "typ1": 11.9,
+    "kas0": 2.2, "fr0": 3.9, "typ0": 6.9, "k2a": 9.5, "typ1": 11.9,
     "fr1": 14.75, "typ2": 15.85,
-    "k3a": 21.55, "typ3": 24.4,
+    "k3a": 21.55, "typ3": 24.55,
     "kas2": 26.3, "fr3": 28.75,
-    "kas3": 34.2, "kas1": 38.05,
+    "kas3": 34.05, "kas1": 38.15,
     "fr2": 39.95, "typ4": 41.85,
 }
 T_K0_LEAVE = 3.0                      # Kunde vor Frieda geht
