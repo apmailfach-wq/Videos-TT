@@ -1,11 +1,11 @@
-"""Kurzfassung (~32 s) von "Frieda an der Kasse" – für maximale Watchtime auf TikTok.
+"""Kurzfassung (~46 s) von "Frieda an der Kasse" – für maximale Watchtime auf TikTok.
 
 Aufbau:
   0–2,3 s   Cold Open: Wurf in Zeitlupe, Freeze am höchsten Punkt + Hook-Text, dann Rückspulen
-  2,3–14 s  Typ drängelt sich vor – "Ich auch." – kurzer Showdown ("Sonst was … Oma?" – "Sonst … das hier.")
-  14–19 s   Wurf, IPPON, Wertungstafeln (9,5)
-  19–27 s   Gurke + Dose aufs Band – "Den zahlt er … hinten." – "Mit Karte oder bar?" – "Mit Stil." + Zwinkern
-  27–32 s   "Bro … die Oma ist Endgegner." – "Frieda?! Bro … lauf!" + "Das ist Frieda." – harter Schnitt
+  2,3–28 s  Typ drängelt sich vor ("Ich zahl jetzt. Sie warten hier …"), Gespräch mit Frieda, Showdown
+  28–33 s   Wurf, IPPON, Wertungstafeln (9,5)
+  33–41 s   Gurke + Dose aufs Band – "Den zahlt er … hinten." – "Mit Karte oder bar?" – "Mit Stil." + Zwinkern
+  41–46 s   "Bro … die Oma ist Endgegner." – "Frieda?! Bro … lauf!" + "Das ist Frieda." – harter Schnitt
 
 Nutzt alle Figuren/Sets aus render.py und überschreibt nur die Zeitleiste.
 python3 tts.py && python3 render_short.py            -> ../../frieda-supermarkt-kurz.mp4
@@ -29,45 +29,48 @@ OUT = R.ROOT / "frieda-supermarkt-kurz.mp4"
 S0 = 2.3              # Ende Cold Open – hier beginnt die Geschichte
 FREEZE = 0.35         # Freeze-Frame ab hier
 REW0 = 1.85           # Rückspulen
-END_TXT = 30.9
+END_TXT = 45.05
 
 OFF = 999.0           # Zeilen/Szenen, die in der Kurzfassung fehlen
+R.T_LINE.update({k: OFF for k in R.T_LINE})
 R.T_LINE.update({
-    "kas0": OFF, "fr0": OFF, "typ0": OFF, "k2a": OFF,
-    "typ1": 3.3, "fr1": 5.75, "typ2": OFF, "fr4": 6.6, "typ5": 10.2, "fr5": 12.75,
-    "mk1": OFF, "k3a": OFF, "typ3": OFF, "kas2": OFF, "fr3": OFF, "kas3": OFF,
-    "kas4": 19.9, "fr6": 21.65, "kas1": 23.2,
-    "fr2": 25.0, "typ4": 26.8, "tel": 29.1,
+    "typ1b": 3.3,
+    "fr1b": 7.3, "typ2b": 9.0, "fr7": 12.7, "typ6": 17.25, "fr4": 20.75, "typ5": 24.35, "fr5": 26.9,
+    "kas4": 34.05, "fr6": 35.8, "kas1": 37.35,
+    "fr2": 39.15, "typ4": 40.95, "tel": 43.25,
 })
 R.T_K0_LEAVE = -10.0
 R.T_GUY_IN0, R.T_GUY_IN1 = 2.3, 3.2
-R.T_PUSH = 5.1
-R.T_CONF_A, R.T_CONF_B = 5.6, 13.95
-R.T_GRAB, R.T_THROW, R.T_FLY, R.T_LAND, R.T_SLOW_END = 13.95, 14.6, 15.1, 17.0, 17.4
-R.T_IPPON = 17.1
-R.T_CARDS, R.T_CARDS_END = 17.35, 19.25
-R.T_CLAP0, R.T_CLAP1 = 17.4, 19.25
+R.T_PUSH = 6.6
+R.T_CONF_A, R.T_CONF_B = 7.1, 28.1
+R.T_GRAB, R.T_THROW, R.T_FLY, R.T_LAND, R.T_SLOW_END = 28.1, 28.75, 29.25, 31.15, 31.55
+R.T_IPPON = 31.25
+R.T_CARDS, R.T_CARDS_END = 31.5, 33.4
+R.T_CLAP0, R.T_CLAP1 = 31.55, 33.4
 R.T_MUSK0, R.T_MUSK1 = OFF, OFF + 1
 R.T_CATCH = R.T_LAND + 0.3
 R.T_BACK1A, R.T_BACK1B = OFF, OFF + 1
 R.T_FLASH_A, R.T_FLASH_B = OFF, OFF + 1
-R.T_CUKE, R.T_BEEP = 19.3, 19.7
-R.T_CLOSE2A = R.T_CLOSE = 24.75
-R.T_WINK = 26.05
-R.T_BACK2A, R.T_BACK2B = 26.6, 32.0
+R.T_CUKE, R.T_BEEP = 33.45, 33.85
+R.T_CLOSE2A = R.T_CLOSE = 38.9
+R.T_WINK = 40.2
+R.T_BACK2A, R.T_BACK2B = 40.75, 46.15
 R.T_END_TXT = OFF
 R.T_TITLE_END = 0.0
-R.TOTAL = 32.0
+R.TOTAL = 46.15
 R.NF = int(R.TOTAL * FPS)
 R.CAM_KEYS[:] = [
-    (0.0, 1.12, 560, 1330), (S0, 1.12, 560, 1330), (3.3, 1.16, 470, 1360), (5.0, 1.25, 450, 1320),
-    (5.6, 1.35, 450, 1280),
+    (0.0, 1.12, 560, 1330), (S0, 1.12, 560, 1330), (3.3, 1.16, 470, 1360), (6.5, 1.25, 450, 1320),
+    (R.T_CONF_A, 1.35, 450, 1280),
     (R.T_CONF_B, 1.32, 400, 1260), (R.T_CONF_B + 1.35, 1.0, 560, 1100), (R.T_CARDS_END, 1.0, 560, 1100),
     (R.T_CUKE + 0.6, 1.22, 380, 1400), (R.T_CLOSE, 1.3, 360, 1380),
 ]
 L = R.T_LINE
 R.CONF_SHOTS[:] = [
-    (R.T_CONF_A, L["fr4"] - 0.15, "frieda", "fr1"),
+    (R.T_CONF_A, L["typ2b"] - 0.2, "frieda", "fr1b"),
+    (L["typ2b"] - 0.2, L["fr7"] - 0.2, "typ", "typ2b"),
+    (L["fr7"] - 0.2, L["typ6"] - 0.2, "frieda", "fr7"),
+    (L["typ6"] - 0.2, L["fr4"] - 0.15, "typ", "typ6"),
     (L["fr4"] - 0.15, L["typ5"] - 0.25, "frieda", "fr4"),
     (L["typ5"] - 0.25, L["fr5"] - 0.2, "typ", "typ5"),
     (L["fr5"] - 0.2, R.T_CONF_B, "frieda", "fr5"),
@@ -120,7 +123,7 @@ def cold_open(t):
 
 @lru_cache(maxsize=1)
 def rewind_text():
-    return text_img("20 Sekunden vorher", 66, (255, 255, 255), F_BLACK, stroke=10, stroke_fill=(30, 26, 40))
+    return text_img("Kurz vorher …", 70, (255, 255, 255), F_BLACK, stroke=10, stroke_fill=(30, 26, 40))
 
 
 @lru_cache(maxsize=1)

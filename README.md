@@ -99,15 +99,16 @@ Scanner, Kassenmonitor, Kartenterminal (zeigt Summe/„Karte?“), Kassenlicht �
 | 46–55 s | Gurke + Dose aufs Band – „Respekt! 0,49 €.“ – „Und sein Energy-Drink?“ – „Den zahlt er … hinten.“ – „Mit Karte oder bar?“ |
 | 55–64 s | Close-up: „Mit Stil.“ + Zwinkern – „Bro … die Oma ist Endgegner.“ – Kumpel am Handy: „Frieda?! Bro … lauf!“ – „Das ist Frieda.“ |
 
-### Kurzfassung: `frieda-supermarkt-kurz.mp4` (32 s, für TikTok)
+### Kurzfassung: `frieda-supermarkt-kurz.mp4` (46 s, für TikTok)
 
 | Zeit | Inhalt |
 |---|---|
-| 0–2 s | **Cold Open:** Wurf in Zeitlupe, Freeze am höchsten Punkt – „Er hat sich vor der falschen Oma vorgedrängelt 😳“ – Rückspulen „⏪ 20 Sekunden vorher“ |
-| 2–14 s | Typ drängelt sich vor: „Sorry Oma, ich hab nur eine Sache.“ – „Ich auch.“ – „Letzte Chance, Bürschchen. Ab nach hinten.“ – „Sonst was … Oma?“ – „Sonst … das hier.“ |
-| 14–19 s | Wurf, **IPPON!**, Wertungstafeln (10 – 10 – 9,5), Frieda fängt die Dose |
-| 19–27 s | „Und sein Energy-Drink?“ – „Den zahlt er … hinten.“ – „Mit Karte oder bar?“ – „Mit Stil.“ + Zwinkern |
-| 27–32 s | „Bro … die Oma ist Endgegner.“ – „Frieda?! Bro … lauf!“ + „Das ist Frieda.“ – harter Schnitt |
+| 0–2 s | **Cold Open:** Wurf in Zeitlupe, Freeze am höchsten Punkt – „Er hat sich vor der falschen Oma vorgedrängelt 😳“ – Rückspulen „⏪ Kurz vorher …“ |
+| 2–7 s | Typ drängelt sich vor: „Ich zahl jetzt. Sie warten hier – ich hab keine Zeit.“ |
+| 7–28 s | Gespräch (Schuss/Gegenschuss): „Ich auch nicht, junger Mann.“ – „Oma, chill. Du hast doch den ganzen Tag Zeit.“ – „Junge, ich bin achtzig. Ich hab am wenigsten Zeit von allen.“ – „Ja und? Was willst du machen – mich wegstricken?“ – „Letzte Chance, Bürschchen. Ab nach hinten.“ – (Brille ab, Faust) „Sonst was … Oma?“ – „Sonst … das hier.“ |
+| 28–33 s | Wurf, **IPPON!**, Wertungstafeln (10 – 10 – 9,5), Frieda fängt die Dose |
+| 33–41 s | „Und sein Energy-Drink?“ – „Den zahlt er … hinten.“ – „Mit Karte oder bar?“ – „Mit Stil.“ + Zwinkern |
+| 41–46 s | „Bro … die Oma ist Endgegner.“ – „Frieda?! Bro … lauf!“ + „Das ist Frieda.“ – harter Schnitt |
 
 Quelle: `src/frieda/render_short.py` (nutzt Figuren/Sets aus `render.py`, eigene Zeitleiste):
 `cd src/frieda && python3 tts.py && python3 render_short.py`

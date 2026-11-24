@@ -48,6 +48,12 @@ LINES = [
     ("kas2", "kasse", "Wo lernt man denn so was?"),
     ("fr3", "frieda", "Deutsche Meisterin. Vierundsiebzig.", "Deutsche Meisterin. 1974."),
     ("kas3", "kasse", "Respekt! Neunundvierzig Cent.", "Respekt! 0,49 €."),
+    # Kurzfassung: längeres Gespräch vor dem Wurf, kein "Sorry"
+    ("typ1b", "typ", "Ich zahl jetzt. Sie warten hier – ich hab keine Zeit."),
+    ("fr1b", "frieda", "Ich auch nicht, junger Mann."),
+    ("typ2b", "typ", "Oma, chill. Du hast doch den ganzen Tag Zeit."),
+    ("fr7", "frieda", "Junge, ich bin achtzig. Ich hab am wenigsten Zeit von allen."),
+    ("typ6", "typ", "Ja und? Was willst du machen – mich wegstricken?"),
     ("kas4", "kasse", "Und sein Energy-Drink?"),
     ("fr6", "frieda", "Den zahlt er … hinten."),
     ("kas1", "kasse", "Mit Karte oder bar?"),

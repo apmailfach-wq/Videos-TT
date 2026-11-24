@@ -421,9 +421,9 @@ def guy_state(t):
         return dict(x=lerp(1260, GUY_SPOT[0], p), y=GUY_SPOT[1] - bob, s=GUY_SPOT[2], rot=0,
                     key=K(GUY, "g_phone", "smirk", m, shades=shades, can=True, phone=True))
     if t < T_GRAB + 0.2:
-        m = max(speaking("typ1", t), speaking("typ2", t))
+        m = max(speaking("typ1", t), speaking("typ2", t), speaking("typ1b", t))
         pose, expr = "b_stand", "arrogant"
-        if line_on("typ1", t, 0):
+        if line_on("typ1", t, 0) or line_on("typ1b", t, 0):
             pose, expr = "g_shrug", "smirk"
         if t >= T_LINE["typ5"]:
             pose, expr = "b_hold", "glare"
@@ -798,8 +798,8 @@ def world_shot(t):
           "kas4": head(*CASH), "fr0": head(*FRIEDA, frieda=True), "fr6": head(*FRIEDA, frieda=True),
           "k2a": head(*QUEUE[0][1:]), "mk1": head(*cust_pos("musk1", *QUEUE[1][1:], t))}
     if gs:
-        sp["typ0"] = sp["typ1"] = head(gs["x"], gs["y"], gs["s"])
-    sizes = {"typ1": 54, "typ0": 52, "k2a": 58, "kas3": 58, "mk1": 50}
+        sp["typ0"] = sp["typ1"] = sp["typ1b"] = head(gs["x"], gs["y"], gs["s"])
+    sizes = {"typ1": 54, "typ1b": 52, "typ0": 52, "k2a": 58, "kas3": 58, "mk1": 50}
     for lid, (ax, ay) in sp.items():
         bubble_at(frame, lid, TEXT[lid], ax, ay, t, sizes.get(lid, 62))
     return frame
@@ -838,7 +838,7 @@ def conf_shot(t):
     p = seg(t, t0, t1)
     if who == "frieda":
         frame = blurred_world(5.0, 1.45, 560, 1250, 18, False).copy()
-        expr = {"fr1": "warm", "fr4": "glare", "fr5": "smirk"}[lid]
+        expr = {"fr1": "warm", "fr4": "glare", "fr5": "smirk", "fr1b": "neutral", "fr7": "smirk"}.get(lid, "warm")
         m = round(speaking(lid, t) * 0.8, 1)
         gl = 0.12 if (lid == "fr5" and t > T_LINE["fr5"] + 0.6) else 0.03   # Brillen-Blitzer
         im, nx, ny = frieda_sprite(470, "oma_stand", expr, m, gl=gl)
@@ -846,13 +846,13 @@ def conf_shot(t):
         im = im.resize((int(im.width * s), int(im.height * s)), Image.BICUBIC)
         nx, ny = nx * s, ny * s
         paste_c(frame, im, 560 - nx + im.width / 2, 1010 - ny + im.height / 2)
-        bubble_at(frame, lid, TEXT[lid], 420, 470, t, 84 if lid != "fr4" else 70)
+        bubble_at(frame, lid, TEXT[lid], 420, 470, t, {"fr4": 70, "fr7": 62, "fr1b": 74}.get(lid, 84))
         frame = grade(frame, 0.35)
         if lid == "fr5":
             frame = red_tension(frame, 0.5 * p)
     else:
         frame = blurred_world(5.0, 1.45, 330, 1250, 18, False).copy()
-        if lid == "typ2":
+        if lid in ("typ2", "typ2b", "typ6"):
             key = K(GUY, "g_shrug", "smirk", speaking(lid, t), shades=True, can=True)
             s, rot = lerp(1.0, 1.05, p), 0
         else:  # Brille ab, Faust, beugt sich bedrohlich vor
@@ -867,7 +867,7 @@ def conf_shot(t):
             im = im.rotate(rot, resample=Image.BICUBIC, center=(nx, ny))
         shake = 6 * math.sin(t * 60) * p if lid == "typ5" else 0
         paste_c(frame, im, 520 - nx + im.width / 2 + shake, 1050 - ny + im.height / 2)
-        bubble_at(frame, lid, TEXT[lid], 560, 430, t, 66 if lid == "typ2" else 92)
+        bubble_at(frame, lid, TEXT[lid], 560, 430, t, 92 if lid == "typ5" else 64)
         frame = grade(frame, 0.35)
         if lid == "typ5":
             frame = red_tension(frame, 0.3 + 0.6 * p)
