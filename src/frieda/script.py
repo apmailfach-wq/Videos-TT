@@ -20,6 +20,7 @@ VOICES = {
     "frieda": ("de-AT-IngridNeural", "-2%", "-3Hz", ROOM),      # ruhig, trocken
     "typ":    ("de-AT-JonasNeural", "+3%", "+0Hz", ROOM),       # lässiger Drängler
     "typ_f":  ("de-AT-JonasNeural", "+12%", "+0Hz", ROOM),      # gehetzt am Handy
+    "typ_b":  ("de-AT-JonasNeural", "-8%", "-8Hz", ROOM),      # leise-bedrohlich
     "typ_k":  ("de-AT-JonasNeural", "-12%", "+0Hz", ROOM),      # benommen / kleinlaut
     "kasse":  ("de-DE-TanjaNeural", "+0%", "+0Hz", ROOM),       # Kassiererin
     "k2":     ("de-CH-LeniNeural", "+4%", "+0Hz", ROOM_FAR),    # Kundin weiter hinten
@@ -34,7 +35,10 @@ LINES = [
     ("k2a", "k2", "Hallo?! Hier ist 'ne Schlange!"),
     ("typ1", "typ", "Sorry, Oma – ich hab nur eine Sache.", "Sorry Oma, ich hab nur eine Sache."),
     ("fr1", "frieda", "Ich auch."),
-    ("typ2", "typ", "Hä?"),
+    ("typ2", "typ", "Hä? Was willst du machen – mich wegstricken?"),
+    ("fr4", "frieda", "Letzte Chance, Bürschchen. Ab nach hinten."),
+    ("typ5", "typ_b", "Sonst was … Oma?"),
+    ("fr5", "frieda", "Sonst … das hier."),
     ("k3a", "k3", "Hinten anstellen, Junge. Ach – bist ja schon da.", "Hinten anstellen, Junge. Ach – bist ja schon da."),
     ("typ3", "typ_k", "Hat mich grad 'ne Oma geworfen?"),
     ("kas2", "kasse", "Wo lernt man denn so was?"),
