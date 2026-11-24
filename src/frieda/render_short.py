@@ -2,8 +2,10 @@
 
 Aufbau:
   0–2,3 s   Cold Open: Wurf in Zeitlupe, Freeze am höchsten Punkt + Hook-Text, Rückspulen
-  2,3–9 s   Typ kommt live streamend rein ("Chat, guckt mal – ich skip die ganze Schlange.") und drängelt sich vor
-  9–26 s    Gespräch mit Frieda (Schuss/Gegenschuss) bis "Sonst … das hier."
+  2,3–9 s   Typ kommt live streamend rein ("Chat, guckt mal – ich skip die ganze Schlange.") und drängelt sich vor:
+            "Ihr seid aber zu viele. Ich zahl schnell – ich hab keine Zeit!"
+  9–27 s    Gespräch mit Frieda ("… ich bin achtzig …" – "Was willst du machen – noch mehr Achtzigjährige holen?
+            Ha ha ha!") bis "Sonst … das hier."
   26–32 s   Wurf, IPPON, +1000 AURA / −1000 AURA, Chat eskaliert (Zuschauer 1,9k -> 48,9k), Wertungstafeln
   32–38 s   Frieda: "Skill issue." – Energy-Drink-Callback – "Mit Karte oder bar?"
   38–45 s   "Mit Stil." + Zwinkern – Typ hinten: "Chat … ich wurde grad von 'ner Oma gefaltet." – Chat: "Frieda?! Bro … lauf! 💀"
@@ -30,36 +32,36 @@ OUT = R.ROOT / "frieda-supermarkt-kurz.mp4"
 S0 = 2.3              # Ende Cold Open – hier beginnt die Geschichte
 FREEZE = 0.35         # Freeze-Frame ab hier
 REW0 = 1.85           # Rückspulen
-END_TXT = 43.6
-T_AURA = 29.55
-T_BOOM = 31.75        # Vine-Boom auf "Skill issue."
+END_TXT = 43.75
+T_AURA = 29.95
+T_BOOM = 31.95        # Vine-Boom auf "Skill issue."
 
 OFF = 999.0           # Zeilen/Szenen, die in dieser Fassung fehlen
 R.GUY_LIVE = True
 R.T_LINE.update({k: OFF for k in R.LINES})
 R.T_LINE.update({
-    "typL": 2.5, "typ1b": 5.05,
-    "fr1b": 9.0, "typ2b": 10.65, "fr7": 14.3, "fr4": 18.8, "typ5": 22.35, "fr5": 24.85,
-    "frS": 31.75, "kas4": 33.25, "fr6": 35.0, "kas1": 36.5,
-    "fr2": 38.25, "typ7": 40.05,
+    "typL": 2.5, "typ1c": 5.0,
+    "fr1b": 9.25, "fr7": 10.95, "typ8": 15.5, "fr4": 19.55, "typ5": 23.1, "fr5": 25.6,
+    "frS": 31.95, "kas4": 33.45, "fr6": 35.2, "kas1": 36.7,
+    "fr2": 38.45, "typ7": 40.25,
 })
 R.T_K0_LEAVE = -10.0
 R.T_GUY_IN0, R.T_GUY_IN1 = 2.3, 4.6
-R.T_PUSH = 8.4
-R.T_CONF_A, R.T_CONF_B = 8.85, 26.0
-R.T_GRAB, R.T_THROW, R.T_FLY, R.T_LAND, R.T_SLOW_END = 26.0, 26.6, 27.0, 28.8, 29.15
-R.T_IPPON = 28.9
-R.T_IPPON_END = 29.75
-R.T_CARDS, R.T_CARDS_END = 30.55, 31.75
-R.T_CLAP0, R.T_CLAP1 = 29.2, 31.6
+R.T_PUSH = 8.6
+R.T_CONF_A, R.T_CONF_B = 9.1, 26.75
+R.T_GRAB, R.T_THROW, R.T_FLY, R.T_LAND, R.T_SLOW_END = 26.75, 27.3, 27.65, 29.25, 29.6
+R.T_IPPON = 29.35
+R.T_IPPON_END = 30.1
+R.T_CARDS, R.T_CARDS_END = 30.85, 31.95
+R.T_CLAP0, R.T_CLAP1 = 29.6, 31.95
 R.T_MUSK0, R.T_MUSK1 = OFF, OFF + 1
 R.T_CATCH = R.T_LAND + 0.3
 R.T_BACK1A, R.T_BACK1B = OFF, OFF + 1
 R.T_FLASH_A, R.T_FLASH_B = OFF, OFF + 1
-R.T_CUKE, R.T_BEEP = 32.75, 33.1
-R.T_CLOSE2A = R.T_CLOSE = 38.05
-R.T_WINK = 39.3
-R.T_BACK2A, R.T_BACK2B = 39.85, 45.0
+R.T_CUKE, R.T_BEEP = 32.95, 33.3
+R.T_CLOSE2A = R.T_CLOSE = 38.25
+R.T_WINK = 39.5
+R.T_BACK2A, R.T_BACK2B = 40.05, 45.0
 R.T_END_TXT = OFF
 R.T_TITLE_END = 0.0
 R.TOTAL = 45.0
@@ -72,9 +74,9 @@ R.CAM_KEYS[:] = [
 ]
 L = R.T_LINE
 R.CONF_SHOTS[:] = [
-    (R.T_CONF_A, L["typ2b"] - 0.2, "frieda", "fr1b"),
-    (L["typ2b"] - 0.2, L["fr7"] - 0.2, "typ", "typ2b"),
-    (L["fr7"] - 0.2, L["fr4"] - 0.15, "frieda", "fr7"),
+    (R.T_CONF_A, L["fr7"] - 0.15, "frieda", "fr1b"),
+    (L["fr7"] - 0.15, L["typ8"] - 0.2, "frieda", "fr7"),
+    (L["typ8"] - 0.2, L["fr4"] - 0.15, "typ", "typ8"),
     (L["fr4"] - 0.15, L["typ5"] - 0.25, "frieda", "fr4"),
     (L["typ5"] - 0.25, L["fr5"] - 0.2, "typ", "typ5"),
     (L["fr5"] - 0.2, R.T_CONF_B, "frieda", "fr5"),
@@ -86,18 +88,18 @@ CHAT = [  # (Zeit, Name, Farbe, Text)
     (2.9, "lena.k", (255, 120, 160), "wo bist du?? 😂"),
     (3.6, "max_99", (90, 170, 255), "skip die schlange bro"),
     (4.5, "jule", (120, 220, 120), "der traut sich was 💀"),
-    (6.2, "tom.b", (255, 190, 60), "Oma vs. Bro 👀"),
-    (7.6, "nina", (190, 130, 255), "oh oh oh"),
-    (26.2, "maxi", (90, 220, 210), "WAS"),
-    (28.95, "lena.k", (255, 120, 160), "💀💀💀"),
-    (29.15, "tom.b", (255, 190, 60), "OMA GOAT 🐐"),
-    (29.4, "jule", (120, 220, 120), "IPPON 🥋🥋"),
-    (29.65, "nina", (190, 130, 255), "W Oma"),
-    (29.9, "max_99", (90, 170, 255), "L Bro 😭"),
-    (30.3, "kev", (255, 150, 60), "+1000 Aura fr"),
-    (32.0, "lena.k", (255, 120, 160), "SKILL ISSUE 💀💀"),
-    (42.95, "bro_kevin", (255, 80, 80), "Frieda?! Bro … lauf! 💀"),
-    (43.4, "nina", (190, 130, 255), "Legende 🫡"),
+    (6.9, "tom.b", (255, 190, 60), "\"ihr seid zu viele\" 💀💀"),
+    (8.0, "nina", (190, 130, 255), "Oma vs. Bro 👀"),
+    (26.95, "maxi", (90, 220, 210), "WAS"),
+    (29.4, "lena.k", (255, 120, 160), "💀💀💀"),
+    (29.6, "tom.b", (255, 190, 60), "OMA GOAT 🐐"),
+    (29.85, "jule", (120, 220, 120), "IPPON 🥋🥋"),
+    (30.1, "nina", (190, 130, 255), "W Oma"),
+    (30.35, "max_99", (90, 170, 255), "L Bro 😭"),
+    (30.75, "kev", (255, 150, 60), "+1000 Aura fr"),
+    (32.2, "lena.k", (255, 120, 160), "SKILL ISSUE 💀💀"),
+    (43.15, "bro_kevin", (255, 80, 80), "Frieda?! Bro … lauf! 💀"),
+    (43.55, "nina", (190, 130, 255), "Legende 🫡"),
 ]
 
 
@@ -186,7 +188,7 @@ def draw_live(frame, t):
         if t >= REW0:
             return
         vtxt = viewers(T_AURA + 2)
-        msgs = [m for m in CHAT if 28.9 <= m[0] <= 30.3][-4:]
+        msgs = [m for m in CHAT if 29.4 <= m[0] <= 30.75][-4:]
     elif kind in ("world", "back"):
         vtxt = viewers(t)
         msgs = [m for m in CHAT if m[0] <= t and t - m[0] < 5.0][-4:]

@@ -57,6 +57,8 @@ LINES = [
     # 45-s-Fassung: Livestream, Aura, Gen-Z-Frieda
     ("typL", "typ", "Chat, guckt mal – ich skip die ganze Schlange."),
     ("frS", "frieda", "Skill Ischu.", "Skill issue."),
+    ("typ1c", "typ", "Ihr seid aber zu viele. Ich zahl schnell – ich hab keine Zeit!"),
+    ("typ8", "typ", "Was willst du machen – noch mehr Achtzigjährige holen? Ha ha ha!"),
     ("typ7", "typ_k", "Chat … ich wurde grad von 'ner Oma gefaltet."),
     ("kas4", "kasse", "Und sein Energy-Drink?"),
     ("fr6", "frieda", "Den zahlt er … hinten."),
