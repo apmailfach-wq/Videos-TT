@@ -45,10 +45,12 @@ T_CONF_A, T_CONF_B = 14.6, 26.45      # Schuss/Gegenschuss vor dem Wurf
 T_GRAB, T_THROW, T_FLY, T_LAND, T_SLOW_END = 26.45, 27.1, 27.6, 29.75, 30.15
 T_IPPON = 29.85
 T_CARDS = 30.1                        # Wertungstafeln hoch
+T_TITLE_END = 2.7                     # Titel "Frieda geht einkaufen"
 T_CLAP0, T_CLAP1 = 30.15, 32.5
 T_MUSK0, T_MUSK1 = 31.0, 32.8         # Muskelprotz schleicht nach hinten
 T_CATCH = T_LAND + 0.3                # Frieda fängt die Dose
 T_BACK1A, T_BACK1B = 33.1, 39.65      # Ende der Schlange: Herr + benommener Typ
+T_CARDS_END = T_BACK1A
 T_FLASH_A, T_FLASH_B = 41.85, 45.7    # Rückblende 1974
 T_CUKE = 45.85                        # Gurke + Dose aufs Band
 T_BEEP = 46.25
@@ -568,7 +570,7 @@ def cust_pos(who, x, y, s, t):
 
 
 def cards_on(t):
-    return T_CARDS <= t < T_BACK1A
+    return T_CARDS <= t < T_CARDS_END
 
 
 def cust_key(who, t, i):
@@ -784,8 +786,8 @@ def world_shot(t):
             if 0 < q < 1:
                 paste_c(frame, emoji("👏", 110), rng.uniform(160, 880), rng.uniform(900, 1400) - q * 300,
                         alpha=math.sin(q * math.pi), rot=rng.uniform(-20, 20))
-    if t < 2.7:
-        a = 1 - seg(t, 2.4, 2.7)
+    if t < T_TITLE_END:
+        a = 1 - seg(t, T_TITLE_END - 0.3, T_TITLE_END)
         paste_c(frame, title_full(), 540, 330, scale=max(0.05, ease_back(seg(t, 0.1, 0.45))), alpha=a)
 
     def head(x, y, s, who="adult", frieda=False):
@@ -1235,9 +1237,9 @@ def build_audio(path):
     amb = lp_fast(rng.standard_normal(n), 60) * 0.25 + 0.01 * np.sin(2 * np.pi * 100 * tt)
     amb *= 1 - env_win(T_FLASH_A, T_FLASH_B, 0.2)
     mix += amb * 0.35
-    for tb in (0.6, 1.3, 1.9):
-        add(tone(1900, 0.12, 0.002, 0.05), tb, 0.12)     # Kunde vor Frieda wird abkassiert
-    add(tone(1400, 0.08, 0.002, 0.04), 1.95, 0.08)
+    for tb in (-1.9, -1.2, -0.6):
+        add(tone(1900, 0.12, 0.002, 0.05), T_K0_LEAVE + tb, 0.12)     # Kunde vor Frieda wird abkassiert
+    add(tone(1400, 0.08, 0.002, 0.04), T_K0_LEAVE - 0.55, 0.08)
 
     # --- Schritte
     for tb in np.arange(T_K0_LEAVE, T_K0_LEAVE + 1.5, 0.23):
