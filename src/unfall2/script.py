@@ -6,7 +6,7 @@ SCENES = [
     {"key": "hook", "text": "Ein ganz normaler Tag. Bis ein Radfahrer und ein Autofahrer zusammenkrachen. Wer zahlt jetzt den ganzen Wahnsinn? So ist die Rechtslage in Deutschland."},
     {"key": "unfall", "text": "Der Autofahrer bremst und knallt mit der Stirn aufs Lenkrad. Der Radfahrer fliegt über die Motorhaube."},
     {"key": "schaden", "text": "Bilanz: Handy kaputt, Fahrrad mit Achter, rechte Schulter verletzt. Am Auto: Kratzer und Delle, plus eine Beule an der Stirn. Willkommen im Schadensmuseum!"},
-    {"key": "streit", "text": "Radfahrer: Sie zahlen mein Handy! Autofahrer: Und wer zahlt meine Reparatur? Dann wird gerangelt. Ring frei, Runde eins! Links der Radfahrer, rechts der Autofahrer. Ganz schlechte Idee."},
+    {"key": "streit", "text": "Radfahrer: Sie zahlen mein Handy! Autofahrer: Und wer zahlt meine Reparatur? Dann wird gerangelt, mitten auf der Straße. Ganz schlechte Idee."},
     {"key": "polizei", "text": "Die Polizei fragt: Wer hat angefangen? Beide zeigen aufeinander. Der Beamte braucht jetzt Urlaub."},
     {"key": "recht", "text": "Jetzt wird's spannend: Nach Paragraf 7 Straßenverkehrsgesetz kann der Halter des Autos haften, auch ohne Verschulden. Aber: Mitverschulden des Radfahrers kann den Anspruch kürzen. Handy und Fahrrad können ersetzt werden, Schmerzensgeld gibt's unter Umständen für beide. Und wer bei der Rangelei vorsätzlich verletzt, riskiert eine Anzeige nach Paragraf 223 Strafgesetzbuch."},
     {"key": "tipps", "text": "Drei goldene Tipps nach dem Unfall: Erstens, Polizei rufen. Zweitens, Fotos und Zeugen sichern. Drittens, Verletzungen beim Arzt dokumentieren lassen."},

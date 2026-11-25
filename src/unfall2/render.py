@@ -1197,48 +1197,43 @@ def build_cards():
     c.fig("klaus", GROUND, [(rA, "stand", 780), (rA + 0.3, "punch", 750)], facing=-1)
     c.prop(bubble("Und wer zahlt\nmeine Reparatur?", ORANGE), 640, 950, rA + 0.2, enter="pop")
     c = card(rD, s1("streit"), B)
-    tR, tL, tRe, tG = at("streit", "Runde"), at("streit", "Links"), at("streit", "rechts"), at("streit", "Ganz")
-    c.text(rD, "DANN WIRD GERANGELT –", "*RING* FREI!").text(tR, "DING DING:", "*RUNDE 1*").text(
-        tL, "IN DER LINKEN ECKE:", "DER *RADFAHRER*").text(tRe, "IN DER RECHTEN ECKE:", "DER *AUTOFAHRER*").text(
-        tG, "GANZ SCHLECHTE IDEE –", "*K.O.* FÜR DEN FRIEDEN")
-    c.prop(ring_back(), 540, 1180, rD, enter="fade", z=-1)
-    # choreography: bobbing guard, then alternating punches
-    ka, kb = [(rD, "stand", 300, 0)], [(rD, "stand", 780, 0)]
-    tt, k = rD + 0.2, 0
-    hits_a, hits_b, hit_x = [], [], []
-    while tt < tR:
-        ka.append((tt, "guard", 380, -8 if k % 2 else 4))
-        kb.append((tt, "guard", 700, 4 if k % 2 else -8))
-        tt += 0.25
+    tG = at("streit", "Ganz")
+    c.text(rD, "DANN WIRD GERANGELT –", "MITTEN AUF DER *STRASSE*").text(tG, "UND DAS IST EINE GANZ",
+                                                                       "*SCHLECHTE* IDEE")
+    c.no_emoji = True
+    # street backdrop: the crashed car and the bike with the Achter
+    c.prop(car_dmg(ORANGE, 520), 300, 1050, rD, enter="fade", z=-1)
+    c.prop(bike_flat(360, buckle=True), 820, 1090, rD, rot=-8, enter="fade", z=-1)
+    # boxer stance, then alternating punches
+    ka, kb = [(rD, "guard", 380, 0)], [(rD, "guard", 700, 0)]
+    hits, xs = [], {}
+    tt, k = rD + 0.15, 0
+    while tt < rD + 0.6:
+        ka.append((tt, "guard", 390, -6 if k % 2 else 4))
+        kb.append((tt, "guard", 690, 4 if k % 2 else -6))
+        tt += 0.22
         k += 1
-    tt, k = tR + 0.25, 0
+    k = 0
     end = s1("streit") - 0.35
     while tt < end:
-        if k % 2 == 0:   # Radfahrer punches
-            ka += [(tt, "guard", 400, 0), (tt + 0.14, "punch", 450, 0), (tt + 0.36, "guard", 410, 0)]
-            kb += [(tt + 0.14, "guard", 690, 0), (tt + 0.2, "hit", 720, 0), (tt + 0.44, "guard", 700, 0)]
-            hits_b.append(tt + 0.17)
-            hit_x.append(640)
-        else:            # Autofahrer punches back
-            kb += [(tt, "guard", 680, 0), (tt + 0.14, "punch", 630, 0), (tt + 0.36, "guard", 670, 0)]
-            ka += [(tt + 0.14, "guard", 410, 0), (tt + 0.2, "hit", 380, 0), (tt + 0.44, "guard", 400, 0)]
-            hits_a.append(tt + 0.17)
-            hit_x.append(440)
-        tt += 0.5
+        if k % 2 == 0:
+            ka += [(tt, "guard", 400, 0), (tt + 0.13, "punch", 450, 0), (tt + 0.34, "guard", 410, 0)]
+            kb += [(tt + 0.13, "guard", 690, 0), (tt + 0.19, "hit", 720, 0), (tt + 0.42, "guard", 700, 0)]
+            xs[tt + 0.16] = 640
+        else:
+            kb += [(tt, "guard", 680, 0), (tt + 0.13, "punch", 630, 0), (tt + 0.34, "guard", 670, 0)]
+            ka += [(tt + 0.13, "guard", 410, 0), (tt + 0.19, "hit", 380, 0), (tt + 0.42, "guard", 400, 0)]
+            xs[tt + 0.16] = 440
+        hits.append(tt + 0.16)
+        tt += 0.48
         k += 1
     ka.append((s1("streit"), "cower", 380, 0))
     kb.append((s1("streit"), "cower", 700, 0))
-    c.fig("you", GROUND + 10, ka, facing=1, s=1.45, gloves=(229, 50, 60))
-    c.fig("klaus", GROUND + 10, kb, facing=-1, s=1.45, gloves=(40, 90, 210))
-    c.prop(ring_front(), 540, 1640 - 80, rD, enter="fade")
-    hits = sorted(hits_a + hits_b)
-    xs = {th: (640 if th in hits_b else 440) for th in hits}
-    c.props.append(AnimProp(lambda t: health_bars(t, hits_a, hits_b, rD), 540, 760, rD + 0.1, enter="drop"))
+    c.fig("you", GROUND + 10, ka, facing=1, s=1.45)
+    c.fig("klaus", GROUND + 10, kb, facing=-1, s=1.45)
     c.props.append(AnimProp(lambda t: impact(t, hits, lambda i: xs[hits[i]]), 540, 1050, rD, enter="fade"))
-    c.prop(stamp("RUNDE 1", RED, 44, fill=True), 170, 880, tR, rot=-8, enter="stamp")
-    c.no_emoji = True
-    c.prop(stamp("SLAPSTICK – NICHT NACHMACHEN!", RED, 30, fill=True), 540, 990, tG, rot=-3, enter="stamp")
-    EXTRA_SFX.extend([("bell", tR), ("crowd", rD + 0.1)] + [("punch", x) for x in hits])
+    c.prop(stamp("SLAPSTICK – NICHT NACHMACHEN!", RED, 30, fill=True), 540, 820, tG, rot=-3, enter="stamp")
+    EXTRA_SFX.extend([("punch", x) for x in hits])
 
     # ============================ 4 POLIZEI
     B = (4, "DIE POLIZEI")
