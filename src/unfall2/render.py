@@ -1185,7 +1185,7 @@ def build_cards():
 
     # ============================ 3 STREIT
     B = (3, "DER STREIT")
-    r0, rA, rD = s0("streit"), at("streit", "Autofahrer"), at("streit", "Dann")
+    r0, rA, rD = s0("streit"), at("streit", "Und"), at("streit", "Dann")
     c = card(r0, rA, B)
     c.text(r0, "DER RADFAHRER:", "SIE ZAHLEN MEIN *HANDY!*")
     c.fig("you", GROUND, [(r0, "stand", 300), (r0 + 0.3, "punch", 330)], facing=1)
@@ -1237,7 +1237,7 @@ def build_cards():
 
     # ============================ 4 POLIZEI
     B = (4, "DIE POLIZEI")
-    p0, pB, pD = s0("polizei"), at("polizei", "Beide"), at("polizei", "Der")
+    p0, pB, pD = s0("polizei"), at("polizei", "Er"), at("polizei", "Der")
     c = card(p0, pB, B)
     c.text(p0, "DIE POLIZEI FRAGT:", "WER HAT *ANGEFANGEN?*")
     c.fig("cop", GROUND, [(p0, "stand", 540), (p0 + 0.4, "shrug", 540)], facing=1, s=1.4)
@@ -1771,8 +1771,27 @@ def sfx_crowd(rng, dur):
     return x * am * env * 1.6
 
 
+EL_DIR = ROOT / "assets" / "unfall2_el"
+
+
+@lru_cache(maxsize=None)
+def el_sfx(name, max_len=None, gain=1.0):
+    """ElevenLabs sound effect as mono float array, peak-normalised (None if not downloaded)."""
+    f = EL_DIR / f"{name}.mp3"
+    if not f.exists():
+        return None
+    b = subprocess.check_output(["ffmpeg", "-v", "error", "-i", str(f), "-ac", "1", "-ar", str(SR), "-f", "f32le", "-"])
+    a = np.frombuffer(b, np.float32).astype(np.float64)
+    if max_len:
+        a = a[: int(max_len * SR)]
+        fade = int(0.05 * SR)
+        a[-fade:] *= np.linspace(1, 0, fade)
+    return a / max(1e-6, np.abs(a).max()) * gain
+
+
 def make_sfx(path):
     rng = np.random.default_rng(11)
+    use_el = el_sfx("sfx_whoosh_a") is not None
     n = int(TOTAL * SR) + SR
     out = np.zeros(n)
 
@@ -1783,20 +1802,31 @@ def make_sfx(path):
 
     for k, c in enumerate(CARDS):
         if k:
-            put(sfx_whoosh(rng) * 0.55, c.start - 0.12)
+            put(el_sfx("sfx_whoosh_a", 0.6, 0.5) if use_el else sfx_whoosh(rng) * 0.55, c.start - 0.15)
         put(sfx_pop() * 0.8, c.start + 0.3)            # emoji pop
         for st in c.texts[1:]:
             put(sfx_tick() * 2, st[0])
         for pr in c.props:
             if pr.enter == "stamp":
-                put(sfx_thud(rng), pr.t + 0.12)
+                put(el_sfx("sfx_stamp_a", 0.6, 1.1) if use_el else sfx_thud(rng), pr.t + 0.1)
             elif pr.enter == "pop":
                 put(sfx_pop(), pr.t + 0.1)
+    if use_el:
+        # real-world sounds from ElevenLabs
+        put(el_sfx("sfx_crash_b", 2.6, 1.0), 0.0)
+        put(el_sfx("sfx_horn_a", 1.0, 0.8), at("unfall", "Stirn") + 0.25)
+        put(el_sfx("sfx_hood_b", 2.0, 1.0), at("unfall", "fliegt") + 0.35)
+        put(el_sfx("sfx_siren_b", 1.0, 0.7), s0("polizei") - 0.25)
+        put(el_sfx("sfx_paper_a", 1.0, 1.0), at("fazit", "Papierkram"))
+        EXTRA_SFX[:] = [e for e in EXTRA_SFX if e[0] != "punch"] + [("el_punch", at("streit", "Dann") + 0.75)]
     for kind, tx in EXTRA_SFX:
         if kind == "bell":
             put(sfx_bell(), tx)
         elif kind == "punch":
             put(sfx_punch(rng) * 0.9, tx)
+        elif kind == "el_punch":
+            put(el_sfx("sfx_punch_a", 2.0, 0.9), tx)
+            put(el_sfx("sfx_punch_b", 0.7, 0.8), tx + 2.0)
         elif kind == "crowd":
             put(sfx_crowd(rng, s1("streit") - tx), tx)
     bed = beat_bed(TOTAL)

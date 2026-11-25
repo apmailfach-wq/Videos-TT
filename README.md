@@ -106,3 +106,13 @@ Heller Erklär-Look wie Notwehr/Führerschein: getippte Headlines, Kapitel 1 Unf
 Gesetzes-Inhaltsverzeichnis, Polaroids mit Handschrift, animiertes Vorderrad mit Achter, Paragrafen-Seiten, Stempel,
 Karaoke-Untertitel, Abstimmung Auto vs. Rad + „Speichern für den Ernstfall“ (wie Notwehr-Video). Ca. 75 s.
 Quelle: `src/unfall2/` (`python3 tts.py && python3 render.py`).
+
+#### Version mit ElevenLabs-Stimmen + Geräuschen (aktuelle `unfall-video-erklaer.mp4`)
+Erzähler „Fiete Waterkant“, Radfahrer „Timon“, Autofahrer „Axel Jones (hessisch)“, Polizist „Jonas“ (eleven_v4),
+echte Geräusche (Crash, Hupe, Aufprall, Schläge, Martinshorn, Stempel, Whoosh, Papier) via ElevenLabs Sound Effects.
+Aufnahmen liegen in `assets/unfall2_el/`; Wort-Timings per faster-whisper (`*.words.json`).
+```bash
+cd src/unfall2
+python3 el_build.py                         # schneidet/strafft die Takes -> build/unfall2_el/
+VOICE_DIR=unfall2_el python3 render.py      # rendert ../../unfall-video-erklaer.mp4
+```
