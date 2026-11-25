@@ -99,3 +99,9 @@ python3 render.py            # rendert ../../unfall-video.mp4
 python3 render.py preview 5 30   # Standbilder
 ```
 Keine Rechtsberatung.
+
+### unfall-video-erklaer.mp4 (gleiches Thema im Erklär-Format des Top-Videos)
+Heller Erklär-Look wie Notwehr/Führerschein: getippte Headlines, Kapitel 1 Unfall · 2 Schäden · 3 Streit ·
+4 Polizei · 5 Rechtslage · 6 Fazit, Strichmännchen (Radfahrer türkis, Autofahrer orange, Polizei blau),
+animiertes Vorderrad mit Achter, Paragrafen-Seiten, Stempel, Karaoke-Untertitel, Abstimmung Auto vs. Rad. Ca. 63 s.
+Quelle: `src/unfall2/` (`python3 tts.py && python3 render.py`).
