@@ -102,6 +102,7 @@ Keine Rechtsberatung.
 
 ### unfall-video-erklaer.mp4 (gleiches Thema im Erklär-Format des Top-Videos)
 Heller Erklär-Look wie Notwehr/Führerschein: getippte Headlines, Kapitel 1 Unfall · 2 Schäden · 3 Streit ·
-4 Polizei · 5 Rechtslage · 6 Fazit, Strichmännchen (Radfahrer türkis, Autofahrer orange, Polizei blau),
-animiertes Vorderrad mit Achter, Paragrafen-Seiten, Stempel, Karaoke-Untertitel, Abstimmung Auto vs. Rad. Ca. 63 s.
+4 Polizei · 5 Rechtslage · 6 3 goldene Tipps · 7 Fazit, Strichmännchen (Radfahrer türkis, Autofahrer orange, Polizei blau),
+Gesetzes-Inhaltsverzeichnis, Polaroids mit Handschrift, animiertes Vorderrad mit Achter, Paragrafen-Seiten, Stempel,
+Karaoke-Untertitel, Abstimmung Auto vs. Rad + „Speichern für den Ernstfall“ (wie Notwehr-Video). Ca. 75 s.
 Quelle: `src/unfall2/` (`python3 tts.py && python3 render.py`).

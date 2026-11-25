@@ -505,10 +505,7 @@ def tip_card(num, text):
     return with_shadow(supersample(w, h, fn), dy=10, blur=12)
 
 
-def toc_page():
-    def extra(d, S, x, y):
-        pass
-    body = ""
+def toc_page(header="STRAFGESETZBUCH", title="StGB", rows=None):
     w, h = 640, 800
 
     def fn(im, d, ss):
@@ -516,15 +513,13 @@ def toc_page():
         d.rounded_rectangle([0, 18 * S, (w - 6) * S, h * S], radius=10 * S, fill=(196, 204, 210))
         d.rounded_rectangle([14 * S, 0, w * S, (h - 14) * S], radius=10 * S, fill=PAPER)
         x = 60 * S
-        d.text((x, 80 * S), "STRAFGESETZBUCH", font=font(F_HEAD_B, 20 * S), fill=(150, 158, 165), anchor="ls")
-        d.text((x, 150 * S), "StGB", font=font(F_HEAD, 64 * S), fill=INK, anchor="ls")
-        rows = [("§ 32", "Notwehr", TEAL_L), ("§ 33", "Notwehrexzess", TEAL_L),
-                ("§ 223", "Körperverletzung", (250, 200, 200)), ("§ 224", "Gefährliche KV", (250, 200, 200))]
+        d.text((x, 80 * S), header, font=font(F_HEAD_B, 20 * S), fill=(150, 158, 165), anchor="ls")
+        d.text((x, 150 * S), title, font=font(F_HEAD, 64 * S), fill=INK, anchor="ls")
         y = 230 * S
         for p, t, c in rows:
             d.rectangle([x - 8 * S, y - 6 * S, x + 520 * S, y + 62 * S], fill=c)
-            d.text((x + 6 * S, y + 28 * S), p, font=font(F_HEAD, 32 * S), fill=INK, anchor="lm")
-            d.text((x + 150 * S, y + 28 * S), t, font=font(F_BODY_B, 32 * S), fill=INK, anchor="lm")
+            d.text((x + 6 * S, y + 28 * S), p, font=font(F_HEAD, 26 * S), fill=INK, anchor="lm")
+            d.text((x + 250 * S, y + 28 * S), t, font=font(F_BODY_B, 30 * S), fill=INK, anchor="lm")
             y += 100 * S
         for i in range(4):
             d.rounded_rectangle([x, y + 10 * S, x + (380 - i * 40) * S, y + 22 * S], radius=6 * S,
@@ -669,7 +664,7 @@ class Card:
         return self
 
 
-RED_KEYS = ("WAHNSINN", "AUTO", "STIRN", "MOTORHAUBE", "KAPUTT", "ACHTER", "SCHULTER", "DELLE", "BEULE",
+RED_KEYS = ("POLIZEI", "WAHNSINN", "AUTO", "STIRN", "MOTORHAUBE", "KAPUTT", "ACHTER", "SCHULTER", "DELLE", "BEULE",
             "SCHLECHTE", "ANGEFANGEN", "KÜRZEN", "§", "SCHULD", "HANDY", "REPARATUR", "AUFEINANDER")
 ORANGE = (236, 128, 38)
 
@@ -966,6 +961,20 @@ def steering_wheel(w=300):
     return with_shadow(supersample(w, h, fn), dy=8, blur=10)
 
 
+def photo_emoji(ch, size=150):
+    def fn(base, box):
+        x0, y0, x1, y1 = box
+        e = emoji_img(ch, size)
+        base.alpha_composite(e, (int((x0 + x1) / 2 - e.width / 2), int((y0 + y1) / 2 - e.height / 2)))
+    return fn
+
+
+def photo_wheel(base, box):
+    x0, y0, x1, y1 = box
+    wimg = wheel_img(0.7, R=95)
+    base.alpha_composite(wimg, (int((x0 + x1) / 2 - wimg.width / 2), int((y0 + y1) / 2 - wimg.height / 2)))
+
+
 class AnimProp(Prop):
     """Prop whose image is regenerated each frame (e.g. a spinning, wobbling wheel)."""
 
@@ -1011,11 +1020,21 @@ def build_cards():
     c.prop(car_dmg(ORANGE, 520), 330, 1300, hB, enter="left")
     c.prop(bike_flat(440), 790, 1290, hB + 0.15, enter="right")
     c.prop(stamp("KRACH!", RED, 90, fill=True), 560, 980, hZ + 0.25, rot=-8, enter="stamp")
-    c = card(hW, s1("hook"))
+    hS = at("hook", "So")
+    c = card(hS, s1("hook"))
+    c.text(hS, "SO IST DIE", "*RECHTSLAGE*", "IN DEUTSCHLAND")
+    c.prop(toc_page("GESETZE ZUM UNFALL", "Wer zahlt?", [
+        ("§ 7 StVG", "Halterhaftung", TEAL_L), ("§ 9 StVG", "Mitverschulden", TEAL_L),
+        ("§ 253 BGB", "Schmerzensgeld", TEAL_L), ("§ 223 StGB", "Körperverletzung", (250, 200, 200))]),
+        540, 1250, hS + 0.05, rot=2)
+    C.remove(c)
+    c_toc = c
+    c = card(hW, hS)
     c.text(hW, "WER ZAHLT JETZT", "DEN GANZEN *WAHNSINN?*")
     c.prop(doc_page("Polizei · Unfallaufnahme", "Rad gegen\nPkw", "Beteiligt: Radfahrer (35) und Autofahrer "
                     "(40). Fünf Schäden. Schuldfrage: ungeklärt.", lines=3), 540, 1260, hW + 0.05, rot=-2)
     c.prop(stamp("UNGEKLÄRT", RED, 62), 560, 1480, at("hook", "Wahnsinn"), rot=-9, enter="stamp")
+    C.append(c_toc)
 
     # ============================ 1 UNFALL
     B = (1, "DER UNFALL")
@@ -1059,11 +1078,12 @@ def build_cards():
     c.prop(big_emoji("🤕", 130), 840, 1180, at("schaden", "Beule"), enter="pop")
     c = card(dW, s1("schaden"), B)
     c.text(dW, "WILLKOMMEN IM", "*SCHADENS-* MUSEUM")
-    for k, (e, lab) in enumerate((("📱", "Handy"), ("🚲", "Achter"), ("💪", "Schulter"), ("🚗", "Delle"),
-                                  ("🤕", "Stirn"))):
+    for k, (e, lab) in enumerate((("📱", "Nr. 1 · Handy"), ("🚲", "Nr. 2 · Achter"), ("💪", "Nr. 3 · Schulter"),
+                                  ("🚗", "Nr. 4 · Delle"), ("🤕", "Nr. 5 · Stirn"))):
         x = 200 + (k % 3) * 340 if k < 3 else 370 + (k - 3) * 340
-        y = 1030 if k < 3 else 1390
-        c.prop(emoji_card(e, lab, 260, 300), x, y, dW + 0.05 + k * 0.12, rot=(k % 2 - 0.5) * 8, enter="pop")
+        y = 990 if k < 3 else 1365
+        scene = photo_wheel if e == "🚲" else photo_emoji(e)
+        c.prop(polaroid(scene, lab, 300, 350), x, y, dW + 0.05 + k * 0.12, rot=(k % 2 - 0.5) * 9, enter="pop")
 
     # ============================ 3 STREIT
     B = (3, "DER STREIT")
@@ -1142,8 +1162,19 @@ def build_cards():
                     "wird bestraft.", lines=2), 540, 1240, jU + 0.05, rot=-2)
     c.prop(stamp("ANZEIGE", RED, 64), 560, 1490, at("recht", "Anzeige"), rot=-9, enter="stamp")
 
-    # ============================ 6 FAZIT
-    B = (6, "FAZIT")
+    # ============================ 6 TIPPS
+    B = (6, "3 GOLDENE TIPPS")
+    t0 = s0("tipps")
+    c = card(t0, s1("tipps"), B)
+    c.text(t0, "NACH DEM UNFALL", "3 GOLDENE *TIPPS*").text(at("tipps", "Erstens"), "TIPP 1", "*POLIZEI* RUFEN").text(
+        at("tipps", "Zweitens"), "TIPP 2", "*FOTOS* + ZEUGEN").text(at("tipps", "Drittens"), "TIPP 3",
+                                                                   "*ARZT* DOKUMENTIERT")
+    c.prop(tip_card(1, "Polizei\nrufen"), 230, 1250, at("tipps", "Erstens"), rot=-7, enter="left")
+    c.prop(tip_card(2, "Fotos +\nZeugen"), 540, 1220, at("tipps", "Zweitens"), rot=0, enter="up")
+    c.prop(tip_card(3, "Attest"), 850, 1250, at("tipps", "Drittens"), rot=7, enter="right")
+
+    # ============================ 7 FAZIT
+    B = (7, "FAZIT")
     z0, zF, zD, zM = s0("fazit"), at("fazit", "fünf"), at("fazit", "drei"), at("fazit", "mehr")
     c = card(z0, s1("fazit"), B)
     c.text(z0, "EIN KLEINER UNFALL:", "*5* SCHÄDEN").text(zF, "EIN KLEINER UNFALL:", "*5* SCHÄDEN").text(
@@ -1158,11 +1189,12 @@ def build_cards():
     q0 = s0("cta")
     c = card(q0, s1("cta"))
     c.text(q0, "UND JETZT DU:", "WER IST *SCHULD?*")
-    c.prop(question_bubble(), 540, 1060, q0 + 0.05, enter="pop")
-    c.prop(cta_pill("🚗", "Autofahrer", ORANGE), 300, 1370, at("cta", "Autofahrer"), enter="pop")
-    c.prop(cta_pill("🚲", "Radfahrer", TEAL), 790, 1370, at("cta", "Radfahrer"), enter="pop")
-    c.prop(cta_pill("💬", "Schreib's in die Kommentare!", INK), 540, 1520, at("cta", "Schreib"), enter="pop")
-    c.prop(disclaimer(), 540, 1640, q0 + 0.5, enter="fade")
+    c.prop(question_bubble(), 540, 1000, q0 + 0.05, enter="pop")
+    c.prop(cta_pill("🚗", "Autofahrer", ORANGE), 300, 1290, at("cta", "Autofahrer"), enter="pop")
+    c.prop(cta_pill("🚲", "Radfahrer", TEAL), 790, 1290, at("cta", "Radfahrer"), enter="pop")
+    c.prop(cta_pill("💬", "Schreib's in die Kommentare!", INK), 540, 1430, at("cta", "Schreib"), enter="pop")
+    c.prop(cta_pill("📌", "Speichern für den Ernstfall", TEAL), 540, 1565, at("cta", "speicher"), enter="pop")
+    c.prop(disclaimer(), 540, 1690, q0 + 0.5, enter="fade")
     return C
 
 
@@ -1342,8 +1374,8 @@ def card_at(t):
 # ------------------------------------------------------------------ trend layer: emojis, captions, progress
 F_EMOJI = "/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf"
 F_CAP = "/usr/share/fonts/opentype/inter/Inter-Black.otf"
-CARD_EMOJI = ["🥐", "💥", "🤔", "📯", "🎢", "📱", "🚲", "😖", "🚗", "🏛️", "😤", "🔧", "🤼", "🚔", "👉", "🌴",
-              "⚖️", "⚠️", "💶", "🚨", "📄", "💬"]
+CARD_EMOJI = ["🥐", "💥", "🤔", "⚖️", "📯", "🎢", "📱", "🚲", "😖", "🚗", "🏛️", "😤", "🔧", "🤼", "🚔", "👉",
+              "🌴", "⚖️", "⚠️", "💶", "🚨", "🩺", "📄", "💬"]
 YELLOW = (255, 226, 0)
 
 
