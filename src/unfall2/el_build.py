@@ -157,6 +157,25 @@ def main():
         n = len(p.split())
         paras.append(erz_words[k:k + n])
         k += n
+    # cut points between narrator paragraphs: inside the longest real silence between them
+    rms, thr = envelope(erz_audio)
+    cut_in = [None] * len(paras)    # start of paragraph k
+    cut_out = [None] * len(paras)   # end of paragraph k
+    for k in range(len(paras) - 1):
+        w0 = int(paras[k][-1]["start"] * 200)
+        w1 = min(len(rms) - 1, int(paras[k + 1][0]["end"] * 200))
+        best, run0 = (0, w0, w0), None
+        for i in range(w0, w1 + 1):
+            if rms[i] <= thr:
+                run0 = i if run0 is None else run0
+                if i - run0 + 1 > best[0]:
+                    best = (i - run0 + 1, run0, i + 1)
+            else:
+                run0 = None
+        _, r0, r1 = best
+        cut_out[k] = min(r1, r0 + 18) / 200          # keep up to 90 ms of the decay
+        cut_in[k + 1] = max(r0, r1 - 10) / 200       # start 50 ms before the next word
+        print(f"Absatz {k}->{k + 1}: Stille {r0 / 200:.2f}-{r1 / 200:.2f}s")
     res = []
     for si, sc in enumerate(SCENES):
         chunks, words, t, prev_spk = [], [], 0.0, None
@@ -168,6 +187,9 @@ def main():
                 full, pw = load(src), align(arg, f"{src}.words.json")
                 spk = SPEAKER[src]
             t0, t1 = speech_bounds(full, pw[0]["start"], pw[-1]["end"])
+            if src == "erz":
+                t0 = cut_in[arg] if cut_in[arg] is not None else t0
+                t1 = cut_out[arg] if cut_out[arg] is not None else t1
             seg = full[int(t0 * SR):int(t1 * SR)].copy()
             for w in pw:
                 w["start"] = max(0.0, w["start"] - t0)
