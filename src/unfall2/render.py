@@ -1246,8 +1246,8 @@ def build_cards():
     c.text(pB, "BEIDE ZEIGEN", "*AUFEINANDER*")
     c.fig("you", GROUND, [(pB, "stand", 330), (pB + 0.25, "punch", 360)], facing=1)
     c.fig("klaus", GROUND, [(pB, "stand", 750), (pB + 0.25, "punch", 720)], facing=-1)
-    c.prop(stamp("ER!", RED, 70, fill=True), 300, 960, pB + 0.4, rot=-10, enter="stamp")
-    c.prop(stamp("ER!", (236, 128, 38), 70, fill=True), 780, 960, pB + 0.55, rot=10, enter="stamp")
+    c.prop(stamp("ER!", TEAL, 70, fill=True), 300, 960, at("polizei", "Er", 0), rot=-10, enter="stamp")
+    c.prop(stamp("ER!", (236, 128, 38), 70, fill=True), 780, 960, at("polizei", "Er", 1), rot=10, enter="stamp")
     c = card(pD, s1("polizei"), B)
     c.text(pD, "DER BEAMTE BRAUCHT JETZT", "ERST MAL *URLAUB*")
     c.fig("cop", GROUND, [(pD, "stand", 330), (pD + 0.4, "shrug", 330)], facing=1, s=1.3)
@@ -1534,14 +1534,15 @@ def build_caps():
     caps = []
     for si, sc in enumerate(TIM):
         words = [dict(text=w["text"].replace("Paragraf", "§").rstrip("."), start=OFF[si] + w["start"],
-                      end=OFF[si] + w["end"]) for w in sc["words"]]
+                      end=OFF[si] + w["end"], spk=w.get("spk", "erz")) for w in sc["words"]]
         merged, skip = [], False
         for i, w in enumerate(words):
             if skip:
                 skip = False
                 continue
             if w["text"] == "§" and i + 1 < len(words):
-                merged.append(dict(text="§ " + words[i + 1]["text"], start=w["start"], end=words[i + 1]["end"]))
+                merged.append(dict(text="§ " + words[i + 1]["text"], start=w["start"], end=words[i + 1]["end"],
+                                   spk=w["spk"]))
                 skip = True
             else:
                 merged.append(w)
@@ -1553,7 +1554,8 @@ def build_caps():
                 punct.add(w["text"].replace("Paragraf", "§").rstrip("."))
         chunk = []
         for i, w in enumerate(merged):
-            if chunk and (len(chunk) >= 3 or sum(len(x["text"]) for x in chunk) + len(w["text"]) > 18):
+            if chunk and (len(chunk) >= 3 or sum(len(x["text"]) for x in chunk) + len(w["text"]) > 18
+                          or chunk[-1]["spk"] != w["spk"]):
                 caps.append(chunk)
                 chunk = []
             chunk.append(w)
@@ -1569,18 +1571,36 @@ def build_caps():
     return out
 
 
+SPK_TAG = {"radler": ("🚲 RADFAHRER", TEAL), "auto": ("🚗 AUTOFAHRER", (236, 128, 38)),
+           "polizei": ("🚔 POLIZIST", (38, 72, 160))}
+
+
 @lru_cache(maxsize=2048)
 def cap_img(ci, active):
     c = CAPS[ci]
+    spk = c["words"][0].get("spk", "erz")
     f = font(F_CAP, 76)
     sp = f.getlength(" ")
     ws = [f.getlength(w["text"]) for w in c["words"]]
     tw = sum(ws) + sp * (len(ws) - 1)
-    im = Image.new("RGBA", (int(tw + 60), 130), (0, 0, 0, 0))
+    top = 70 if spk in SPK_TAG else 0
+    im = Image.new("RGBA", (int(max(tw + 60, 420)), 130 + top), (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
-    x = 30
+    hl = YELLOW
+    if spk in SPK_TAG:
+        label, col = SPK_TAG[spk]
+        hl = lerp_col(col, PAPER, 0.35)
+        txt = label.split(" ", 1)[1]
+        tf = font(F_HEAD, 30)
+        lw = tf.getlength(txt) + 70
+        x0 = im.width / 2 - lw / 2
+        d.rounded_rectangle([x0, 6, x0 + lw, 60], radius=27, fill=col)
+        e = emoji_img(label.split(" ")[0], 40)
+        im.alpha_composite(e, (int(x0 + 8), int(33 - e.height / 2)))
+        d.text((x0 + 52, 33), txt, font=tf, fill=PAPER, anchor="lm")
+    x = (im.width - tw) / 2
     for i, (w, ww) in enumerate(zip(c["words"], ws)):
-        d.text((x, 65), w["text"], font=f, fill=YELLOW if i == active else PAPER, anchor="lm",
+        d.text((x, 65 + top), w["text"], font=f, fill=hl if i == active else PAPER, anchor="lm",
                stroke_width=10, stroke_fill=(0, 0, 0))
         x += ww + sp
     sh = Image.new("RGBA", im.size, (0, 0, 0, 0))

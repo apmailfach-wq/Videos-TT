@@ -14,8 +14,10 @@ OUT = ROOT / "build" / "unfall2_el"
 OUT.mkdir(parents=True, exist_ok=True)
 SR = 48000
 TEMPO = 1.12      # slightly faster, pitch preserved
-MAX_SIL = 0.18    # longest pause kept inside a part
-GAP = 0.14        # pause between speakers
+GAP = 0.14        # pause inside the same speaker
+GAP_SPK = 0.3     # clear pause when another person speaks
+SPEAKER = {"rad_handy_a": "radler", "rad_er_a": "radler", "auto_rep_a": "auto", "auto_er_a": "auto",
+           "pol_a": "polizei"}
 TAIL = 0.22       # breath after each scene
 
 # scene -> parts: ("erz", index of narrator paragraph) or (file, text)
@@ -71,48 +73,78 @@ def align(script_text, wjson):
     return [dict(text=t.strip(".,:!?\"„“"), start=s, end=e) for t, (s, e) in zip(toks, times)]
 
 
-def tighten(a, words):
-    hop = SR // 100
+def envelope(a):
+    hop = SR // 200                      # 5 ms frames
     n = len(a) // hop
     rms = np.sqrt(np.mean(a[:n * hop].reshape(n, hop) ** 2, axis=1))
-    silent = rms < max(0.004, rms.max() * 0.03)
-    keep = np.ones(n, bool)
-    cuts, i, lim = [], 0, int(MAX_SIL * 100)
+    return rms, rms.max() * 0.015        # sensitive threshold: keeps soft R/S/T endings
+
+
+def speech_bounds(a, t_first, t_last):
+    """Real start/end of the sound around the recognised words (recogniser ends words too early)."""
+    rms, thr = envelope(a)
+    n = len(rms)
+    i = max(0, int(t_first * 200))
+    for _ in range(60):                  # search back up to 0.3 s for the true onset
+        if i > 0 and rms[i - 1] > thr:
+            i -= 1
+        else:
+            break
+    j = min(n - 1, int(t_last * 200))
+    quiet = 0
+    while j < n - 1 and quiet < 24:      # until 120 ms of continuous silence
+        j += 1
+        quiet = quiet + 1 if rms[j] <= thr else 0
+    return max(0.0, i / 200 - 0.05), min(len(a) / SR, (j - quiet) / 200 + 0.09)
+
+
+def tighten(a, words):
+    """Shorten only long pauses (> 0.35 s) to 0.24 s, with 15 ms crossfades - never touches sound."""
+    rms, thr = envelope(a)
+    n = len(rms)
+    silent = rms <= thr
+    keep_after, keep_before = 28, 20     # 140 ms after speech, 100 ms before next speech
+    pieces, cuts, last, i = [], [], 0, 0
     while i < n:
         if silent[i]:
             j = i
             while j < n and silent[j]:
                 j += 1
-            if j - i > lim and i > 0 and j < n:
-                d0, d1 = i + lim // 2, j - (lim - lim // 2)
-                keep[d0:d1] = False
-                cuts.append((d0 / 100, (d1 - d0) / 100))
+            if j - i > 70 and i > 0 and j < n:
+                c0, c1 = (i + keep_after) * (SR // 200), (j - keep_before) * (SR // 200)
+                pieces.append((last, c0))
+                cuts.append((c0 / SR, (c1 - c0) / SR))
+                last = c1
             i = j
         else:
             i += 1
-    out = np.concatenate([a[:n * hop].reshape(n, hop)[keep].reshape(-1), a[n * hop:]])
+    pieces.append((last, len(a)))
+    xf = int(0.015 * SR)
+    out = a[pieces[0][0]:pieces[0][1]].copy()
+    for p0, p1 in pieces[1:]:
+        nxt = a[p0:p1].copy()
+        k = min(xf, len(out), len(nxt))
+        ramp = np.linspace(0, 1, k)
+        out[-k:] = out[-k:] * (1 - ramp) + nxt[:k] * ramp
+        out = np.concatenate([out, nxt[k:]])
 
     def remap(t):
-        s = 0.0
+        s_ = 0.0
         for c0, d in cuts:
             if t > c0 + d:
-                s += d
+                s_ += d
             elif t > c0:
-                s += t - c0
-        return t - s
+                s_ += t - c0
+        return t - s_
     for w in words:
         w["start"], w["end"] = remap(w["start"]), remap(w["end"])
     return out
 
 
-def trim(a, words, pre=0.04, post=0.12):
-    """Cut leading/trailing silence around the spoken words."""
-    t0 = max(0.0, words[0]["start"] - pre)
-    t1 = min(len(a) / SR, words[-1]["end"] + post)
-    seg = a[int(t0 * SR):int(t1 * SR)]
-    for w in words:
-        w["start"] -= t0
-        w["end"] -= t0
+def fade(seg, ms=12):
+    k = min(len(seg) // 2, int(ms / 1000 * SR))
+    seg[:k] *= np.linspace(0, 1, k)
+    seg[-k:] *= np.linspace(1, 0, k)
     return seg
 
 
@@ -127,26 +159,28 @@ def main():
         k += n
     res = []
     for si, sc in enumerate(SCENES):
-        chunks, words, t = [], [], 0.0
+        chunks, words, t, prev_spk = [], [], 0.0, None
         for src, arg in PARTS[sc["key"]]:
             if src == "erz":
-                pw = [dict(w) for w in paras[arg]]
-                t0 = max(0.0, pw[0]["start"] - 0.06)
-                t1 = pw[-1]["end"] + 0.15
-                seg = erz_audio[int(t0 * SR):int(t1 * SR)]
-                for w in pw:
-                    w["start"] -= t0
-                    w["end"] -= t0
+                full, pw = erz_audio, [dict(w) for w in paras[arg]]
+                spk = "erz"
             else:
-                seg = load(src)
-                pw = align(arg, f"{src}.words.json")
-                seg = trim(seg, pw)
-            seg = tighten(seg, pw)
-            if chunks:
-                chunks.append(np.zeros(int(GAP * SR), np.float32))
-                t += GAP
+                full, pw = load(src), align(arg, f"{src}.words.json")
+                spk = SPEAKER[src]
+            t0, t1 = speech_bounds(full, pw[0]["start"], pw[-1]["end"])
+            seg = full[int(t0 * SR):int(t1 * SR)].copy()
             for w in pw:
-                words.append(dict(text=w["text"], start=w["start"] + t, end=w["end"] + t))
+                w["start"] = max(0.0, w["start"] - t0)
+                w["end"] = min(t1 - t0, w["end"] - t0)
+            pw[-1]["end"] = t1 - t0 - 0.09     # last word lasts until the sound really ends
+            seg = fade(tighten(seg, pw))
+            if chunks:
+                g = GAP if spk == prev_spk else GAP_SPK
+                chunks.append(np.zeros(int(g * SR), np.float32))
+                t += g
+            prev_spk = spk
+            for w in pw:
+                words.append(dict(text=w["text"], start=w["start"] + t, end=w["end"] + t, spk=spk))
             chunks.append(seg)
             t += len(seg) / SR
         chunks.append(np.zeros(int(TAIL * SR), np.float32))
