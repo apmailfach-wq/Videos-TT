@@ -77,3 +77,25 @@ python3 render.py              # rendert ../../fuehrerschein-video-neon.mp4
 python3 render.py shots        # Schnittliste
 python3 render.py preview 5 30 # Standbilder
 ```
+
+## unfall-video.mp4 (ALLTAG KLAR – Fahrrad vs. Auto: Wer zahlt?)
+
+Satirischer Kurzfilm im Soft-3D-Look · ca. 83 s · 1080×1920 · 30 fps · 4 Stimmen (Erzähler, Autofahrer, Radfahrer, Polizist)
+
+| Abschnitt | Inhalt |
+|---|---|
+| Cold Open | Zeitlupen-Standbild „WER ZAHLT DAS ALLES?“ → Zurückspulen |
+| Unfall | Fahrt zum Bäcker, Radfahrer, KRACH, Stirn aufs Lenkrad (HUUUP!), Flug über die Motorhaube in Zeitlupe, Aktenzeichen-Stempel |
+| Schadensbilanz | Harte Schnitte pro Wort: zersprungenes Handy, Vorderrad mit Achter (eiert beim Drehen), Schulter, Totalschaden, Delle, Stirn, Brötchen; Schadensmuseum |
+| Streit + Rangelei | Gegenseitiges Zeigen, Haftpflicht-Politur, Slapstick-Staubwolke, Kosten-O-Meter, „Strafverfahren?!“ |
+| Polizei | Ankunft mit Blaulicht, genervter Beamter, beide zeigen aufeinander, Urlaubsantrag genehmigt |
+| Rechtslage | § 7 StVG (Halterhaftung), Umstände/Mitverschulden, Schadensersatz, Schmerzensgeld ggf. für beide, § 223 StGB – vorsichtig formuliert, keine Pauschalschuld |
+| Pointe + Frage | Parkbank mit Kühlpack, „brauche ich drei“, Papierstapel mit Brautpaar, WER ZAHLT? WER HAFTET? WER IST SCHULD? + Abstimmung in den Kommentaren |
+
+```bash
+cd src/unfall
+python3 tts.py               # Stimmen (script.py: VOICES / LINES), Pausen straffen -> build/unfall/
+python3 render.py            # rendert ../../unfall-video.mp4
+python3 render.py preview 5 30   # Standbilder
+```
+Keine Rechtsberatung.
