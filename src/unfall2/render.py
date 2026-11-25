@@ -1012,8 +1012,8 @@ def build_cards():
     # ============================ HOOK
     h0, hB, hZ, hW = -0.2, at("hook", "Bis"), at("hook", "zusammenkrachen"), at("hook", "Wer")
     c = card(h0, hB)
-    c.text(h0, "EIN GANZ NORMALER TAG", "NUR KURZ *BRÖTCHEN* HOLEN")
-    c.prop(car_dmg(ORANGE, 560, dent=False), 540, 1250, h0, enter="left")
+    c.text(-2.0, "EIN GANZ NORMALER TAG", "NUR KURZ *BRÖTCHEN* HOLEN")
+    c.prop(car_dmg(ORANGE, 560, dent=False), 540, 1250, -1.0, enter="left")
     c.prop(emoji_card("🥐", "Bäcker"), 820, 900, h0 + 0.4, rot=6, enter="pop")
     c = card(hB, hW)
     c.text(hB, "BIS ZWEI ZUSAMMENKRACHEN", "*RAD* GEGEN *AUTO*")
@@ -1064,7 +1064,7 @@ def build_cards():
     c.text(d0, "BILANZ NR. 1", "HANDY *KAPUTT*")
     c.prop(phone_cracked(300), 540, 1180, d0 + 0.1, rot=-10, enter="drop")
     c = card(dF, dS, B)
-    c.text(dF, "BILANZ NR. 2", "FAHRRAD MIT *ACHTER*").text(at("schaden", "Achter") + 0.3, "ES EIERT!", "FAHRRAD MIT *ACHTER*")
+    c.text(dF, "BILANZ NR. 2 – ES EIERT!", "FAHRRAD MIT *ACHTER*")
     c.props.append(AnimProp(lambda t: wheel_img(t), 540, 1190, dF, enter="pop"))
     c.prop(stamp("EIERT", RED, 56), 820, 1450, at("schaden", "Achter") + 0.2, rot=-10, enter="stamp")
     c = card(dS, dA, B)
@@ -1136,8 +1136,8 @@ def build_cards():
                           at("recht", "Und"))
     jS = at("recht", "Schmerzensgeld")
     c = card(j0, jA, B)
-    c.text(j0, "JETZT WIRD'S SPANNEND", "§ 7 *STVG*").text(at("recht", "Halter"), "§ 7 STRASSENVERKEHRSGESETZ",
-                                                          "*HALTER* KANN HAFTEN", "AUCH OHNE VERSCHULDEN")
+    c.text(j0, "JETZT WIRD'S SPANNEND", "§ 7 *STVG*").text(at("recht", "Halter"), "§ 7 STVG – AUCH OHNE VERSCHULDEN",
+                                                          "*HALTER* KANN HAFTEN")
     c.prop(doc_page("Straßenverkehrsgesetz", "§ 7\nHalterhaftung",
                     "Wird beim Betrieb eines Kfz ein Mensch verletzt oder eine Sache beschädigt, kann der Halter "
                     "zum Schadensersatz verpflichtet sein.", lines=2), 540, 1240, jN, rot=-2)
@@ -1177,7 +1177,7 @@ def build_cards():
     B = (7, "FAZIT")
     z0, zF, zD, zM = s0("fazit"), at("fazit", "fünf"), at("fazit", "drei"), at("fazit", "mehr")
     c = card(z0, s1("fazit"), B)
-    c.text(z0, "EIN KLEINER UNFALL:", "*5* SCHÄDEN").text(zF, "EIN KLEINER UNFALL:", "*5* SCHÄDEN").text(
+    c.text(z0, "EIN KLEINER UNFALL:", "*5* SCHÄDEN").text(
         zD, "EIN KLEINER UNFALL:", "*3* STREITPARTEIEN").text(zM, "MEHR PAPIERKRAM ALS", "BEI EINER *HOCHZEIT*")
     c.fig("you", GROUND, [(z0, "cower", 250)], facing=1, s=1.0)
     c.fig("cop", GROUND, [(z0, "shrug", 540)], facing=1, s=1.0)
@@ -1189,12 +1189,12 @@ def build_cards():
     q0 = s0("cta")
     c = card(q0, s1("cta"))
     c.text(q0, "UND JETZT DU:", "WER IST *SCHULD?*")
-    c.prop(question_bubble(), 540, 1000, q0 + 0.05, enter="pop")
-    c.prop(cta_pill("🚗", "Autofahrer", ORANGE), 300, 1290, at("cta", "Autofahrer"), enter="pop")
-    c.prop(cta_pill("🚲", "Radfahrer", TEAL), 790, 1290, at("cta", "Radfahrer"), enter="pop")
-    c.prop(cta_pill("💬", "Schreib's in die Kommentare!", INK), 540, 1430, at("cta", "Schreib"), enter="pop")
-    c.prop(cta_pill("📌", "Speichern für den Ernstfall", TEAL), 540, 1565, at("cta", "speicher"), enter="pop")
-    c.prop(disclaimer(), 540, 1690, q0 + 0.5, enter="fade")
+    c.prop(question_bubble(880), 520, 900, q0 + 0.05, enter="pop")
+    c.prop(cta_pill("🚗", "Autofahrer", ORANGE), 290, 1190, at("cta", "Autofahrer"), enter="pop")
+    c.prop(cta_pill("🚲", "Radfahrer", TEAL), 760, 1190, at("cta", "Radfahrer"), enter="pop")
+    c.prop(cta_pill("💬", "Schreib's in die Kommentare!", INK), 520, 1320, at("cta", "Schreib"), enter="pop")
+    c.prop(cta_pill("📌", "Speichern für den Ernstfall", TEAL), 520, 1445, at("cta", "speicher"), enter="pop")
+    c.prop(disclaimer(), 520, 1550, q0 + 0.5, enter="fade")
     return C
 
 
@@ -1288,7 +1288,7 @@ def draw_header(frame, card, t):
             k_start = s[0]
         else:
             break
-    CPS = 42.0
+    CPS = 78.0
     kcol = (150, 160, 168) if dark else GREY
     hcol = PAPER if dark else INK
     y = 255
@@ -1391,7 +1391,7 @@ def emoji_img(ch, size=150):
 
 
 def draw_emoji(frame, card, idx, t):
-    if idx >= len(CARD_EMOJI):
+    if idx >= len(CARD_EMOJI) or card is CARDS[-1]:
         return
     p = (t - card.start - 0.25) / 0.35
     if p <= 0:
@@ -1474,10 +1474,10 @@ def draw_caption(frame, t):
             act = max([i for i, w in enumerate(c["words"]) if t >= w["start"]] or [0])
             img = cap_img(ci, act)
             p = clamp01((t - c["start"]) / 0.12)
-            sc = (0.85 + 0.15 * ease_back(p, 2.0)) * min(1.0, 1000 / img.width)
+            sc = (0.85 + 0.15 * ease_back(p, 2.0)) * min(1.0, 860 / img.width)
             if abs(sc - 1) > 0.01:
                 img = img.resize((int(img.width * sc), int(img.height * sc)), Image.BICUBIC)
-            frame.alpha_composite(img, (int(W / 2 - img.width / 2), int(1610 - img.height / 2)))
+            frame.alpha_composite(img, (int(520 - img.width / 2), int(1470 - img.height / 2)))
             return
 
 
@@ -1616,7 +1616,7 @@ def beat_bed(dur, bpm=96):
             out[s0:s0 + len(pad)] += pad
         tb += beat
         i += 1
-    fade = np.minimum(1, np.minimum(np.arange(n) / SR / 1.0, (n - np.arange(n)) / SR / 1.5))
+    fade = np.minimum(1, np.minimum(np.arange(n) / SR / 0.05, (n - np.arange(n)) / SR / 1.5))
     return out * fade
 
 
@@ -1643,8 +1643,8 @@ def make_sfx(path):
                 put(sfx_pop(), pr.t + 0.1)
     bed = beat_bed(TOTAL)
     mix = np.zeros(n)
-    mix[: len(out)] += out * 0.5
-    mix[: len(bed)] += bed * 0.22
+    mix[: len(out)] += out * 0.32
+    mix[: len(bed)] += bed * 0.2
     mix = np.clip(mix, -1, 1)
     import wave
     with wave.open(str(path), "wb") as w:
@@ -1667,14 +1667,32 @@ def main():
     lst = BUILD / "concat.txt"
     lst.write_text("".join(f"file '{s['audio']}'\n" for s in TIM))
     voice = BUILD / "voice_only.wav"
+    # even, punchy voice: per-scene loudness already equal -> gentle compression, no dynamic normaliser
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", str(lst),
-                    "-af", f"apad=pad_dur={TAIL},loudnorm=I=-16:TP=-2:LRA=11", "-ar", "48000", str(voice)],
-                   check=True)
+                    "-af", f"apad=pad_dur={TAIL},highpass=f=70,"
+                    "acompressor=threshold=0.08:ratio=3:attack=8:release=120:makeup=2,alimiter=limit=0.9",
+                    "-ar", "48000", "-ac", "1", str(voice)], check=True)
     sfx = BUILD / "sfx.wav"
     make_sfx(sfx)
+    raw = BUILD / "mix_raw.wav"
+    # music/sfx ducked under the voice (sidechain), then mixed
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(voice), "-i", str(sfx), "-filter_complex",
-                    "[1:a]volume=0.55[s];[0:a][s]amix=inputs=2:normalize=0:duration=first,"
-                    "loudnorm=I=-14:TP=-1.5:LRA=11", "-ar", "48000", str(audio)], check=True)
+                    "[0:a]asplit=2[v][sc];[1:a]volume=0.5[s];"
+                    "[s][sc]sidechaincompress=threshold=0.03:ratio=4:attack=10:release=250[sd];"
+                    "[v][sd]amix=inputs=2:normalize=0:duration=first,alimiter=limit=0.95",
+                    "-ar", "48000", str(raw)], check=True)
+    # two-pass loudness normalisation (linear -> constant gain, no pumping)
+    m = subprocess.run(["ffmpeg", "-hide_banner", "-i", str(raw), "-af",
+                        "loudnorm=I=-14:TP=-1.5:LRA=11:print_format=json", "-f", "null", "-"],
+                       capture_output=True, text=True).stderr
+    js = json.loads(m[m.rindex("{"):m.rindex("}") + 1])
+    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(raw), "-af",
+                    "loudnorm=I=-14:TP=-1.5:LRA=11:linear=true:"
+                    f"measured_I={js['input_i']}:measured_TP={js['input_tp']}:measured_LRA={js['input_lra']}:"
+                    f"measured_thresh={js['input_thresh']}:offset={js['target_offset']}",
+                    "-ar", "48000", str(audio)], check=True)
+    if len(sys.argv) > 1 and sys.argv[1] == "audio":
+        return
     cmd = ["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}",
            "-r", str(FPS), "-i", "-", "-i", str(audio), "-c:v", "libx264", "-preset", "medium", "-crf", "20",
            "-pix_fmt", "yuv420p", "-profile:v", "high", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart",
