@@ -672,7 +672,7 @@ class Card:
         return self
 
 
-RED_KEYS = ("K.O.", "RING", "POLIZEI", "WAHNSINN", "AUTO", "STIRN", "MOTORHAUBE", "KAPUTT", "ACHTER", "SCHULTER", "DELLE", "BEULE",
+RED_KEYS = ("KRACHT", "MITVERSCHULDEN", "SELBST", "ANZEIGE", "K.O.", "RING", "POLIZEI", "WAHNSINN", "AUTO", "STIRN", "MOTORHAUBE", "KAPUTT", "ACHTER", "SCHULTER", "DELLE", "BEULE",
             "SCHLECHTE", "ANGEFANGEN", "KÜRZEN", "§", "SCHULD", "HANDY", "REPARATUR", "AUFEINANDER")
 ORANGE = (236, 128, 38)
 
@@ -927,7 +927,7 @@ def phone_cracked(w=240):
     return with_shadow(supersample(w, h, fn), dy=10, blur=12)
 
 
-def share_bar(w=860):
+def share_bar(w=860):  # noqa
     """'Wer zahlt welchen Anteil?' split bar."""
     h = 210
 
@@ -1107,18 +1107,18 @@ def build_cards():
         ks.append((t1, "stand", x1))
         return ks
 
-    # ============================ HOOK
-    h0, hB, hZ, hW = -0.2, at("hook", "Bis"), at("hook", "zusammenkrachen"), at("hook", "Wer")
-    c = card(h0, hB)
-    c.text(-2.0, "EIN GANZ NORMALER TAG", "NUR KURZ *BRÖTCHEN* HOLEN")
-    c.prop(car_dmg(ORANGE, 560, dent=False), 540, 1250, -1.0, enter="left")
-    c.prop(emoji_card("🥐", "Bäcker"), 820, 900, h0 + 0.4, rot=6, enter="pop")
-    c = card(hB, hW)
-    c.text(hB, "BIS ZWEI ZUSAMMENKRACHEN", "*RAD* GEGEN *AUTO*")
-    c.prop(car_dmg(ORANGE, 520), 330, 1300, hB, enter="left")
-    c.prop(bike_flat(440), 790, 1290, hB + 0.15, enter="right")
-    c.prop(stamp("KRACH!", RED, 90, fill=True), 560, 980, hZ + 0.25, rot=-8, enter="stamp")
-    hS = at("hook", "So")
+    # ============================ HOOK  (frame 0 already shows the crash)
+    hS1, hW, hS = at("hook", "Stell"), at("hook", "Wer"), at("hook", "So")
+    c = card(-0.2, hS1)
+    c.text(-2.0, "RADFAHRER GEGEN AUTO –", "ES *KRACHT!*")
+    c.prop(car_dmg(ORANGE, 520), 330, 1300, -1.0, enter="left")
+    c.prop(bike_flat(440, buckle=True), 790, 1290, -1.0, rot=-6, enter="right")
+    c.prop(stamp("KRACH!", RED, 96, fill=True), 560, 960, -0.6, rot=-8, enter="stamp")
+    c = card(hS1, hW)
+    c.text(hS1, "STELL DIR VOR,", "DAS BIST *DU*")
+    c.fig("you", GROUND, [(hS1, "stand", 540), (hS1 + 0.25, "handsup", 540)], facing=1, s=1.5,
+          shake=(hS1 + 0.25, hW))
+    c.prop(big_emoji("😳", 170), 800, 1000, hS1 + 0.2, enter="pop")
     c = card(hS, s1("hook"))
     c.text(hS, "SO IST DIE", "*RECHTSLAGE*", "IN DEUTSCHLAND")
     c.prop(toc_page("GESETZE ZUM UNFALL", "Wer zahlt?", [
@@ -1156,7 +1156,7 @@ def build_cards():
 
     # ============================ 2 SCHÄDEN
     B = (2, "DIE SCHÄDEN")
-    d0, dF, dS, dA, dW = (s0("schaden"), at("schaden", "Fahrrad"), at("schaden", "rechte"), at("schaden", "Am"),
+    d0, dF, dS, dA, dW = (s0("schaden"), at("schaden", "Fahrrad"), at("schaden", "Schulter"), at("schaden", "Am"),
                           at("schaden", "Willkommen"))
     c = card(d0, dF, B)
     c.text(d0, "BILANZ NR. 1", "HANDY *KAPUTT*")
@@ -1256,31 +1256,31 @@ def build_cards():
 
     # ============================ 5 RECHTSLAGE
     B = (5, "DIE RECHTSLAGE")
-    j0, jN, jA, jH, jU = (s0("recht"), at("recht", "Nach"), at("recht", "Aber"), at("recht", "Handy"),
+    j0, jN, jA, jS, jU = (s0("recht"), at("recht", "Nach"), at("recht", "Aber"), at("recht", "Schmerzensgeld"),
                           at("recht", "Und"))
-    jS = at("recht", "Schmerzensgeld")
+    jG, jH = at("recht", "großen"), at("recht", "Handy")
     c = card(j0, jA, B)
     c.text(j0, "JETZT WIRD'S SPANNEND", "§ 7 *STVG*").text(at("recht", "Halter"), "§ 7 STVG – AUCH OHNE VERSCHULDEN",
-                                                          "*HALTER* KANN HAFTEN")
+                                                          "*HALTER* HAFTET")
     c.prop(doc_page("Straßenverkehrsgesetz", "§ 7\nHalterhaftung",
-                    "Wird beim Betrieb eines Kfz ein Mensch verletzt oder eine Sache beschädigt, kann der Halter "
-                    "zum Schadensersatz verpflichtet sein.", lines=2), 540, 1240, jN, rot=-2)
-    c.prop(stamp("AUCH OHNE\nVERSCHULDEN", TEAL, 40), 560, 1500, at("recht", "ohne"), rot=-8, enter="stamp")
-    c = card(jA, jH, B)
-    c.text(jA, "ABER: MITVERSCHULDEN", "KANN *KÜRZEN*")
-    c.prop(share_bar(), 540, 1100, jA + 0.1, enter="wipe")
-    c.prop(emoji_card("🚗", "Auto"), 300, 1420, jA + 0.4, rot=-6, enter="left")
-    c.prop(emoji_card("🚲", "Rad"), 780, 1420, jA + 0.5, rot=6, enter="right")
-    c = card(jH, jU, B)
-    c.text(jH, "HANDY + FAHRRAD", "*ERSATZ* MÖGLICH").text(jS, "SCHMERZENSGELD – UNTER UMSTÄNDEN",
-                                                           "FÜR *BEIDE*")
-    c.prop(phone_cracked(170), 250, 1070, jH, rot=-8, enter="pop")
-    c.prop(bike_flat(380, buckle=True), 700, 1080, at("recht", "Fahrrad"), enter="pop")
-    c.prop(check_badge(50), 540, 1000, at("recht", "ersetzt"), enter="pop")
-    c.prop(emoji_card("💪", "Radfahrer"), 330, 1440, jS + 0.2, rot=-6, enter="pop")
-    c.prop(emoji_card("🤕", "Autofahrer"), 750, 1440, jS + 0.35, rot=6, enter="pop")
+                    "Wird beim Betrieb eines Kfz ein Mensch verletzt oder eine Sache beschädigt, ist der Halter "
+                    "grundsätzlich zum Schadensersatz verpflichtet.", lines=2), 540, 1240, jN, rot=-2)
+    c.prop(stamp("AUCH OHNE\nVERSCHULDEN", TEAL, 40, fill=True), 790, 980, at("recht", "ohne"), rot=8, enter="stamp")
+    c = card(jA, jS, B)
+    c.text(jA, "ABER: RADFAHRER FÄHRT BEI ROT?", "*MITVERSCHULDEN*").text(
+        jG, "DANN KANN ER EINEN GROSSEN TEIL", "*SELBST* TRAGEN").text(
+        jH, "UND BLEIBT WOMÖGLICH SITZEN AUF", "HANDY + *FAHRRAD*")
+    c.prop(big_emoji("🚦", 200), 200, 1000, jA + 0.1, enter="pop")
+    c.prop(share_bar(640), 640, 1000, at("recht", "Rot"), enter="wipe")
+    c.prop(phone_cracked(150), 300, 1300, jH, rot=-8, enter="pop")
+    c.prop(bike_flat(340, buckle=True), 640, 1300, at("recht", "Fahrrad"), enter="pop")
+    c.prop(stamp("SELBST ZAHLEN?", RED, 44), 560, 1180, jG + 0.2, rot=-7, enter="stamp")
+    c = card(jS, jU, B)
+    c.text(jS, "SCHMERZENSGELD – UNTER UMSTÄNDEN", "FÜR *BEIDE*")
+    c.prop(emoji_card("💪", "Radfahrer"), 320, 1150, jS + 0.15, rot=-6, enter="left")
+    c.prop(emoji_card("🤕", "Autofahrer"), 760, 1150, jS + 0.3, rot=6, enter="right")
     c = card(jU, s1("recht"), B)
-    c.text(jU, "RANGELEI MIT VERLETZUNG?", "*§ 223* STGB")
+    c.text(jU, "UND WER ZUSCHLÄGT, RISKIERT EINE", "*ANZEIGE*", "§ 223 STGB · KÖRPERVERLETZUNG")
     c.prop(doc_page("Strafgesetzbuch", "§ 223\nKörperverletzung",
                     "Wer eine andere Person vorsätzlich körperlich misshandelt oder an der Gesundheit schädigt, "
                     "wird bestraft.", lines=2), 540, 1240, jU + 0.05, rot=-2)
@@ -1290,12 +1290,13 @@ def build_cards():
     B = (6, "3 GOLDENE TIPPS")
     t0 = s0("tipps")
     c = card(t0, s1("tipps"), B)
-    c.text(t0, "NACH DEM UNFALL", "3 GOLDENE *TIPPS*").text(at("tipps", "Erstens"), "TIPP 1", "*POLIZEI* RUFEN").text(
-        at("tipps", "Zweitens"), "TIPP 2", "*FOTOS* + ZEUGEN").text(at("tipps", "Drittens"), "TIPP 3",
-                                                                   "*ARZT* DOKUMENTIERT")
-    c.prop(tip_card(1, "Polizei\nrufen"), 230, 1250, at("tipps", "Erstens"), rot=-7, enter="left")
-    c.prop(tip_card(2, "Fotos +\nZeugen"), 540, 1220, at("tipps", "Zweitens"), rot=0, enter="up")
-    c.prop(tip_card(3, "Attest"), 850, 1250, at("tipps", "Drittens"), rot=7, enter="right")
+    c.text(t0, "3 GOLDENE TIPPS · NR. 1", "*POLIZEI* RUFEN").text(
+        at("tipps", "Fotos"), "3 GOLDENE TIPPS · NR. 2", "*FOTOS* + ZEUGEN").text(at("tipps", "Verletzungen"),
+                                                                                 "3 GOLDENE TIPPS · NR. 3",
+                                                                "*ARZT* DOKUMENTIERT")
+    c.prop(tip_card(1, "Polizei\nrufen"), 230, 1250, at("tipps", "Polizei"), rot=-7, enter="left")
+    c.prop(tip_card(2, "Fotos +\nZeugen"), 540, 1220, at("tipps", "Fotos"), rot=0, enter="up")
+    c.prop(tip_card(3, "Attest"), 850, 1250, at("tipps", "Verletzungen"), rot=7, enter="right")
 
     # ============================ 7 FAZIT
     B = (7, "FAZIT")
