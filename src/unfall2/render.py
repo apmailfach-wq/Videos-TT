@@ -257,8 +257,9 @@ def figure_image(pose, team="you", facing=1, s=1.0, shadow=True):
 class Fig:
     """Animated stick figure on the stage. keys: list of (time, pose, x)."""
 
-    def __init__(self, team, y, keys, facing=1, s=1.3, recolor=None, shake=None):
+    def __init__(self, team, y, keys, facing=1, s=1.45, recolor=None, shake=None, gloves=None):
         self.team, self.y, self.keys, self.facing, self.s = team, y, keys, facing, s
+        self.gloves = gloves
         self.recolor = recolor  # (t, team) -> morph colours
         self.shake = shake      # (t0, t1) trembling
 
@@ -290,6 +291,13 @@ class Fig:
         d.ellipse([(gx - sw) * ss, (gy - 12 * self.s) * ss, (gx + sw) * ss, (gy + 12 * self.s) * ss],
                   fill=(20, 30, 40, 34))
         draw_figure(d, pts, gx, gy, self.s, cf, cb, ss)
+        if self.gloves:
+            for k in ("hb", "hf"):
+                hx, hy = (gx + pts[k][0]) * ss, (gy + pts[k][1]) * ss
+                r = 27 * self.s * ss
+                d.ellipse([hx - r, hy - r, hx + r, hy + r], fill=self.gloves)
+                d.ellipse([hx - r * 0.55, hy - r * 0.75, hx + r * 0.05, hy - r * 0.2], fill=(255, 255, 255, 90))
+                d.ellipse([hx - r * 0.8, hy + r * 0.35, hx + r * 0.8, hy + r * 1.05], fill=PAPER)
 
 
 # ------------------------------------------------------------------ props
@@ -664,7 +672,7 @@ class Card:
         return self
 
 
-RED_KEYS = ("POLIZEI", "WAHNSINN", "AUTO", "STIRN", "MOTORHAUBE", "KAPUTT", "ACHTER", "SCHULTER", "DELLE", "BEULE",
+RED_KEYS = ("K.O.", "RING", "POLIZEI", "WAHNSINN", "AUTO", "STIRN", "MOTORHAUBE", "KAPUTT", "ACHTER", "SCHULTER", "DELLE", "BEULE",
             "SCHLECHTE", "ANGEFANGEN", "KÜRZEN", "§", "SCHULD", "HANDY", "REPARATUR", "AUFEINANDER")
 ORANGE = (236, 128, 38)
 
@@ -975,6 +983,94 @@ def photo_wheel(base, box):
     base.alpha_composite(wimg, (int((x0 + x1) / 2 - wimg.width / 2), int((y0 + y1) / 2 - wimg.height / 2)))
 
 
+def ring_back(w=1080):
+    """Boxing ring behind the fighters: canvas floor, corner posts, back ropes."""
+    h = 760
+
+    def fn(im, d, ss):
+        S = ss
+        # spotlight
+        d.ellipse([120 * S, 0, (w - 120) * S, 520 * S], fill=(255, 255, 255, 120))
+        # floor (canvas) in perspective
+        d.polygon([(110 * S, 520 * S), ((w - 110) * S, 520 * S), (w * S, 700 * S), (0, 700 * S)],
+                  fill=(64, 120, 200))
+        d.polygon([(0, 700 * S), (w * S, 700 * S), (w * S, 760 * S), (0, 760 * S)], fill=(40, 80, 150))
+        # back posts + ropes
+        for x, col in ((150, RED), (w - 150, (40, 90, 200))):
+            d.rounded_rectangle([(x - 14) * S, 170 * S, (x + 14) * S, 530 * S], radius=10 * S, fill=col)
+        for k, col in enumerate(((240, 70, 80), PAPER, (60, 110, 220))):
+            y = 230 + k * 85
+            d.line([(150 * S, y * S), ((w - 150) * S, y * S)], fill=col + (200,), width=int(9 * S))
+    return supersample(w, h, fn)
+
+
+def ring_front(w=1080):
+    h = 420
+
+    def fn(im, d, ss):
+        S = ss
+        for x, col in ((40, RED), (w - 40, (40, 90, 200))):
+            d.rounded_rectangle([(x - 22) * S, 0, (x + 22) * S, 420 * S], radius=14 * S, fill=col)
+            d.rounded_rectangle([(x - 30) * S, 0, (x + 30) * S, 40 * S], radius=12 * S, fill=PAPER)
+        for k, col in enumerate(((240, 70, 80), PAPER, (60, 110, 220))):
+            y = 70 + k * 95
+            d.line([(40 * S, y * S), ((w - 40) * S, (y + 10) * S)], fill=col, width=int(14 * S))
+    return supersample(w, h, fn)
+
+
+def health_bars(t, hits_a, hits_b, t0):
+    """Fighting-game style health bars. hits_* = times where that fighter loses health."""
+    w, h = 1000, 120
+    la = max(0.12, 1 - 0.17 * sum(1 for x in hits_a if t >= x))
+    lb = max(0.12, 1 - 0.17 * sum(1 for x in hits_b if t >= x))
+    flash_a = any(0 <= t - x < 0.15 for x in hits_a)
+    flash_b = any(0 <= t - x < 0.15 for x in hits_b)
+
+    def fn(im, d, ss):
+        S = ss
+        for side, life, name, col, fl in ((0, la, "RADFAHRER", TEAL_F, flash_a), (1, lb, "AUTOFAHRER", ORANGE, flash_b)):
+            x0 = 0 if side == 0 else 540
+            d.rounded_rectangle([x0 * S, 50 * S, (x0 + 460) * S, 100 * S], radius=12 * S, fill=INK)
+            bw = 448 * life
+            bx0 = x0 + 6 if side == 0 else x0 + 454 - bw
+            d.rounded_rectangle([bx0 * S, 56 * S, (bx0 + bw) * S, 94 * S], radius=9 * S,
+                                fill=PAPER if fl else (RED if life < 0.4 else col))
+            d.text(((x0 + (0 if side == 0 else 460)) * S, 26 * S), name, font=font(F_HEAD, 30 * S), fill=INK,
+                   anchor="ls" if side == 0 else "rs")
+        d.ellipse([462 * S, 30 * S, 538 * S, 106 * S], fill=YELLOW_K)
+        d.text((500 * S, 69 * S), "VS", font=font(F_HEAD, 30 * S), fill=INK, anchor="mm")
+    return supersample(w, h, fn)
+
+
+YELLOW_K = (255, 214, 0)
+
+
+def impact(t, hits, x_of):
+    """Comic hit flashes: starburst + POW word for 0.3 s after each hit."""
+    w, h = 1080, 700
+    words = ["POW!", "BAM!", "WUMMS!", "KLATSCH!", "BÄM!", "ZACK!"]
+
+    def fn(im, d, ss):
+        S = ss
+        for i, th in enumerate(hits):
+            u = (t - th) / 0.32
+            if not 0 <= u < 1:
+                continue
+            cx, cy = x_of(i), 300
+            r = (90 + 70 * ease_out(u)) * S
+            pts = []
+            for k in range(16):
+                a = k / 16 * math.tau + i
+                rr = r if k % 2 == 0 else r * 0.5
+                pts.append((cx * S + math.cos(a) * rr, cy * S + math.sin(a) * rr))
+            a = int(255 * (1 - u))
+            d.polygon(pts, fill=(255, 214, 0, a), outline=(229, 72, 77, a), width=int(6 * S))
+            wd = words[i % len(words)]
+            d.text((cx * S, (cy - 150 - 40 * u) * S), wd, font=font(F_HEAD, int(64 * S)), fill=(229, 72, 77, a),
+                   anchor="mm", stroke_width=int(6 * S), stroke_fill=(255, 255, 255, a))
+    return supersample(w, h, fn)
+
+
 class AnimProp(Prop):
     """Prop whose image is regenerated each frame (e.g. a spinning, wobbling wheel)."""
 
@@ -989,9 +1085,11 @@ class AnimProp(Prop):
 
 
 GROUND = 1500
+EXTRA_SFX = []
 
 
 def build_cards():
+    EXTRA_SFX.clear()
     C = []
 
     def card(*a, **k):
@@ -1053,7 +1151,7 @@ def build_cards():
     tf = at("unfall", "fliegt")
     c.fig("you", GROUND - 220, [(uR, "stand", 900, 0), (tf, "handsup", 860, 0), (tf + 0.35, "lying", 640, -300),
                                 (tf + 0.7, "lying", 420, -360), (tf + 1.05, "lying", 220, -120),
-                                (tf + 1.3, "lying", 180, 150)], facing=-1, s=1.15)
+                                (tf + 1.3, "lying", 180, 150)], facing=-1, s=1.3)
     c.prop(stamp("ZEITLUPE", INK, 40), 540, 860, uR + 0.2, rot=-4, enter="pop")
 
     # ============================ 2 SCHÄDEN
@@ -1099,17 +1197,48 @@ def build_cards():
     c.fig("klaus", GROUND, [(rA, "stand", 780), (rA + 0.3, "punch", 750)], facing=-1)
     c.prop(bubble("Und wer zahlt\nmeine Reparatur?", ORANGE), 640, 950, rA + 0.2, enter="pop")
     c = card(rD, s1("streit"), B)
-    c.text(rD, "DANN WIRD GERANGELT –", "*SCHLECHTE* IDEE")
-    kys_a, kys_b, tt = [(rD, "guard", 400)], [(rD, "guard", 680)], rD + 0.2
-    k = 0
-    while tt < s1("streit"):
-        kys_a.append((tt, "push" if k % 2 == 0 else "hit", 430 if k % 2 == 0 else 400))
-        kys_b.append((tt, "hit" if k % 2 == 0 else "push", 690 if k % 2 == 0 else 650))
-        tt += 0.32
+    tR, tL, tRe, tG = at("streit", "Runde"), at("streit", "Links"), at("streit", "rechts"), at("streit", "Ganz")
+    c.text(rD, "DANN WIRD GERANGELT –", "*RING* FREI!").text(tR, "DING DING:", "*RUNDE 1*").text(
+        tL, "IN DER LINKEN ECKE:", "DER *RADFAHRER*").text(tRe, "IN DER RECHTEN ECKE:", "DER *AUTOFAHRER*").text(
+        tG, "GANZ SCHLECHTE IDEE –", "*K.O.* FÜR DEN FRIEDEN")
+    c.prop(ring_back(), 540, 1180, rD, enter="fade", z=-1)
+    # choreography: bobbing guard, then alternating punches
+    ka, kb = [(rD, "stand", 300, 0)], [(rD, "stand", 780, 0)]
+    tt, k = rD + 0.2, 0
+    hits_a, hits_b, hit_x = [], [], []
+    while tt < tR:
+        ka.append((tt, "guard", 380, -8 if k % 2 else 4))
+        kb.append((tt, "guard", 700, 4 if k % 2 else -8))
+        tt += 0.25
         k += 1
-    c.fig("you", GROUND, kys_a, facing=1)
-    c.fig("klaus", GROUND, kys_b, facing=-1)
-    c.prop(stamp("SLAPSTICK –\nNICHT NACHMACHEN", RED, 36), 540, 900, rD + 0.3, rot=-6, enter="stamp")
+    tt, k = tR + 0.25, 0
+    end = s1("streit") - 0.35
+    while tt < end:
+        if k % 2 == 0:   # Radfahrer punches
+            ka += [(tt, "guard", 400, 0), (tt + 0.14, "punch", 450, 0), (tt + 0.36, "guard", 410, 0)]
+            kb += [(tt + 0.14, "guard", 690, 0), (tt + 0.2, "hit", 720, 0), (tt + 0.44, "guard", 700, 0)]
+            hits_b.append(tt + 0.17)
+            hit_x.append(640)
+        else:            # Autofahrer punches back
+            kb += [(tt, "guard", 680, 0), (tt + 0.14, "punch", 630, 0), (tt + 0.36, "guard", 670, 0)]
+            ka += [(tt + 0.14, "guard", 410, 0), (tt + 0.2, "hit", 380, 0), (tt + 0.44, "guard", 400, 0)]
+            hits_a.append(tt + 0.17)
+            hit_x.append(440)
+        tt += 0.5
+        k += 1
+    ka.append((s1("streit"), "cower", 380, 0))
+    kb.append((s1("streit"), "cower", 700, 0))
+    c.fig("you", GROUND + 10, ka, facing=1, s=1.45, gloves=(229, 50, 60))
+    c.fig("klaus", GROUND + 10, kb, facing=-1, s=1.45, gloves=(40, 90, 210))
+    c.prop(ring_front(), 540, 1640 - 80, rD, enter="fade")
+    hits = sorted(hits_a + hits_b)
+    xs = {th: (640 if th in hits_b else 440) for th in hits}
+    c.props.append(AnimProp(lambda t: health_bars(t, hits_a, hits_b, rD), 540, 760, rD + 0.1, enter="drop"))
+    c.props.append(AnimProp(lambda t: impact(t, hits, lambda i: xs[hits[i]]), 540, 1050, rD, enter="fade"))
+    c.prop(stamp("RUNDE 1", RED, 44, fill=True), 170, 880, tR, rot=-8, enter="stamp")
+    c.no_emoji = True
+    c.prop(stamp("SLAPSTICK – NICHT NACHMACHEN!", RED, 30, fill=True), 540, 990, tG, rot=-3, enter="stamp")
+    EXTRA_SFX.extend([("bell", tR), ("crowd", rD + 0.1)] + [("punch", x) for x in hits])
 
     # ============================ 4 POLIZEI
     B = (4, "DIE POLIZEI")
@@ -1179,11 +1308,11 @@ def build_cards():
     c = card(z0, s1("fazit"), B)
     c.text(z0, "EIN KLEINER UNFALL:", "*5* SCHÄDEN").text(
         zD, "EIN KLEINER UNFALL:", "*3* STREITPARTEIEN").text(zM, "MEHR PAPIERKRAM ALS", "BEI EINER *HOCHZEIT*")
-    c.fig("you", GROUND, [(z0, "cower", 250)], facing=1, s=1.0)
-    c.fig("cop", GROUND, [(z0, "shrug", 540)], facing=1, s=1.0)
-    c.fig("klaus", GROUND, [(z0, "cower", 830)], facing=-1, s=1.0)
-    c.prop(paper_stack(16), 540, 960, zM, enter="drop")
-    c.prop(big_emoji("💍", 130), 540, 700 + 120, zM + 0.4, enter="pop")
+    c.fig("you", GROUND, [(z0, "cower", 220)], facing=1, s=1.3, shake=(z0, s1("fazit")))
+    c.fig("cop", GROUND, [(z0, "shrug", 540)], facing=1, s=1.3)
+    c.fig("klaus", GROUND, [(z0, "cower", 860)], facing=-1, s=1.3, shake=(z0, s1("fazit")))
+    c.prop(paper_stack(12), 540, 870, zM, enter="drop")
+    c.prop(big_emoji("💍", 120), 540, 730, zM + 0.4, enter="pop")
 
     # ============================ CTA
     q0 = s0("cta")
@@ -1391,7 +1520,7 @@ def emoji_img(ch, size=150):
 
 
 def draw_emoji(frame, card, idx, t):
-    if idx >= len(CARD_EMOJI) or card is CARDS[-1]:
+    if idx >= len(CARD_EMOJI) or card is CARDS[-1] or getattr(card, "no_emoji", False):
         return
     p = (t - card.start - 0.25) / 0.35
     if p <= 0:
@@ -1501,16 +1630,16 @@ def render_frame(fi):
     # stage: props + figures, gentle camera push
     layer = Image.new("RGBA", (W, STAGE_H), (0, 0, 0, 0))
     out = clamp01((t - (card.end - 0.12)) / 0.12) if card is not CARDS[-1] else 0
+    back = Image.new("RGBA", (W, STAGE_H), (0, 0, 0, 0))
     for p in sorted(card.props, key=lambda p: p.z):
-        p.draw(layer, t, out)
-    if card.figs:
+        p.draw(back if p.z < 0 else layer, t, out)
+    if card.figs or any(p.z < 0 for p in card.props):
         fl = Image.new("RGBA", (W * SS, STAGE_H * SS), (0, 0, 0, 0))
         fd = ImageDraw.Draw(fl)
         for f in card.figs:
             f.draw(fd, t, SS, dy=-STAGE_Y)
         fl = fl.resize((W, STAGE_H), Image.BILINEAR)
-        # props drawn after figures should be on top (stamps); keep simple: figures under stamps
-        base = Image.new("RGBA", (W, STAGE_H), (0, 0, 0, 0))
+        base = back
         base.alpha_composite(fl)
         base.alpha_composite(layer)
         layer = base
@@ -1620,6 +1749,32 @@ def beat_bed(dur, bpm=96):
     return out * fade
 
 
+def sfx_bell():
+    n = int(1.2 * SR)
+    t = np.arange(n) / SR
+    one = sum(np.sin(2 * np.pi * f * t) * g for f, g in ((1180, 1.0), (2950, 0.5), (4100, 0.25))) * _env(n, 0.001, 0.35)
+    out = np.zeros(n + int(0.28 * SR))
+    out[:n] += one * 0.35
+    out[int(0.28 * SR):int(0.28 * SR) + n] += one * 0.35
+    return out
+
+
+def sfx_punch(rng):
+    n = int(0.22 * SR)
+    t = np.arange(n) / SR
+    body = np.sin(2 * np.pi * (90 + 120 * np.exp(-t * 40)) * t) * _env(n, 0.001, 0.06)
+    slap = rng.standard_normal(n) * _env(n, 0.0005, 0.02)
+    return (body * 1.1 + slap * 0.7)
+
+
+def sfx_crowd(rng, dur):
+    n = int(dur * SR)
+    x = np.convolve(rng.standard_normal(n), np.ones(30) / 30, mode="same")
+    am = 1 + 0.35 * np.sin(np.arange(n) / SR * 2 * np.pi * 3.3)
+    env = np.minimum(1, np.minimum(np.arange(n) / SR / 0.4, (n - np.arange(n)) / SR / 0.6))
+    return x * am * env * 1.6
+
+
 def make_sfx(path):
     rng = np.random.default_rng(11)
     n = int(TOTAL * SR) + SR
@@ -1641,6 +1796,13 @@ def make_sfx(path):
                 put(sfx_thud(rng), pr.t + 0.12)
             elif pr.enter == "pop":
                 put(sfx_pop(), pr.t + 0.1)
+    for kind, tx in EXTRA_SFX:
+        if kind == "bell":
+            put(sfx_bell(), tx)
+        elif kind == "punch":
+            put(sfx_punch(rng) * 0.9, tx)
+        elif kind == "crowd":
+            put(sfx_crowd(rng, s1("streit") - tx), tx)
     bed = beat_bed(TOTAL)
     mix = np.zeros(n)
     mix[: len(out)] += out * 0.32
