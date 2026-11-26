@@ -389,7 +389,7 @@ class Scene:
         elif target == "doener":
             cx, cy = DOENER_POS[0] - 20, DOENER_POS[1] - 60
         elif target == "richard_horst":
-            cx, cy = 1300, 960 + 0.16 * ch
+            cx, cy = 1360, 960 + 0.16 * ch
         else:
             hx, hy = HEADS[target]
             cx, cy = hx, hy + (0.0 if e.get("law") else 0.17) * ch
@@ -507,12 +507,15 @@ class Scene:
         if e["id"] in ("23",):
             big_text(img, [("TEAM DENNIS", (120, 200, 255)), ("oder", (255, 255, 255)), ("TEAM SABINE?", (255, 140, 200))],
                      1150, tr, 80, -2)
-            if tr > e["dur"] - 1.8:
-                fsm = font(F_INTER_B, 34)
-                d.text((W / 2, 1720), "Nächste Folge: DIE MÜLLTONNE", font=fsm, fill=(255, 230, 60),
-                       stroke_width=5, stroke_fill=(15, 12, 20), anchor="mm")
+            if tr > 0.6:
+                fsm = font(F_UNB, 44)
+                d.rounded_rectangle([150, 1655, 930, 1745], radius=40, fill=(210, 30, 50), outline=(15, 12, 20), width=6)
+                d.text((W / 2, 1700), "FOLGT UNS FÜR NEUE FÄLLE!", font=fsm, fill=(255, 255, 255), anchor="mm")
         if e["id"] == "p4":
-            big_text(img, [("…?!", (255, 255, 255))], 420, tr - 0.3, 120, 0)
+            big_text(img, [("RICHARDS DÖNER …", (255, 255, 255)), ("WEG?!", (255, 220, 40))], 420, tr - 0.2, 76, 0)
+        if e["id"] in ("p5", "22"):
+            big_text(img, [("HORST HAT IHN GEGESSEN", (255, 255, 255)), ("– MIT GABEL!", (255, 220, 40))], 1110,
+                     tr if e["id"] == "p5" else 1.0, 58, 0)
         if "text" in e and tr <= e["dur"] - (e.get("post", 0)):
             y_sub = 1500 if (e.get("law") or e["id"] == "23") else 1330
             draw_subtitle(img, e, tr, y_sub)

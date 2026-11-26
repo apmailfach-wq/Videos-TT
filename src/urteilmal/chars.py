@@ -47,7 +47,7 @@ CHARS = {
                     body=(28, 28, 34), body_w=360, hair=(206, 206, 212), brow=(70, 66, 66)),
     "klaus": dict(skin=(226, 168, 124), head=(126, 160), jaw=0.97, eye_dx=50, eye_dy=-10,
                   body=(34, 44, 86), body_w=370, hair=(112, 66, 36), brow=(70, 40, 24)),
-    "horst": dict(skin=(238, 184, 152), head=(150, 156), jaw=1.02, eye_dx=50, eye_dy=-22,
+    "horst": dict(skin=(238, 184, 152), head=(130, 160), jaw=0.97, eye_dx=46, eye_dy=-22,
                   body=(134, 180, 234), body_w=440, hair=(104, 66, 40), brow=(70, 44, 30)),
     "dennis": dict(skin=(240, 204, 178), head=(124, 150), jaw=0.9, eye_dx=50, eye_dy=-6,
                    body=(30, 150, 90), body_w=330, hair=(110, 72, 40)),
@@ -374,6 +374,17 @@ def prop_fork(d, x, y):
     d.line(P([(x, y), (x + 8, y - 170)]), fill=INK, width=S(2))
 
 
+def prop_fork_doener(d, x, y):
+    prop_fork(d, x, y)
+    tx, ty = x + 8, y - 215
+    d.rounded_rectangle(box(tx, ty, 46, 30), radius=S(12), fill=(178, 104, 56), outline=INK, width=S(5))   # Fleisch
+    for k in range(3):
+        d.line(P([(tx - 34 + k * 26, ty - 18), (tx - 26 + k * 26, ty + 18)]), fill=(130, 70, 36), width=S(4))
+    d.ellipse(box(tx - 30, ty - 30, 20, 12), fill=(90, 180, 70), outline=INK, width=S(3))      # Salat
+    d.ellipse(box(tx + 26, ty - 28, 16, 11), fill=(220, 60, 50), outline=INK, width=S(3))      # Tomate
+    d.ellipse(box(tx + 6, ty + 26, 22, 10), fill=(250, 248, 232), outline=INK, width=S(3))     # Soße
+
+
 def prop_receipt(d, x, y):
     d.rectangle([S(x - 45), S(y - 330), S(x + 45), S(y + 10)], fill=(252, 252, 246), outline=INK, width=S(5))
     for k in range(9):
@@ -430,8 +441,7 @@ def sprite(name, expr_name="", mouth=0, blink=False, look=(0.0, 0.0), pose="", e
     # Nase
     if name == "horst":     # große rote Knollennase
         d.ellipse(box(HX + 2, HY + 42, 27, 22), fill=(232, 160, 136), outline=INK, width=S(5))
-        for sx in (-1, 1):
-            d.arc(box(HX + 2 + sx * 22, HY + 50, 10, 10), 0, 180, fill=INK, width=S(4))
+
     elif name == "richard":  # markante, große Nase
         d.polygon(P([(HX - 4, HY - 4), (HX - 24, HY + 54), (HX - 8, HY + 70), (HX + 24, HY + 68), (HX + 30, HY + 50), (HX + 10, HY - 4)]),
                   fill=darker(spec["skin"], 0.95), outline=INK, width=S(5))
@@ -526,7 +536,7 @@ def sprite(name, expr_name="", mouth=0, blink=False, look=(0.0, 0.0), pose="", e
         hx, hy = draw_arm(d, spec, 1, [(HX + bw / 2 - 30, top + 100), (HX + 150, top + 40), (HX + 40, HY - 40)])
     elif pose == "fork_horst":
         hx, hy = draw_arm(d, spec, 1, [(HX + bw / 2 - 30, top + 100), (HX + bw / 2 + 40, top + 200), (HX + 150, top + 120)])
-        prop_fork(d, hx, hy - 20)
+        prop_fork_doener(d, hx, hy - 20)
         d.ellipse(box(hx, hy, 34, 34), fill=spec["skin"], outline=INK, width=S(6))
 
     return img.resize((SW, SH), Image.LANCZOS)
