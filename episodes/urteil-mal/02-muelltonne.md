@@ -1,4 +1,4 @@
-# URTEIL MAL! – Folge 01: Die Mülltonne
+# URTEIL MAL! – Folge 02: Die Mülltonne
 
 Figuren & Stimmen: siehe `00-serienbibel.md`
 

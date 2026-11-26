@@ -16,6 +16,19 @@ Diese Beschreibung **wortgleich** vor jeden Bildprompt kopieren. Am besten einma
 | **Anwalt Klaus** | ca. 45, zurückgegelte schwarze Haare, perfekt getrimmter Dreitagebart, zu weißes Lächeln, schmaler bordeauxroter Anzug, goldene Krawattennadel, Einstecktuch | Verteidigt jeden Unsinn mit voller Überzeugung, macht alles schlimmer | **Synchro Sam – Exaggerated Emotional Dub** · `JTpoNHy6INFLV7b5DDwt` (übertrieben, theatralisch, Synchron-Pathos) |
 | **Gerichtsdiener Horst** | ca. 55, klein und rundlich, Glatze mit Haarkranz, roter Walross-Schnurrbart, hellblaues Uniformhemd mit zu kurzer dunkelblauer Krawatte, Hosenträger, Schlüsselbund am Gürtel | Tollpatschig, langsam, mischt sich ein, versteht alles falsch – visuelle Gags | **Horstd – schmierig & aufdringlich** · `YgfD7xnpDbkAqDwKKlOz` (Comedy-Onkel, Stammtisch-Energie) |
 
+### Richter Richard – Regeln für seine Figur
+
+Ziel: Die Zuschauer sollen schon lachen, wenn sie nur sein Gesicht sehen.
+
+- **Wenig Worte:** maximal ca. 10 Wörter pro Satz (Ausnahme: die Rechts-Erklärung). Oft nur ein Wort: „Horst.“
+- **Keine Fragezeichen:** Er fragt nicht, er stellt fest. „Wegen eines Döners.“
+- **Pausen:** Vor jeder Antwort eine Sekunde Stille. Die Pause ist der Witz.
+- **Schreit höchstens einmal pro Folge**, und dann nur ganz kurz.
+- **Feste Mimik-Stufen** (immer dieselben Bilder wiederverwenden): 1 reglos → 2 eine Augenbraue hoch → 3 Brille ab, Augen reiben → 4 Auge zuckt (Freeze-Frame am Ende).
+- **Requisiten:** Kaffeetasse, Holzhammer, sein eigener Feierabend-Snack (kann als Running Gag immer wieder verschwinden).
+- **Catchphrase** genau einmal pro Folge, immer bei Mimik-Stufe 3.
+- **Stimme:** Hans mit Tags `[tonlos]`, `[sehr trocken]`, `[lange Pause]`, `[seufzt tief]`.
+
 **Ersatzstimmen, falls eine nicht gefällt:**
 Richard → *Willy Lübke – Rough & Bold* `U2swAVvmpE98PJAkPUMP` (für mehr Ausraster) · Klaus → *Victor Voss – Sinister Villain* `BxoyaO1xuQUNkP2tJIrR` (kühler, schmieriger) · Horst → *Kermin – Quirky & Silly* `ucRSf046SQyHREQLH4JR` (nervöses Stottern, Panik).
 
