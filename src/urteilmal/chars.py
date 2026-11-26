@@ -574,9 +574,6 @@ def sprite(name, expr_name="", mouth=0, blink=False, look=(0.0, 0.0), pose="", e
         for k, c in enumerate([(160, 90, 50), (80, 170, 70), (220, 60, 50), (250, 246, 230)]):
             d.ellipse(box(dx_ - 30 + k * 20, dy_ - 46 + (k % 2) * 6, 12, 9), fill=c)
         d.ellipse(box(dx_ - 40, dy_ - 52, 16, 14), fill=(200, 170, 130))   # Bissspur
-        d.polygon(P([(dx_ + 20, dy_ - 8), (dx_ + 70, dy_ - 4), (dx_ + 66, dy_ + 40), (dx_ + 16, dy_ + 36)]),
-                  fill=(255, 232, 80), outline=INK, width=S(3))   # Post-it klebt noch dran
-        d.text((S(dx_ + 43), S(dy_ + 16)), "R.", font=font(F_HAND, S(30)), fill=(30, 30, 120), anchor="mm")
         d.ellipse(box(hx, hy, 34, 34), fill=spec["skin"], outline=INK, width=S(6))
     elif pose == "fork_horst":
         hx, hy = draw_arm(d, spec, 1, [(HX + bw / 2 - 30, top + 100), (HX + bw / 2 + 40, top + 200), (HX + 150, top + 120)])

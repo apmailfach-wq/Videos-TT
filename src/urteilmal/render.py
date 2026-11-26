@@ -181,14 +181,6 @@ def props_layer(doener_state, gavel_up, sparkle):
             d.ellipse(box(dx - 40 + k * 26, dy - 56 + (k % 2) * 8, 16, 12), fill=c)
     else:
         chars.prop_foil(d, dx, dy - 4, 1.0)
-    # Post-it
-    px, py = dx + 80, dy - 60
-    if doener_state == "held":
-        return img.resize((w, h), Image.LANCZOS), (x0, y0)
-    d.polygon(P([(px - 50, py - 50), (px + 54, py - 44), (px + 50, py + 56), (px - 54, py + 50)]),
-              fill=(255, 232, 80), outline=INK, width=S(4))
-    d.text((S(px), S(py - 14)), "FINGER", font=font(F_HAND, S(30)), fill=(30, 30, 120), anchor="mm")
-    d.text((S(px), S(py + 18)), "WEG! – R.", font=font(F_HAND, S(28)), fill=(30, 30, 120), anchor="mm")
     if sparkle:
         for (sx, sy, r) in [(dx - 110, dy - 90, 26), (dx + 10, dy - 130, 34), (dx + 140, dy - 110, 22), (dx - 60, dy - 150, 18)]:
             d.polygon(P([(sx, sy - r), (sx + r * 0.25, sy - r * 0.25), (sx + r, sy), (sx + r * 0.25, sy + r * 0.25),
