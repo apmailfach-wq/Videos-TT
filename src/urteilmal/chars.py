@@ -574,8 +574,29 @@ def sprite(name, expr_name="", mouth=0, blink=False, look=(0.0, 0.0), pose="", e
         bread = (222, 170, 100)
         # Döner im Fladenbrot: breite Brottasche, Füllung oben, Folie unten
         d.chord(box(dx_, dy_ - 14 * g, 70 * g, 48 * g), 170, 370, fill=bread, outline=INK, width=S(6))       # Brotrücken
-        for k, c in enumerate([(80, 170, 70), (160, 90, 50), (220, 60, 50), (170, 96, 52), (90, 180, 80), (250, 246, 230)]):
-            d.ellipse(box(dx_ - 52 * g + k * 21 * g, dy_ - 22 * g - (k % 2) * 7 * g, 14 * g, 10 * g), fill=c, outline=INK, width=S(2))
+        # Fleisch
+        for k in range(5):
+            d.rounded_rectangle(box(dx_ - 44 * g + k * 22 * g, dy_ - 30 * g - (k % 2) * 4 * g, 14 * g, 7 * g),
+                                radius=S(4), fill=(170, 96, 52), outline=INK, width=S(2))
+        # Salatblätter: gewellte, hellgrüne Blätter mit Blattader
+        for k in range(6):
+            lx = dx_ - 56 * g + k * 22 * g
+            ly = dy_ - 40 * g - (k % 2) * 6 * g
+            pts = [(lx - 14 * g, ly + 8 * g)]
+            for j in range(7):
+                ang = math.pi + j * math.pi / 6
+                rr = (13 if j % 2 else 16) * g
+                pts.append((lx + rr * math.cos(ang), ly + rr * 0.8 * math.sin(ang)))
+            pts.append((lx + 14 * g, ly + 8 * g))
+            d.polygon(P(pts), fill=(110, 200, 80) if k % 2 else (140, 214, 96), outline=(40, 110, 40), width=S(3))
+            d.line(P([(lx, ly + 6 * g), (lx + 2 * g, ly - 8 * g)]), fill=(200, 240, 170), width=S(3))
+        # Tomatenscheiben und Zwiebelringe
+        for k in range(3):
+            tx_ = dx_ - 36 * g + k * 34 * g
+            d.chord(box(tx_, dy_ - 30 * g, 11 * g, 9 * g), 180, 360, fill=(226, 60, 50), outline=INK, width=S(2))
+            d.ellipse(box(tx_ - 3 * g, dy_ - 34 * g, 2.5 * g, 2 * g), fill=(255, 220, 120))
+        for k in range(2):
+            d.arc(box(dx_ - 18 * g + k * 40 * g, dy_ - 34 * g, 9 * g, 6 * g), 180, 360, fill=(235, 210, 235), width=S(4))
         d.chord(box(dx_, dy_ - 30 * g, 72 * g, 60 * g), 0, 180, fill=bread, outline=INK, width=S(6))           # Brot vorn
         d.polygon(P([(dx_ - 74 * g, dy_ - 4 * g), (dx_ + 74 * g, dy_ - 4 * g), (dx_ + 58 * g, dy_ + 30 * g), (dx_ - 58 * g, dy_ + 30 * g)]),
                   fill=(205, 210, 218), outline=INK, width=S(6))                                                  # Folie
