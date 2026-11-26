@@ -579,8 +579,8 @@ def sprite(name, expr_name="", mouth=0, blink=False, look=(0.0, 0.0), pose="", e
         px_, py_ = dx_ + 74, dy_ - 44   # Post-it "FINGER WEG – R."
         d.polygon(P([(px_ - 48, py_ - 42), (px_ + 52, py_ - 38), (px_ + 48, py_ + 44), (px_ - 52, py_ + 40)]),
                   fill=(255, 232, 80), outline=INK, width=S(4))
-        d.text((S(px_), S(py_ - 14)), "FINGER", font=font(F_HAND, S(30)), fill=(30, 30, 120), anchor="mm")
-        d.text((S(px_), S(py_ + 16)), "WEG! – R.", font=font(F_HAND, S(28)), fill=(30, 30, 120), anchor="mm")
+        d.text((S(px_), S(py_ - 14)), "Finger weg", font=font(F_HAND, S(28)), fill=(30, 30, 120), anchor="mm")
+        d.text((S(px_), S(py_ + 18)), "R.", font=font(F_HAND, S(32)), fill=(30, 30, 120), anchor="mm")
         d.ellipse(box(hx, hy, 34, 34), fill=spec["skin"], outline=INK, width=S(6))
     elif pose == "fork_horst":
         hx, hy = draw_arm(d, spec, 1, [(HX + bw / 2 - 30, top + 100), (HX + bw / 2 + 40, top + 200), (HX + 150, top + 120)])
