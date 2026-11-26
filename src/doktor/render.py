@@ -127,7 +127,9 @@ T_FLAT = T_PEND + 0.22           # flatline
 T_STAMP = T_FLAT + 0.35
 T_CTA = T_FLAT + 1.75
 T_END = T_CTA + 3.0
-NFRAMES = int(T_END * FPS)
+HOOK = 2.0          # flash-forward cold open before the story
+HOOK_REW = 1.42     # rewind starts
+NFRAMES = int((T_END + HOOK) * FPS)
 
 
 def bpm_at(tt):
@@ -748,9 +750,9 @@ def draw_cta(img, d, tt):
 
 
 # ---------------------------------------------------------------- frame
-def render_frame(fi):
-    tt = fi / FPS
+def story_frame(tt, overlays=True, zoom_mul=1.0):
     cx, cy, z, shake = cam_at(tt)
+    z *= zoom_mul
     sx = math.sin(tt * 91) * shake
     sy = math.cos(tt * 77) * shake
     c = Cam(cx, cy, z, sx, sy)
@@ -772,6 +774,8 @@ def render_frame(fi):
         arr = np.asarray(img).astype(np.float32)
         arr[..., :3] *= (1 - VIG * dark)[..., None]
         img = Image.fromarray(arr.clip(0, 255).astype(np.uint8), "RGBA")
+    if not overlays:
+        return img
     # overlays at SS for crisp text
     ov = Image.new("RGBA", (W * SS, H * SS), (0, 0, 0, 0))
     od = ImageDraw.Draw(ov, "RGBA")
@@ -784,6 +788,74 @@ def render_frame(fi):
         od.rectangle([0, 0, W * SS, H * SS], fill=(255, 255, 255, int(160 * (1 - (tt - T_FLAT) / 0.12))))
     ov = ov.resize((W, H), Image.LANCZOS)
     img.alpha_composite(ov)
+    return img
+
+
+def fit_font(path, txt, size, maxw):
+    while font(path, size * SS).getlength(txt) > maxw * SS and size > 20:
+        size -= 2
+    return size
+
+
+def hook_frame(tt):
+    """Cold open: the aftermath of the punchline, then a VHS rewind into the story."""
+    if tt < HOOK_REW:
+        ts = T_FLAT + 0.12 + tt * 0.55
+        zm = 1.0 + 0.18 * (1 - ease_out(tt / 0.25))
+        img = story_frame(ts, overlays=False, zoom_mul=zm)
+        ov = Image.new("RGBA", (W * SS, H * SS), (0, 0, 0, 0))
+        od = ImageDraw.Draw(ov, "RGBA")
+        if tt < 0.1:
+            od.rectangle([0, 0, W * SS, H * SS], fill=(255, 40, 40, int(150 * (1 - tt / 0.1))))
+        band = ease_out(tt / 0.15)
+        od.rectangle([0, 170 * SS, W * SS, 760 * SS], fill=(10, 10, 16, int(175 * band)))
+        y = 250
+        for key, col, size, t0 in (("hook1", (255, 255, 255), 96, 0.0), ("hook2", YEL, 112, 0.45)):
+            fb = font(F_HEAD, size * SS)
+            lines = wrap(TXT[key], fb, 980 * SS, od)
+            lh = size * 1.18
+            if tt >= t0:
+                p = ease_back((tt - t0) / 0.28, 2.2)
+                f = font(F_HEAD, size * SS * (0.5 + 0.5 * p))
+                jit = math.sin(tt * 45) * 6 * max(0, 1 - (tt - t0) / 0.35)
+                for i, l in enumerate(lines):
+                    text_c(od, ((540 + jit) * SS, (y + i * lh) * SS), l, f, col, 12 * SS)
+            y += len(lines) * lh + 25
+        # "watch till the end" style timer bar at the bottom
+        ov = ov.resize((W, H), Image.LANCZOS)
+        img.alpha_composite(ov)
+        return img
+    # rewind: story time runs backwards fast, with VHS glitch
+    p = clamp01((tt - HOOK_REW) / (HOOK - HOOK_REW))
+    ts = lerp(T_FLAT + 0.9, 0.0, ease_io(p))
+    img = story_frame(ts, overlays=False)
+    arr = np.asarray(img.convert("RGB")).astype(np.int16)
+    out = arr.copy()
+    out[..., 0] = np.roll(arr[..., 0], 14, axis=1)
+    out[..., 2] = np.roll(arr[..., 2], -14, axis=1)
+    rng = np.random.default_rng(int(tt * 1000))
+    for _ in range(6):
+        y0 = int(rng.integers(0, H - 60)); hh = int(rng.integers(8, 50))
+        out[y0:y0 + hh] = np.roll(out[y0:y0 + hh], int(rng.integers(-80, 80)), axis=1)
+    out[::4] = (out[::4] * 0.7).astype(np.int16)
+    img = Image.fromarray(out.clip(0, 255).astype(np.uint8), "RGB").convert("RGBA")
+    ov = Image.new("RGBA", (W * SS, H * SS), (0, 0, 0, 0))
+    od = ImageDraw.Draw(ov, "RGBA")
+    cx, cy = 540 * SS, 860 * SS
+    for k in (0, 1):     # rewind symbol
+        x = cx - 10 * SS + (k - 1) * 90 * SS + 60 * SS
+        od.polygon([(x + 80 * SS, cy - 70 * SS), (x + 80 * SS, cy + 70 * SS), (x - 20 * SS, cy)],
+                   fill=(255, 255, 255, 235), outline=INK, width=6 * SS)
+    sz = fit_font(F_HEAD, TXT["rewind"], 64, 960)
+    text_c(od, (540 * SS, 1020 * SS), TXT["rewind"], font(F_HEAD, sz * SS), (255, 255, 255), 10 * SS)
+    ov = ov.resize((W, H), Image.LANCZOS)
+    img.alpha_composite(ov)
+    return img
+
+
+def render_frame(fi):
+    tt = fi / FPS
+    img = hook_frame(tt) if tt < HOOK else story_frame(tt - HOOK)
     return img.convert("RGB").tobytes()
 
 
@@ -851,6 +923,23 @@ def build_audio():
     add(ding, T_CTA + 0.73, 0.12)
     add(ding, T_CTA + 0.91, 0.12)
     out = out[: int(T_END * SR)]
+    # cold-open audio: bass hit + flatline, then tape rewind
+    th = np.arange(int(HOOK * SR)) / SR
+    hook = np.zeros(len(th), np.float32)
+    boom = np.sin(2 * np.pi * (45 + 90 * np.exp(-th * 14)) * th) * np.exp(-th * 3.5)
+    hook += 0.9 * boom
+    fl = (th < HOOK_REW) * np.sin(2 * np.pi * 1046 * th) * np.minimum(1, th / 0.005)
+    fl *= np.minimum(1, np.maximum(0, (HOOK_REW - th) / 0.08))
+    hook += 0.17 * fl
+    m = th >= HOOK_REW
+    tr = th[m] - HOOK_REW
+    dur = HOOK - HOOK_REW
+    freq = 180 + 2600 * (tr / dur) ** 1.5
+    ph = 2 * np.cumsum(np.pi * freq / SR)
+    rw = np.sign(np.sin(ph)) * 0.25 + np.random.default_rng(9).normal(0, 0.25, len(tr))
+    rw *= (0.6 + 0.4 * np.sin(2 * np.pi * 38 * tr)) * np.minimum(1, tr / 0.03) * np.minimum(1, (dur - tr) / 0.05)
+    hook[m] += 0.35 * np.convolve(rw, np.ones(4) / 4, mode="same")
+    out = np.concatenate([hook.astype(np.float32), out])
     out /= max(1.0, np.max(np.abs(out)) / 0.95)
     p = BUILD / "mix.wav"
     with wave.open(str(p), "wb") as w:
@@ -870,7 +959,7 @@ def main():
             Image.frombytes("RGB", (W, H), render_frame(fi)).save(sd / f"t{float(s):05.2f}.png")
         print("stills ->", sd)
         return
-    print(f"duration {T_END:.2f}s, punch {T_PUNCH:.2f}s, flat {T_FLAT:.2f}s, frames {NFRAMES}")
+    print(f"duration {T_END + HOOK:.2f}s, punch {T_PUNCH:.2f}s, flat {T_FLAT:.2f}s, frames {NFRAMES}")
     wav = build_audio()
     ff = subprocess.Popen(["ffmpeg", "-y", "-v", "error", "-f", "rawvideo", "-pix_fmt", "rgb24",
                            "-s", f"{W}x{H}", "-r", str(FPS), "-i", "-", "-i", str(wav),

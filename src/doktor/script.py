@@ -21,6 +21,7 @@ if LANG == "de":
         "card": "PATIENTENAKTE", "labels": ["Raucht?", "Trinkt?", "Frauen?"],
         "no": "NEIN", "final": "SINNLOS", "chip_pat": "PATIENT", "chip_doc": "ÄRZTIN",
         "stage": "*nimmt die Brille ab*",
+        "hook1": "1 SATZ VON DER ÄRZTIN…", "hook2": "…UND ER WAR ERLEDIGT", "rewind": "15 SEKUNDEN VORHER",
         "cta1": "MARKIER EINEN FREUND,", "cta2": "der so antworten würde", "cta3": "schreib's in die Kommentare",
     }
 else:
@@ -43,6 +44,7 @@ else:
         "card": "МЕДКАРТА", "labels": ["Курит?", "Пьёт?", "Женщины?"],
         "no": "НЕТ", "final": "СМЫСЛА НЕТ", "chip_pat": "ПАЦИЕНТ", "chip_doc": "ВРАЧ",
         "stage": "*снимает очки*",
+        "hook1": "ОДНА ФРАЗА ВРАЧА…", "hook2": "…И ЕМУ КОНЕЦ", "rewind": "15 СЕКУНД НАЗАД",
         "cta1": "ОТМЕТЬ ДРУГА,", "cta2": "который ответил бы", "cta3": "пиши в комменты",
     }
 

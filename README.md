@@ -80,7 +80,10 @@ python3 render.py preview 5 30 # Standbilder
 
 ## doktor-video.mp4 (Witz-Sketch, Russisch)
 
-„Доктор, сколько мне осталось жить?“ – ca. 17 s, Cartoon-Sketch in der Arztpraxis.
+„Доктор, сколько мне осталось жить?“ – ca. 19 s, Cartoon-Sketch in der Arztpraxis.
+**Hook (0–2 s):** Flash-Forward auf den Schockmoment (Flatline, grüner Patient, Haare fliegen) + Riesentext
+„ОДНА ФРАЗА ВРАЧА… …И ЕМУ КОНЕЦ“ / „1 SATZ VON DER ÄRZTIN… …UND ER WAR ERLEDIGT“, Bass-Hit, dann VHS-Rückspulen
+(„15 SEKUNDEN VORHER“) in die Geschichte.
 Patient (edge-tts `ru-RU-DmitryNeural`) & Ärztin (`ru-RU-SvetlanaNeural`), Lip-Sync über die Lautstärke,
 Medkarte füllt sich mit „НЕТ“-Stempeln, Herzmonitor wird schneller, Ärztin nimmt die Brille ab
 (dramatischer Sting, Kamerafahrt), Pointe → Flatline, die drei Haare fliegen weg, Stempel „СМЫСЛА НЕТ“,
