@@ -567,20 +567,21 @@ def sprite(name, expr_name="", mouth=0, blink=False, look=(0.0, 0.0), pose="", e
         d.ellipse(box(hx, hy, 34, 34), fill=spec["skin"], outline=INK, width=S(6))
     elif pose == "facepalm":
         hx, hy = draw_arm(d, spec, 1, [(HX + bw / 2 - 30, top + 100), (HX + 150, top + 40), (HX + 40, HY - 40)])
-    elif pose == "eat":   # beißt in seinen eigenen Döner
-        hx, hy = draw_arm(d, spec, 1, [(HX + bw / 2 - 30, top + 100), (HX + bw / 2 + 30, top + 60), (HX + 80, HY + 150)])
-        dx_, dy_ = hx - 10, hy - 56
-        d.polygon(P([(dx_ - 50, dy_ - 34), (dx_ + 50, dy_ - 34), (dx_ + 16, dy_ + 52), (dx_ - 16, dy_ + 52)]),
-                  fill=(205, 210, 218), outline=INK, width=S(5))
-        d.chord(box(dx_, dy_ - 34, 52, 30), 180, 360, fill=(230, 180, 110), outline=INK, width=S(5))
+    elif pose == "eat":   # beißt in seinen eigenen (großen) Döner, Zettel klebt auf der Folie
+        hx, hy = draw_arm(d, spec, 1, [(HX + bw / 2 - 30, top + 100), (HX + bw / 2 + 50, top + 80), (HX + 120, HY + 210)])
+        g = 1.7
+        dx_, dy_ = hx - 6, hy - 62 * g
+        d.polygon(P([(dx_ - 50 * g, dy_ - 34 * g), (dx_ + 50 * g, dy_ - 34 * g), (dx_ + 16 * g, dy_ + 52 * g), (dx_ - 16 * g, dy_ + 52 * g)]),
+                  fill=(205, 210, 218), outline=INK, width=S(6))
+        d.chord(box(dx_, dy_ - 34 * g, 52 * g, 30 * g), 180, 360, fill=(230, 180, 110), outline=INK, width=S(6))
         for k, c in enumerate([(160, 90, 50), (80, 170, 70), (220, 60, 50), (250, 246, 230)]):
-            d.ellipse(box(dx_ - 30 + k * 20, dy_ - 46 + (k % 2) * 6, 12, 9), fill=c)
-        d.ellipse(box(dx_ - 40, dy_ - 52, 16, 14), fill=(200, 170, 130))   # Bissspur
-        px_, py_ = dx_ + 74, dy_ - 44   # Post-it "FINGER WEG – R."
-        d.polygon(P([(px_ - 48, py_ - 42), (px_ + 52, py_ - 38), (px_ + 48, py_ + 44), (px_ - 52, py_ + 40)]),
+            d.ellipse(box(dx_ - 30 * g + k * 20 * g, dy_ - 46 * g + (k % 2) * 6 * g, 12 * g, 9 * g), fill=c)
+        d.ellipse(box(dx_ - 40 * g, dy_ - 52 * g, 16 * g, 14 * g), fill=(200, 170, 130))   # Bissspur
+        px_, py_ = dx_, dy_ + 4 * g   # Zettel mitten auf der Folie
+        d.polygon(P([(px_ - 36 * g, py_ - 22 * g), (px_ + 38 * g, py_ - 20 * g), (px_ + 34 * g, py_ + 24 * g), (px_ - 38 * g, py_ + 22 * g)]),
                   fill=(255, 232, 80), outline=INK, width=S(4))
-        d.text((S(px_), S(py_ - 14)), "Finger weg", font=font(F_HAND, S(28)), fill=(30, 30, 120), anchor="mm")
-        d.text((S(px_), S(py_ + 18)), "R.", font=font(F_HAND, S(32)), fill=(30, 30, 120), anchor="mm")
+        d.text((S(px_), S(py_ - 8 * g)), "Finger weg", font=font(F_HAND, S(15 * g)), fill=(30, 30, 120), anchor="mm")
+        d.text((S(px_), S(py_ + 10 * g)), "R.", font=font(F_HAND, S(17 * g)), fill=(30, 30, 120), anchor="mm")
         d.ellipse(box(hx, hy, 34, 34), fill=spec["skin"], outline=INK, width=S(6))
     elif pose == "fork_horst":
         hx, hy = draw_arm(d, spec, 1, [(HX + bw / 2 - 30, top + 100), (HX + bw / 2 + 40, top + 200), (HX + 150, top + 120)])
