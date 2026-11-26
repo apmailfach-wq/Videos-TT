@@ -542,8 +542,10 @@ def sprite(name, expr_name="", mouth=0, blink=False, look=(0.0, 0.0), pose="", e
             d.arc(box(hx - 16 + k * 16, hy - 26, 10, 12), 180, 360, fill=INK, width=S(4))
         tx, ty = hx + 66, hy + 86   # Schild "BEWEISSTÜCK A" hängt an der Hand
         d.line(P([(hx + 6, hy + 20), (tx, ty - 28)]), fill=INK, width=S(3))
-        d.rounded_rectangle(box(tx, ty, 92, 28), radius=S(6), fill=(255, 226, 60), outline=INK, width=S(4))
-        d.text((S(tx), S(ty)), "BEWEISSTÜCK A", font=font(F_BLACK, S(22)), fill=INK, anchor="mm")
+        ty += 18
+        d.rounded_rectangle(box(tx, ty, 100, 46), radius=S(8), fill=(255, 226, 60), outline=INK, width=S(4))
+        d.text((S(tx), S(ty - 18)), "BEWEISSTÜCK A:", font=font(F_BLACK, S(20)), fill=INK, anchor="mm")
+        d.text((S(tx), S(ty + 16)), "LEERE DÖNERFOLIE", font=font(F_BLACK, S(17)), fill=(200, 30, 40), anchor="mm")
     elif pose == "finger":
         hx, hy = draw_arm(d, spec, 1, [(HX + bw / 2 - 30, top + 90), (HX + bw / 2 + 60, top - 20), (HX + bw / 2 + 60, HY - 90)])
         for k, (dx, ln) in enumerate([(-26, 44), (-9, 56), (9, 58), (26, 46)]):   # offene Hand
@@ -574,6 +576,11 @@ def sprite(name, expr_name="", mouth=0, blink=False, look=(0.0, 0.0), pose="", e
         for k, c in enumerate([(160, 90, 50), (80, 170, 70), (220, 60, 50), (250, 246, 230)]):
             d.ellipse(box(dx_ - 30 + k * 20, dy_ - 46 + (k % 2) * 6, 12, 9), fill=c)
         d.ellipse(box(dx_ - 40, dy_ - 52, 16, 14), fill=(200, 170, 130))   # Bissspur
+        px_, py_ = dx_ + 74, dy_ - 44   # Post-it "FINGER WEG – R."
+        d.polygon(P([(px_ - 48, py_ - 42), (px_ + 52, py_ - 38), (px_ + 48, py_ + 44), (px_ - 52, py_ + 40)]),
+                  fill=(255, 232, 80), outline=INK, width=S(4))
+        d.text((S(px_), S(py_ - 14)), "FINGER", font=font(F_HAND, S(30)), fill=(30, 30, 120), anchor="mm")
+        d.text((S(px_), S(py_ + 16)), "WEG! – R.", font=font(F_HAND, S(28)), fill=(30, 30, 120), anchor="mm")
         d.ellipse(box(hx, hy, 34, 34), fill=spec["skin"], outline=INK, width=S(6))
     elif pose == "fork_horst":
         hx, hy = draw_arm(d, spec, 1, [(HX + bw / 2 - 30, top + 100), (HX + bw / 2 + 40, top + 200), (HX + 150, top + 120)])
