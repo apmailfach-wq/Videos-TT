@@ -514,7 +514,7 @@ class Scene:
         if e["id"] == "p4":
             big_text(img, [("RICHARDS DÖNER …", (255, 255, 255)), ("WEG?!", (255, 220, 40))], 420, tr - 0.2, 76, 0)
         if e["id"] in ("p5", "22"):
-            big_text(img, [("HORST HAT IHN GEGESSEN", (255, 255, 255)), ("– MIT PUTZHANDSCHUHEN!", (255, 220, 40))], 1110,
+            big_text(img, [("HORST HAT RICHARDS", (255, 255, 255)), ("DÖNER GEGESSEN!", (255, 220, 40))], 1110,
                      tr if e["id"] == "p5" else 1.0, 58, 0)
         if "text" in e and tr <= e["dur"] - (e.get("post", 0)):
             y_sub = 1500 if (e.get("law") or e["id"] == "23") else 1330

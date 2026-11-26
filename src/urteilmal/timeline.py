@@ -70,13 +70,14 @@ EVENTS = [
          cam=("wide", 2160, 2100), fx=["gavel"], hide={"horst"}),
     dict(id="p4", pause=1.0, cam=("doener", 760, 640), music=False, fx=["sting"], doener="empty", hide={"horst"}),
     dict(id="p5", pause=0.8, cam=("richard_horst", 1250, 1150), music=False, doener="empty",
-         expr={"richard": "shock"}, horst_final=True, look={"richard": (1, 0)}),
-    dict(id="22", who="horst", text="Da stand nur „Finger weg“.", cam=("richard_horst", 1150, 1050),
-         doener="empty", horst_final=True, expr={"richard": "twitch", "horst": "innocent"},
-         look={"richard": (1, 0)}),
+         expr={"richard": "shock", "horst": "guilty"}, horst_final=True,
+         look={"richard": (1, 0), "horst": (-0.6, 0.8)}, extra={"horst": "sweat"}),
+    dict(id="22", who="horst", text="Der hat so gut gerochen … und ich dachte, nach diesem Döner-Prozess haben Sie sowieso keine Lust mehr auf Döner.", cam=("richard_horst", 1150, 1050),
+         doener="empty", horst_final=True, expr={"richard": "twitch", "horst": "guilty"},
+         look={"richard": (1, 0), "horst": (-0.6, 0.8)}),
     dict(id="23", who="sprecher", text="Und jetzt seid ihr dran: Wer hat hier eigentlich Recht?",
          cam=("richard_horst", 1050, 900), pre=0.3, post=1.6, doener="empty", horst_final=True,
-         expr={"richard": "twitch", "horst": "innocent"}, look={"richard": (1, 0)}, freeze=True, end=True),
+         expr={"richard": "twitch", "horst": "guilty"}, look={"richard": (1, 0)}, freeze=True, end=True),
 ]
 
 # Text-Einblendungen während der Rechts-Erklärung: (Anteil der Zeile, Titel, Untertitel)

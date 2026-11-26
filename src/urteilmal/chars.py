@@ -74,6 +74,7 @@ EXPR = {
     "proud": dict(lid=0.3, brow=(8, 8), mouth="smile"),
     "longing": dict(lid=0.2, brow=(14, 4), mouth="o", pupil=1.1),
     "innocent": dict(lid=0.2, brow=(14, 8), mouth="smile"),
+    "guilty": dict(lid=0.35, brow=(20, -4), mouth="wavy", pupil=0.9),
     "puzzled": dict(lid=0.25, brow=(10, 6), mouth="flat", pupil=0.95),
 }
 
