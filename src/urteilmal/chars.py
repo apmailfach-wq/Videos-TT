@@ -152,6 +152,14 @@ def draw_body(d, spec, name, pose):
             d.polygon(P([(HX + sx * (bw / 2 - 30), top + 40), (HX + sx * (bw / 2 + 60), top + 110), (HX + sx * (bw / 2 + 30), top + 190),
                          (HX + sx * (bw / 2 - 10), top + 170)]), fill=col, outline=INK, width=S(5))
             d.line(P([(HX + sx * (bw / 2 + 58), top + 116), (HX + sx * (bw / 2 + 30), top + 184)]), fill=(255, 255, 255), width=S(8))
+        for sx in (-1, 1):   # Unterarme + Hände (rechts nur, wenn er nichts hochhält)
+            if sx == 1 and pose:
+                continue
+            arm = [(HX + sx * (bw / 2 + 44), top + 160), (HX + sx * (bw / 2 + 52), top + 290), (HX + sx * (bw / 2 + 40), top + 400)]
+            d.line(P(arm), fill=INK, width=S(42), joint="curve")
+            d.line(P(arm), fill=spec["skin"], width=S(30), joint="curve")
+            d.ellipse(box(arm[-1][0], arm[-1][1] + 10, 26, 30), fill=spec["skin"], outline=INK, width=S(5))
+            d.line(P([(arm[-1][0] - sx * 6, arm[-1][1] + 18), (arm[-1][0] - sx * 6, arm[-1][1] + 34)]), fill=INK, width=S(3))
         d.polygon(P([(HX - 60, top + 40), (HX, top + 90), (HX + 60, top + 40)]), fill=(255, 255, 255), outline=INK, width=S(5))
         d.text((S(HX + 80), S(top + 200)), "7", font=font(F_BLACK, S(110)), fill=(255, 255, 255),
                stroke_width=S(4), stroke_fill=INK, anchor="mm")
@@ -162,7 +170,14 @@ def draw_body(d, spec, name, pose):
 def draw_arm(d, spec, side, pts, hand_open=False):
     col = spec["body"] if spec is not CHARS["sabine"] else spec["body"]
     d.line(P(pts), fill=INK, width=S(64), joint="curve")
-    d.line(P(pts), fill=col, width=S(50), joint="curve")
+    if spec is CHARS["dennis"]:   # kurzer Trikotärmel, darunter nackter Arm
+        d.line(P(pts), fill=spec["skin"], width=S(50), joint="curve")
+        (x0, y0), (x1, y1) = pts[0], pts[1]
+        mid = (x0 + (x1 - x0) * 0.45, y0 + (y1 - y0) * 0.45)
+        d.line(P([pts[0], mid]), fill=INK, width=S(72))
+        d.line(P([pts[0], mid]), fill=col, width=S(58))
+    else:
+        d.line(P(pts), fill=col, width=S(50), joint="curve")
     hx, hy = pts[-1]
     d.ellipse(box(hx, hy, 34, 34), fill=spec["skin"], outline=INK, width=S(6))
     return hx, hy
