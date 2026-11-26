@@ -19,11 +19,11 @@ TEMPO_LAW = 1.5      # Rechts-Erklärung schneller
 # text = Untertitel (ohne Regie-Tags)
 EVENTS = [
     dict(id="01", who="dennis", text="Herr Richter, ich will die Scheidung! Sie hat meinen Döner gegessen!",
-         cam=("dennis", 1500, 1000), expr={"dennis": "shout"}, pose={"dennis": "foil_up"},
+         cam=("dennis", 1500, 1000), expr={"dennis": "shout"},
          fx=["lines", "whoosh"], hook=True),
     dict(id="02", who="richard", text="Wegen eines Döners.", cam=("richard", 1000, 950)),
     dict(id="03", who="dennis", text="MIT EXTRA FLEISCH!", cam=("dennis", 820, 780),
-         expr={"dennis": "shout"}, pose={"dennis": "foil_up"}, fx=["lines", "shake"]),
+         expr={"dennis": "shout"}, fx=["lines", "shake"]),
     dict(id="04", who="richard", text="… Fahren Sie fort.", cam=("richard", 1050, 900), pre=0.55,
          expr={"richard": "deadpan"}),
     dict(id="05", who="dennis", text="Versteckt im Kühlschrank! Hinter dem Rosenkohl! Da guckt NIEMAND hin!",
@@ -38,7 +38,7 @@ EVENTS = [
     dict(id="09", who="klaus", text="Hohes Gericht! Meine Mandantin hat den Döner nicht gegessen – sie hat ihn GERETTET!",
          cam=("klaus", 1100, 850), expr={"klaus": "dramatic"}, pose={"klaus": "finger"}, fx=["lines", "whoosh"]),
     dict(id="10", who="dennis", text="Sie hat die Alufolie AUSGELECKT!", cam=("dennis", 1000, 950),
-         expr={"dennis": "disgust"}, pose={"dennis": "foil_up"}),
+         expr={"dennis": "disgust"}),
     dict(id="11", who="sabine", text="Die Soße wär sonst schlecht geworden.", cam=("sabine", 1000, 950)),
     dict(id="12", who="klaus", text="Lebensmittelrettung! Andere kriegen dafür einen Preis!",
          cam=("klaus", 1050, 950), expr={"klaus": "dramatic"}, pose={"klaus": "fist"}, fx=["shake", "bang"]),
