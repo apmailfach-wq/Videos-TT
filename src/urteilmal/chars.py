@@ -138,12 +138,22 @@ def draw_body(d, spec, name, pose):
         d.rectangle([S(HX + 40), S(top + 190), S(HX + 190), S(top + 330)], outline=darker(col, 0.6), width=S(5))
         d.rounded_rectangle([S(HX + 46), S(top + 140), S(HX + 196), S(top + 186)], radius=S(6), fill=(22, 22, 26), outline=INK, width=S(3))
         d.text((S(HX + 121), S(top + 163)), "JUSTIZ", font=font(F_BLACK, S(30)), fill=(255, 255, 255), anchor="mm")
-    elif name == "dennis":    # Trikot mit Kragen und Nummer
+    elif name == "dennis":    # Fußballtrikot (kurze Ärmel, Saum) + graue Jogginghose
+        hem = top + 360
+        d.rectangle([S(HX - bw / 2 - 40), S(hem), S(HX + bw / 2 + 40), S(SH)], fill=(0, 0, 0, 0))
+        d.polygon(P([(HX - bw / 2 - 10, hem), (HX + bw / 2 + 10, hem), (HX + bw / 2 - 6, SH), (HX + 8, SH), (HX, hem + 140),
+                     (HX - 8, SH), (HX - bw / 2 + 6, SH)]), fill=(140, 140, 150), outline=INK, width=S(OUT))
+        d.rectangle([S(HX - bw / 2 - 6), S(hem - 6), S(HX + bw / 2 + 6), S(hem + 30)], fill=(120, 120, 130), outline=INK, width=S(5))
+        d.line(P([(HX - 20, hem + 30), (HX - 26, hem + 90)]), fill=(240, 240, 240), width=S(4))     # Kordel
+        d.line(P([(HX + 20, hem + 30), (HX + 26, hem + 90)]), fill=(240, 240, 240), width=S(4))
+        d.polygon(P([(HX - bw / 2 - 26, hem - 20), (HX + bw / 2 + 26, hem - 20), (HX + bw / 2 + 20, hem + 8), (HX - bw / 2 - 20, hem + 8)]),
+                  fill=darker(col, 0.85), outline=INK, width=S(5))                                         # Trikot-Saum
+        for sx in (-1, 1):   # kurze Ärmel mit weißem Rand
+            d.polygon(P([(HX + sx * (bw / 2 - 30), top + 40), (HX + sx * (bw / 2 + 60), top + 110), (HX + sx * (bw / 2 + 30), top + 190),
+                         (HX + sx * (bw / 2 - 10), top + 170)]), fill=col, outline=INK, width=S(5))
+            d.line(P([(HX + sx * (bw / 2 + 58), top + 116), (HX + sx * (bw / 2 + 30), top + 184)]), fill=(255, 255, 255), width=S(8))
         d.polygon(P([(HX - 60, top + 40), (HX, top + 90), (HX + 60, top + 40)]), fill=(255, 255, 255), outline=INK, width=S(5))
-        for k in range(3):
-            x = HX - 90 + k * 90
-            d.rectangle([S(x - 14), S(top + 110), S(x + 14), S(SH)], fill=lighter(col, 0.35))
-        d.text((S(HX + 80), S(top + 220)), "7", font=font(F_BLACK, S(110)), fill=(255, 255, 255),
+        d.text((S(HX + 80), S(top + 200)), "7", font=font(F_BLACK, S(110)), fill=(255, 255, 255),
                stroke_width=S(4), stroke_fill=INK, anchor="mm")
     elif name == "sabine":
         d.line(P([(HX, top + 60), (HX, SH)]), fill=darker(col, 0.7), width=S(5))
@@ -534,6 +544,32 @@ def sprite(name, expr_name="", mouth=0, blink=False, look=(0.0, 0.0), pose="", e
         d.ellipse(box(hx, hy, 34, 34), fill=spec["skin"], outline=INK, width=S(6))
     elif pose == "facepalm":
         hx, hy = draw_arm(d, spec, 1, [(HX + bw / 2 - 30, top + 100), (HX + 150, top + 40), (HX + 40, HY - 40)])
+    elif pose == "glove_horst":
+        pts = [(HX + bw / 2 - 30, top + 100), (HX + bw / 2 + 60, top + 150), (HX + 190, top - 10)]
+        d.line(P(pts), fill=INK, width=S(64), joint="curve")
+        d.line(P(pts), fill=spec["body"], width=S(50), joint="curve")
+        hx, hy = pts[-1]
+        g = 1.55
+        y_ = (250, 214, 40)
+        G = lambda x, y: (hx + x * g, hy + y * g)
+        d.polygon(P([G(-30, 50), G(30, 50), G(26, 14), G(-26, 14)]), fill=y_, outline=INK, width=S(5))   # Stulpe
+        dx_, dy_ = G(2, -62)
+        d.polygon(P([(dx_ - 40 * g, dy_ - 26 * g), (dx_ + 40 * g, dy_ - 26 * g), (dx_ + 12 * g, dy_ + 40 * g), (dx_ - 12 * g, dy_ + 40 * g)]),
+                  fill=(205, 210, 218), outline=INK, width=S(5))
+        d.chord(box(dx_, dy_ - 26 * g, 42 * g, 24 * g), 180, 360, fill=(230, 180, 110), outline=INK, width=S(5))
+        for k in range(3):
+            d.ellipse(box(dx_ - 24 * g + k * 24 * g, dy_ - 48 * g, 13 * g, 12 * g), fill=(200, 170, 130))   # Bissspur
+        d.ellipse(box(dx_ - 16 * g, dy_ - 34 * g, 9 * g, 6 * g), fill=(90, 180, 70))
+        d.ellipse(box(dx_ + 14 * g, dy_ - 32 * g, 9 * g, 6 * g), fill=(160, 90, 50))
+        for k in range(4):
+            fx_, fy_ = G(-30 + k * 20, -20)
+            d.ellipse(box(fx_, fy_, 12 * g, 20 * g), fill=y_, outline=INK, width=S(5))
+        cx_, cy_ = G(0, 4)
+        d.ellipse(box(cx_, cy_, 34 * g, 26 * g), fill=y_, outline=INK, width=S(6))
+        tx_, ty_ = G(-38, -4)
+        d.ellipse(box(tx_, ty_, 12 * g, 18 * g), fill=y_, outline=INK, width=S(5))     # Daumen
+        sx_, sy_ = G(10, 6)
+        d.ellipse(box(sx_, sy_, 10 * g, 7 * g), fill=(252, 250, 236))                   # Soßenfleck
     elif pose == "fork_horst":
         hx, hy = draw_arm(d, spec, 1, [(HX + bw / 2 - 30, top + 100), (HX + bw / 2 + 40, top + 200), (HX + 150, top + 120)])
         prop_fork_doener(d, hx, hy - 20)
