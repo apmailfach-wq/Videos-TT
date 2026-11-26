@@ -22,11 +22,11 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
-from script import LINES
+from script import LINES, TXT, BUILD_NAME, VIDEO_NAME
 
 ROOT = Path(__file__).resolve().parents[2]
-BUILD = ROOT / "build" / "doktor"
-OUT = ROOT / os.environ.get("VIDEO_OUT", "doktor-video.mp4")
+BUILD = ROOT / "build" / BUILD_NAME
+OUT = ROOT / os.environ.get("VIDEO_OUT", VIDEO_NAME)
 W, H, FPS, SR = 1080, 1920, 30, 44100
 SS = 2  # supersampling
 
@@ -565,7 +565,7 @@ def draw_headline(d, tt):
     if tt >= T_CTA:
         return
     f = font(F_HEAD, 50 * SS)
-    lines = ["КОГДА СПРОСИЛ ВРАЧА,", "СКОЛЬКО МНЕ ОСТАЛОСЬ…"]
+    lines = TXT["head"]
     y = 175 * SS
     for i, ln in enumerate(lines):
         tw = d.textlength(ln, font=f)
@@ -623,9 +623,9 @@ def draw_card(img, d, tt):
     d.rounded_rectangle([X(8), Y(10), X(cw + 8), Y(ch + 10)], radius=18 * SS, fill=(0, 0, 0, 60))
     d.rounded_rectangle([X(0), Y(0), X(cw), Y(ch)], radius=18 * SS, fill=(255, 253, 246), outline=INK, width=5 * SS)
     d.rounded_rectangle([X(cw / 2 - 70), Y(-22), X(cw / 2 + 70), Y(18)], radius=10 * SS, fill=(150, 156, 170), outline=INK, width=4 * SS)
-    text_c(d, (X(cw / 2), Y(62)), "МЕДКАРТА", font(F_HEAD, 36 * SS), INK)
+    text_c(d, (X(cw / 2), Y(62)), TXT["card"], font(F_HEAD, (36 if len(TXT["card"]) < 10 else 30) * SS), INK)
     d.line([X(30), Y(98), X(cw - 30), Y(98)], fill=(200, 200, 210), width=3 * SS)
-    labels = ["Курит?", "Пьёт?", "Женщины?"]
+    labels = TXT["labels"]
     for k in range(3):
         if tt < T_Q[k]:
             continue
@@ -642,11 +642,11 @@ def draw_card(img, d, tt):
         if tt >= T_NO[k]:
             sp = clamp01((tt - T_NO[k]) / 0.16)
             sc = lerp(2.0, 1.0, ease_out(sp))
-            stamp(img, "НЕТ", X(cw - 78), Y(ry), 36 * SS, (-12, 8, -6)[k], sp, sc)
+            stamp(img, TXT["no"], X(cw - 82), Y(ry), (36 if len(TXT["no"]) < 4 else 30) * SS, (-12, 8, -6)[k], sp, sc)
     if tt >= T_STAMP:
         sp = clamp01((tt - T_STAMP) / 0.14)
         sc = lerp(2.6, 1.0, ease_out(sp))
-        stamp(img, "СМЫСЛА НЕТ", X(cw / 2), Y(ch / 2 + 50), 46 * SS, 12, sp, sc)
+        stamp(img, TXT["final"], X(cw / 2), Y(ch / 2 + 50), 46 * SS, 12, sp, sc)
 
 
 def draw_caption(d, tt):
@@ -664,7 +664,7 @@ def draw_caption(d, tt):
         lh = size * 1.12 * SS
         y0 = 1450 * SS - (len(lines) - 1) * lh / 2
         # speaker chip
-        chip = "ПАЦИЕНТ" if who == "pat" else "ВРАЧ"
+        chip = TXT["chip_pat"] if who == "pat" else TXT["chip_doc"]
         fc = font(F_HEAD, 30 * SS)
         tw = d.textlength(chip, font=fc)
         cy = y0 - lh / 2 - 52 * SS
@@ -672,10 +672,13 @@ def draw_caption(d, tt):
                             radius=28 * SS, fill=col, outline=INK, width=4 * SS)
         text_c(d, (540 * SS, cy), chip, fc, (255, 255, 255))
         # words, current word highlighted
-        cur_w = None
-        for wi, w in enumerate(ln["words"]):
+        # map TTS word boundaries (may span several tokens, e.g. "Frau Doktor") to tokens
+        cur_w, tok_i = set(), 0
+        for w in ln["words"]:
+            nt = max(1, len(w["text"].split()))
             if w["start"] - 0.05 <= tt:
-                cur_w = wi
+                cur_w = set(range(tok_i, tok_i + nt))
+            tok_i += nt
         widx = 0
         for li, l in enumerate(lines):
             tokens = l.split()
@@ -684,7 +687,7 @@ def draw_caption(d, tt):
             x = 540 * SS - total / 2
             y = y0 + li * lh
             for tok in tokens:
-                fill = YEL if (cur_w is not None and widx == cur_w) else (255, 255, 255)
+                fill = YEL if widx in cur_w else (255, 255, 255)
                 d.text((x, y), tok, font=f, fill=fill, anchor="lm", stroke_width=9 * SS, stroke_fill=INK)
                 x += d.textlength(tok, font=f) + space
                 widx += 1
@@ -692,7 +695,7 @@ def draw_caption(d, tt):
     if T_GLASS0 - 0.2 <= tt < T_PUNCH - 0.1:
         a = clamp01((tt - T_GLASS0 + 0.2) / 0.3)
         f = font(F_HAND, 92 * SS)
-        txt = "*снимает очки*"
+        txt = TXT["stage"]
         text_c(d, (540 * SS, 1540 * SS), txt, f, (255, 255, 255, int(255 * a)), 8 * SS, (28, 30, 36, int(255 * a)))
 
 
@@ -713,12 +716,15 @@ def draw_cta(img, d, tt):
     p = ease_out((tt - T_CTA) / 0.3)
     d.rectangle([0, 0, W * SS, H * SS], fill=(14, 16, 22, int(170 * p)))
     s1 = ease_back((tt - T_CTA) / 0.35)
-    f1 = font(F_HEAD, 82 * SS * (0.6 + 0.4 * s1))
-    text_c(d, (540 * SS, 620 * SS), "ОТМЕТЬ ДРУГА,", f1, YEL, 10 * SS)
+    base1 = 82
+    while font(F_HEAD, base1 * SS).getlength(TXT["cta1"]) > 960 * SS:
+        base1 -= 2
+    f1 = font(F_HEAD, base1 * SS * (0.6 + 0.4 * s1))
+    text_c(d, (540 * SS, 620 * SS), TXT["cta1"], f1, YEL, 10 * SS)
     s2 = ease_back((tt - T_CTA - 0.25) / 0.35)
     if tt > T_CTA + 0.25:
         f2 = font(F_HEAD, 54 * SS * (0.6 + 0.4 * s2))
-        text_c(d, (540 * SS, 740 * SS), "который ответил бы", f2, (255, 255, 255), 8 * SS)
+        text_c(d, (540 * SS, 740 * SS), TXT["cta2"], f2, (255, 255, 255), 8 * SS)
     if tt > T_CTA + 0.55:
         for k in range(3):
             tk = T_CTA + 0.55 + k * 0.18
@@ -730,11 +736,11 @@ def draw_cta(img, d, tt):
             sc = 0.5 + 0.5 * sk
             d.rounded_rectangle([cx - 125 * SS * sc, cy - 62 * SS * sc, cx + 125 * SS * sc, cy + 62 * SS * sc],
                                 radius=20 * SS, fill=RED, outline=(255, 255, 255), width=6 * SS)
-            text_c(d, (cx, cy), "НЕТ", font(F_HEAD, 64 * SS * sc), (255, 255, 255))
+            text_c(d, (cx, cy), TXT["no"], font(F_HEAD, (64 if len(TXT["no"]) < 4 else 54) * SS * sc), (255, 255, 255))
     if tt > T_CTA + 1.2:
         a = clamp01((tt - T_CTA - 1.2) / 0.3)
         bob = math.sin((tt - T_CTA) * 7) * 12 * SS
-        text_c(d, (540 * SS, 1090 * SS), "пиши в комменты", font(F_HAND, 96 * SS),
+        text_c(d, (540 * SS, 1090 * SS), TXT["cta3"], font(F_HAND, 96 * SS),
                (255, 255, 255, int(255 * a)), 6 * SS, (0, 0, 0, int(255 * a)))
         ax, ay = 540 * SS, 1210 * SS + bob
         d.polygon([(ax - 50 * SS, ay - 20 * SS), (ax + 50 * SS, ay - 20 * SS), (ax, ay + 45 * SS)], fill=(255, 255, 255, int(255 * a)))

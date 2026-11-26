@@ -3,13 +3,13 @@ import asyncio, json, os, ssl, subprocess
 from pathlib import Path
 import edge_tts
 import edge_tts.communicate as _ec
-from script import LINES
+from script import LINES, BUILD_NAME
 
 PROXY = os.environ.get("HTTPS_PROXY") or os.environ.get("https_proxy")
 _ca = os.environ.get("SSL_CERT_FILE") or "/root/.ccr/ca-bundle.crt"
 if os.path.exists(_ca):
     _ec._SSL_CTX = ssl.create_default_context(cafile=_ca)
-OUT = Path(__file__).resolve().parents[2] / "build" / "doktor"
+OUT = Path(__file__).resolve().parents[2] / "build" / BUILD_NAME
 OUT.mkdir(parents=True, exist_ok=True)
 
 async def synth(i, who, text, voice, rate, pitch):

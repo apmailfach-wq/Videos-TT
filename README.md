@@ -92,3 +92,10 @@ python3 tts.py                 # Stimmen je Zeile -> build/doktor/
 python3 render.py              # rendert ../../doktor-video.mp4
 python3 render.py preview 3 9 13
 ```
+
+### Deutsche Version: `doktor-video-de.mp4`
+„Frau Doktor, wie lange habe ich noch zu leben?“ – Patient `de-DE-ConradNeural`, Ärztin `de-DE-KatjaNeural`,
+alle Einblendungen auf Deutsch (Patientenakte, NEIN-Stempel, „SINNLOS“, CTA „Markier einen Freund …“). Ca. 18 s.
+```bash
+cd src/doktor && DOKTOR_LANG=de python3 tts.py && DOKTOR_LANG=de python3 render.py
+```
