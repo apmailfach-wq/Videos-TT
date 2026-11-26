@@ -570,14 +570,17 @@ def sprite(name, expr_name="", mouth=0, blink=False, look=(0.0, 0.0), pose="", e
     elif pose == "eat":   # beißt in seinen eigenen (großen) Döner, Zettel klebt auf der Folie
         hx, hy = draw_arm(d, spec, 1, [(HX + bw / 2 - 30, top + 100), (HX + bw / 2 + 50, top + 80), (HX + 120, HY + 210)])
         g = 1.7
-        dx_, dy_ = hx - 6, hy - 62 * g
-        d.polygon(P([(dx_ - 50 * g, dy_ - 34 * g), (dx_ + 50 * g, dy_ - 34 * g), (dx_ + 16 * g, dy_ + 52 * g), (dx_ - 16 * g, dy_ + 52 * g)]),
-                  fill=(205, 210, 218), outline=INK, width=S(6))
-        d.chord(box(dx_, dy_ - 34 * g, 52 * g, 30 * g), 180, 360, fill=(230, 180, 110), outline=INK, width=S(6))
-        for k, c in enumerate([(160, 90, 50), (80, 170, 70), (220, 60, 50), (250, 246, 230)]):
-            d.ellipse(box(dx_ - 30 * g + k * 20 * g, dy_ - 46 * g + (k % 2) * 6 * g, 12 * g, 9 * g), fill=c)
-        d.ellipse(box(dx_ - 40 * g, dy_ - 52 * g, 16 * g, 14 * g), fill=(200, 170, 130))   # Bissspur
-        px_, py_ = dx_, dy_ + 4 * g   # Zettel mitten auf der Folie
+        dx_, dy_ = hx - 6, hy - 46 * g
+        bread = (222, 170, 100)
+        # Döner im Fladenbrot: breite Brottasche, Füllung oben, Folie unten
+        d.chord(box(dx_, dy_ - 14 * g, 70 * g, 48 * g), 170, 370, fill=bread, outline=INK, width=S(6))       # Brotrücken
+        for k, c in enumerate([(80, 170, 70), (160, 90, 50), (220, 60, 50), (170, 96, 52), (90, 180, 80), (250, 246, 230)]):
+            d.ellipse(box(dx_ - 52 * g + k * 21 * g, dy_ - 22 * g - (k % 2) * 7 * g, 14 * g, 10 * g), fill=c, outline=INK, width=S(2))
+        d.chord(box(dx_, dy_ - 30 * g, 72 * g, 60 * g), 0, 180, fill=bread, outline=INK, width=S(6))           # Brot vorn
+        d.polygon(P([(dx_ - 74 * g, dy_ - 4 * g), (dx_ + 74 * g, dy_ - 4 * g), (dx_ + 58 * g, dy_ + 30 * g), (dx_ - 58 * g, dy_ + 30 * g)]),
+                  fill=(205, 210, 218), outline=INK, width=S(6))                                                  # Folie
+        d.ellipse(box(dx_ - 62 * g, dy_ - 30 * g, 14 * g, 12 * g), fill=(200, 170, 130))                       # Bissspur
+        px_, py_ = dx_ + 6 * g, dy_ + 6 * g   # Zettel mitten auf der Folie
         d.polygon(P([(px_ - 36 * g, py_ - 22 * g), (px_ + 38 * g, py_ - 20 * g), (px_ + 34 * g, py_ + 24 * g), (px_ - 38 * g, py_ + 22 * g)]),
                   fill=(255, 232, 80), outline=INK, width=S(4))
         d.text((S(px_), S(py_ - 8 * g)), "Finger weg", font=font(F_HAND, S(15 * g)), fill=(30, 30, 120), anchor="mm")
