@@ -77,3 +77,18 @@ python3 render.py              # rendert ../../fuehrerschein-video-neon.mp4
 python3 render.py shots        # Schnittliste
 python3 render.py preview 5 30 # Standbilder
 ```
+
+## doktor-video.mp4 (Witz-Sketch, Russisch)
+
+„Доктор, сколько мне осталось жить?“ – ca. 17 s, Cartoon-Sketch in der Arztpraxis.
+Patient (edge-tts `ru-RU-DmitryNeural`) & Ärztin (`ru-RU-SvetlanaNeural`), Lip-Sync über die Lautstärke,
+Medkarte füllt sich mit „НЕТ“-Stempeln, Herzmonitor wird schneller, Ärztin nimmt die Brille ab
+(dramatischer Sting, Kamerafahrt), Pointe → Flatline, die drei Haare fliegen weg, Stempel „СМЫСЛА НЕТ“,
+danach Share-CTA „Отметь друга, который ответил бы НЕТ НЕТ НЕТ“.
+
+```bash
+cd src/doktor
+python3 tts.py                 # Stimmen je Zeile -> build/doktor/
+python3 render.py              # rendert ../../doktor-video.mp4
+python3 render.py preview 3 9 13
+```
