@@ -77,3 +77,27 @@ python3 render.py              # rendert ../../fuehrerschein-video-neon.mp4
 python3 render.py shots        # Schnittliste
 python3 render.py preview 5 30 # Standbilder
 ```
+
+## urteil-mal-01-doener-skandal.mp4 (Serie „URTEIL MAL!“, Folge 1)
+
+**Thema:** „Sie hat meinen Döner gegessen – ich will die Scheidung!“ – 2D-Comic-Gerichtsshow mit Richter Richard,
+Anwalt Klaus, Gerichtsdiener Horst sowie Dennis & Sabine. Ca. 76 s · 1080×1920 · 30 fps.
+Drehbuch, Bildprompts und Rechtslage: `episodes/urteil-mal/01-doener-skandal.md`.
+
+- Stimmen: ElevenLabs (`eleven_v4`), je Figur eine eigene Stimme (siehe `episodes/urteil-mal/00-serienbibel.md`)
+- Figuren, Kulisse, Kamera, Lippensync (aus der Lautstärke der Tonspur), Untertitel mit Wort-Highlight,
+  Paragrafen-Karten, Soundeffekte und Musik werden komplett per Code erzeugt (Pillow + numpy + ffmpeg).
+- Recht (ohne Gewähr): § 1363 Abs. 2 BGB (getrennte Vermögen), § 1565 BGB (Scheitern der Ehe), § 387 BGB (Aufrechnung).
+
+```bash
+# Sprachdateien aus ElevenLabs liegen in src/urteilmal/voice/<id>.mp3 (01–23, siehe timeline.py)
+cd src/urteilmal
+python3 audio.py                          # Pausen kürzen/Tempo, Effekte, Musik -> build/doener/mix.wav + timeline.json
+python3 render.py preview 2 21 48         # Standbilder -> build/doener/stills/
+for k in 0 1 2 3; do python3 render.py part $k 4 & done; wait
+python3 render.py mux 4                   # -> urteil-mal-01-doener-skandal.mp4
+```
+
+- `timeline.py` – Zeilen, Sprecher, Kamera (Ziel + Zoom), Mimik, Gesten, Effekte, Paragrafen-Karten
+- `chars.py` – die fünf Figuren als Vektor-Comic (Kontur, Cel-Shading, Mimik-Stufen, Requisiten)
+- `audio.py` – Tonspur und Zeitplan · `render.py` – Kulisse, Kamera, Overlays, Export
