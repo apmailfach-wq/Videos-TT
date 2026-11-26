@@ -513,7 +513,7 @@ class Scene:
                 d.text((W / 2, 1700), "FOLGT UNS FÜR NEUE FÄLLE!", font=fsm, fill=(255, 255, 255), anchor="mm")
         if e["id"] == "p4":
             big_text(img, [("RICHARDS DÖNER …", (255, 255, 255)), ("WEG?!", (255, 220, 40))], 420, tr - 0.2, 76, 0)
-        if e["id"] in ("p5", "22"):
+        if e["id"] == "p5":
             big_text(img, [("HORST HAT RICHARDS", (255, 255, 255)), ("DÖNER GEGESSEN!", (255, 220, 40))], 1110,
                      tr if e["id"] == "p5" else 1.0, 58, 0)
         if "text" in e and tr <= e["dur"] - (e.get("post", 0)):

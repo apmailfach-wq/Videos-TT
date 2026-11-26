@@ -540,7 +540,7 @@ def sprite(name, expr_name="", mouth=0, blink=False, look=(0.0, 0.0), pose="", e
         d.ellipse(box(hx, hy, 34, 34), fill=spec["skin"], outline=INK, width=S(6))
         for k in range(3):   # Finger um die Folie
             d.arc(box(hx - 16 + k * 16, hy - 26, 10, 12), 180, 360, fill=INK, width=S(4))
-        tx, ty = hx + 40, hy + 86   # Schild "BEWEISSTÜCK A" hängt an der Hand
+        tx, ty = hx + 66, hy + 86   # Schild "BEWEISSTÜCK A" hängt an der Hand
         d.line(P([(hx + 6, hy + 20), (tx, ty - 28)]), fill=INK, width=S(3))
         d.rounded_rectangle(box(tx, ty, 92, 28), radius=S(6), fill=(255, 226, 60), outline=INK, width=S(4))
         d.text((S(tx), S(ty)), "BEWEISSTÜCK A", font=font(F_BLACK, S(22)), fill=INK, anchor="mm")
