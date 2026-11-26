@@ -50,7 +50,7 @@ CHARS = {
     "horst": dict(skin=(238, 184, 152), head=(130, 160), jaw=0.97, eye_dx=46, eye_dy=-22,
                   body=(134, 180, 234), body_w=440, hair=(104, 66, 40), brow=(70, 44, 30)),
     "dennis": dict(skin=(240, 204, 178), head=(124, 150), jaw=0.9, eye_dx=50, eye_dy=-6,
-                   body=(30, 150, 90), body_w=330, hair=(110, 72, 40)),
+                   body=(30, 150, 90), body_w=270, hair=(110, 72, 40)),
     "sabine": dict(skin=(246, 206, 180), head=(120, 146), jaw=0.84, eye_dx=50, eye_dy=-4,
                    body=(250, 170, 200), body_w=320, hair=(244, 214, 120)),
 }
@@ -101,10 +101,12 @@ def draw_body(d, spec, name, pose):
     # Schattenseite
     sh = [(HX + bw / 2 - 60, top + 60), (HX + bw / 2 - 40, top + 40), (HX + bw / 2 + 20, top + 160),
           (HX + bw / 2 + 30, SH), (HX + bw / 2 - 40, SH)]
-    d.polygon(P(sh), fill=darker(col, 0.82))
+    if name != "dennis":
+        d.polygon(P(sh), fill=darker(col, 0.82))
 
-    for sx in (-1, 1):
-        d.line(P([(HX + sx * (bw / 2 - 30), top + 130), (HX + sx * (bw / 2 - 10), SH)]), fill=darker(col, 0.6), width=S(5))
+    if name != "dennis":
+        for sx in (-1, 1):
+            d.line(P([(HX + sx * (bw / 2 - 30), top + 130), (HX + sx * (bw / 2 - 10), SH)]), fill=darker(col, 0.6), width=S(5))
     if name == "richard":     # schwarze Robe, weißes Hemd, dunkle Krawatte, Samtbesatz
         d.polygon(P([(HX - 80, top + 36), (HX, top + 210), (HX + 80, top + 36)]), fill=(250, 250, 250), outline=INK, width=S(5))
         d.polygon(P([(HX - 40, top + 40), (HX, top + 70), (HX + 40, top + 40), (HX + 30, top + 20), (HX - 30, top + 20)]),
@@ -537,7 +539,7 @@ def sprite(name, expr_name="", mouth=0, blink=False, look=(0.0, 0.0), pose="", e
         d.ellipse(box(hx, hy, 34, 34), fill=spec["skin"], outline=INK, width=S(6))
         for k in range(3):   # Finger um die Folie
             d.arc(box(hx - 16 + k * 16, hy - 26, 10, 12), 180, 360, fill=INK, width=S(4))
-        tx, ty = hx + 6, hy + 86   # Schild "BEWEISSTÜCK A" hängt an der Hand
+        tx, ty = hx + 40, hy + 86   # Schild "BEWEISSTÜCK A" hängt an der Hand
         d.line(P([(hx + 6, hy + 20), (tx, ty - 28)]), fill=INK, width=S(3))
         d.rounded_rectangle(box(tx, ty, 92, 28), radius=S(6), fill=(255, 226, 60), outline=INK, width=S(4))
         d.text((S(tx), S(ty)), "BEWEISSTÜCK A", font=font(F_BLACK, S(22)), fill=INK, anchor="mm")
