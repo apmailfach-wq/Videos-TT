@@ -34,6 +34,17 @@
 
 **Ort:** Kleiner, holzvertäfelter Sitzungssaal eines Amtsgerichts (Nachlassabteilung), Neonröhren, Gummibaum in der Ecke, Bundesadler an der Wand.
 
+### ElevenLabs-Stimmen (Modell: eleven_v3)
+
+| Figur | Stimme | voice_id |
+|---|---|---|
+| Kevin | Jordi Türmer – Thug & Gangster (schlitzohrig, Berliner Schnauze) | `9VeBtouyYRANyE97rZR1` |
+| Gabi | Klara – Angry and Powerful (deutsche Mutter mit Temperament) | `vPFocGjG5CEBbSByU2UY` |
+| Richterin Dr. Brandt | Nora Vale – Mission Control (kühl, kontrolliert, trocken) | `iV1OKYxbmgRtpzJ2q8kx` |
+| Bodo spricht als Oma Erna | Elinor – The Gruff Aunt (alt, spitz, sarkastisch) | `gDQfVolj9RbmXgumLcOq` |
+| Bodo eigene Stimme („Erbschleicher!“, „Kein Keks!“) | Kunibert Cuddle – Sweet & Puppyish (quietschig, frech) | `eRExbYUuATnn9e2um0J1` |
+| Bodo spricht als Kevin | Kevins Stimme (Jordi) mit Tag `[krächzend, wie ein Papagei nachgeahmt]` | `9VeBtouyYRANyE97rZR1` |
+
 ---
 
 ## 4. Drehbuch mit Zeitangaben und Dialogen
