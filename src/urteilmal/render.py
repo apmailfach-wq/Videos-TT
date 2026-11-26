@@ -171,7 +171,9 @@ def props_layer(doener_state, gavel_up, sparkle):
     d.ellipse(box(gx - 20, gy + 26, 60, 12), fill=(90, 56, 36), outline=INK, width=S(4))
     # Döner
     dx, dy = L(*DOENER_POS)
-    if doener_state == "full":
+    if doener_state == "held":
+        pass
+    elif doener_state == "full":
         d.polygon(P([(dx - 70, dy - 40), (dx + 70, dy - 40), (dx + 20, dy + 40), (dx - 20, dy + 40)]),
                   fill=(205, 210, 218), outline=INK, width=S(6))
         d.chord(box(dx, dy - 40, 72, 46), 180, 360, fill=(230, 180, 110), outline=INK, width=S(6))
@@ -181,6 +183,8 @@ def props_layer(doener_state, gavel_up, sparkle):
         chars.prop_foil(d, dx, dy - 4, 1.0)
     # Post-it
     px, py = dx + 80, dy - 60
+    if doener_state == "held":
+        return img.resize((w, h), Image.LANCZOS), (x0, y0)
     d.polygon(P([(px - 50, py - 50), (px + 54, py - 44), (px + 50, py + 56), (px - 54, py + 50)]),
               fill=(255, 232, 80), outline=INK, width=S(4))
     d.text((S(px), S(py - 14)), "FINGER", font=font(F_HAND, S(30)), fill=(30, 30, 120), anchor="mm")
@@ -417,9 +421,9 @@ class Scene:
             expr = e["expr2"][name]
         pose = e.get("pose", {}).get(name, "")
         extra = e.get("extra", {}).get(name, "")
-        if name == "horst" and e.get("horst_final"):
-            pose, extra = "glove_horst", "sauce"
         mouth = 0
+        if name in e.get("chew", []):
+            mouth = int(t * 5) % 2
         if e.get("who") == name and "mouth" in e:
             i = int(tr * FPS)
             m = e["mouth"]
@@ -512,10 +516,9 @@ class Scene:
                 d.rounded_rectangle([150, 1655, 930, 1745], radius=40, fill=(210, 30, 50), outline=(15, 12, 20), width=6)
                 d.text((W / 2, 1700), "FOLGT UNS FÜR NEUE FÄLLE!", font=fsm, fill=(255, 255, 255), anchor="mm")
         if e["id"] == "p4":
-            big_text(img, [("RICHARDS DÖNER …", (255, 255, 255)), ("WEG?!", (255, 220, 40))], 420, tr - 0.2, 76, 0)
+            big_text(img, [("FEIERABEND.", (255, 255, 255))], 1150, tr - 0.3, 84, 0)
         if e["id"] == "p5":
-            big_text(img, [("HORST HAT RICHARDS", (255, 255, 255)), ("DÖNER GEGESSEN!", (255, 220, 40))], 1110,
-                     tr if e["id"] == "p5" else 1.0, 58, 0)
+            big_text(img, [("AUCH RICHTER", (255, 255, 255)), ("HABEN HUNGER.", (255, 220, 40))], 1150, tr, 76, 0)
         if "text" in e and tr <= e["dur"] - (e.get("post", 0)):
             y_sub = 1500 if (e.get("law") or e["id"] == "23") else 1330
             draw_subtitle(img, e, tr, y_sub)

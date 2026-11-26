@@ -565,32 +565,19 @@ def sprite(name, expr_name="", mouth=0, blink=False, look=(0.0, 0.0), pose="", e
         d.ellipse(box(hx, hy, 34, 34), fill=spec["skin"], outline=INK, width=S(6))
     elif pose == "facepalm":
         hx, hy = draw_arm(d, spec, 1, [(HX + bw / 2 - 30, top + 100), (HX + 150, top + 40), (HX + 40, HY - 40)])
-    elif pose == "glove_horst":
-        pts = [(HX + bw / 2 - 30, top + 100), (HX + bw / 2 + 60, top + 150), (HX + 190, top - 10)]
-        d.line(P(pts), fill=INK, width=S(64), joint="curve")
-        d.line(P(pts), fill=spec["body"], width=S(50), joint="curve")
-        hx, hy = pts[-1]
-        g = 1.55
-        y_ = (250, 214, 40)
-        G = lambda x, y: (hx + x * g, hy + y * g)
-        d.polygon(P([G(-30, 50), G(30, 50), G(26, 14), G(-26, 14)]), fill=y_, outline=INK, width=S(5))   # Stulpe
-        dx_, dy_ = G(2, -62)
-        d.polygon(P([(dx_ - 40 * g, dy_ - 26 * g), (dx_ + 40 * g, dy_ - 26 * g), (dx_ + 12 * g, dy_ + 40 * g), (dx_ - 12 * g, dy_ + 40 * g)]),
+    elif pose == "eat":   # beißt in seinen eigenen Döner
+        hx, hy = draw_arm(d, spec, 1, [(HX + bw / 2 - 30, top + 100), (HX + bw / 2 + 30, top + 60), (HX + 80, HY + 150)])
+        dx_, dy_ = hx - 10, hy - 56
+        d.polygon(P([(dx_ - 50, dy_ - 34), (dx_ + 50, dy_ - 34), (dx_ + 16, dy_ + 52), (dx_ - 16, dy_ + 52)]),
                   fill=(205, 210, 218), outline=INK, width=S(5))
-        d.chord(box(dx_, dy_ - 26 * g, 42 * g, 24 * g), 180, 360, fill=(230, 180, 110), outline=INK, width=S(5))
-        for k in range(3):
-            d.ellipse(box(dx_ - 24 * g + k * 24 * g, dy_ - 48 * g, 13 * g, 12 * g), fill=(200, 170, 130))   # Bissspur
-        d.ellipse(box(dx_ - 16 * g, dy_ - 34 * g, 9 * g, 6 * g), fill=(90, 180, 70))
-        d.ellipse(box(dx_ + 14 * g, dy_ - 32 * g, 9 * g, 6 * g), fill=(160, 90, 50))
-        for k in range(4):
-            fx_, fy_ = G(-30 + k * 20, -20)
-            d.ellipse(box(fx_, fy_, 12 * g, 20 * g), fill=y_, outline=INK, width=S(5))
-        cx_, cy_ = G(0, 4)
-        d.ellipse(box(cx_, cy_, 34 * g, 26 * g), fill=y_, outline=INK, width=S(6))
-        tx_, ty_ = G(-38, -4)
-        d.ellipse(box(tx_, ty_, 12 * g, 18 * g), fill=y_, outline=INK, width=S(5))     # Daumen
-        sx_, sy_ = G(10, 6)
-        d.ellipse(box(sx_, sy_, 10 * g, 7 * g), fill=(252, 250, 236))                   # Soßenfleck
+        d.chord(box(dx_, dy_ - 34, 52, 30), 180, 360, fill=(230, 180, 110), outline=INK, width=S(5))
+        for k, c in enumerate([(160, 90, 50), (80, 170, 70), (220, 60, 50), (250, 246, 230)]):
+            d.ellipse(box(dx_ - 30 + k * 20, dy_ - 46 + (k % 2) * 6, 12, 9), fill=c)
+        d.ellipse(box(dx_ - 40, dy_ - 52, 16, 14), fill=(200, 170, 130))   # Bissspur
+        d.polygon(P([(dx_ + 20, dy_ - 8), (dx_ + 70, dy_ - 4), (dx_ + 66, dy_ + 40), (dx_ + 16, dy_ + 36)]),
+                  fill=(255, 232, 80), outline=INK, width=S(3))   # Post-it klebt noch dran
+        d.text((S(dx_ + 43), S(dy_ + 16)), "R.", font=font(F_HAND, S(30)), fill=(30, 30, 120), anchor="mm")
+        d.ellipse(box(hx, hy, 34, 34), fill=spec["skin"], outline=INK, width=S(6))
     elif pose == "fork_horst":
         hx, hy = draw_arm(d, spec, 1, [(HX + bw / 2 - 30, top + 100), (HX + bw / 2 + 40, top + 200), (HX + 150, top + 120)])
         prop_fork_doener(d, hx, hy - 20)
