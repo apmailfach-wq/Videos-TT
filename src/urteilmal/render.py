@@ -137,7 +137,7 @@ def build_legs():
     d = ImageDraw.Draw(lay)
     s2 = lambda v: int(v * 2)
     yy = lambda v: int((v - y0) * 2)
-    spec = {"dennis": ((140, 140, 150), (245, 245, 245), 34), "sabine": ((70, 100, 160), (255, 255, 255), 30),
+    spec = {"dennis": ((140, 140, 150), (245, 245, 245), 40), "sabine": ((70, 100, 160), (255, 255, 255), 30),
             "klaus": ((34, 44, 86), (30, 24, 22), 38)}
     for nm, (pants, shoe, lw) in spec.items():
         hx = HEADS[nm][0]

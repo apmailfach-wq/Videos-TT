@@ -612,7 +612,7 @@ def sprite(name, expr_name="", mouth=0, blink=False, look=(0.0, 0.0), pose="", e
         prop_fork_doener(d, hx, hy - 20)
         d.ellipse(box(hx, hy, 34, 34), fill=spec["skin"], outline=INK, width=S(6))
 
-    cut = {"sabine": 1100, "klaus": 1260}.get(name)   # Jacke/Sakko enden an der Hüfte, darunter kommen die Beine
+    cut = {"sabine": 1100, "klaus": 1260, "dennis": 1220}.get(name)   # Jacke/Sakko enden an der Hüfte, darunter kommen die Beine
     if cut:
         img.paste((0, 0, 0, 0), (0, S(cut), S(SW), S(SH)))
         d = ImageDraw.Draw(img)
