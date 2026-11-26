@@ -130,6 +130,29 @@ def build_bench():
     return lay.resize((WW, 820), Image.LANCZOS), y0 - 40
 
 
+def build_legs():
+    """Beine und Schuhe von Dennis, Sabine und Klaus (unter den Tischen sichtbar)."""
+    y0 = 3380
+    lay = Image.new("RGBA", (WW * 2, 2 * (WH - y0)), (0, 0, 0, 0))
+    d = ImageDraw.Draw(lay)
+    s2 = lambda v: int(v * 2)
+    yy = lambda v: int((v - y0) * 2)
+    spec = {"dennis": ((140, 140, 150), (245, 245, 245), 34), "sabine": ((70, 100, 160), (255, 255, 255), 30),
+            "klaus": ((34, 44, 86), (30, 24, 22), 38)}
+    for nm, (pants, shoe, lw) in spec.items():
+        hx = HEADS[nm][0]
+        for sx in (-1, 1):
+            x = hx + sx * 46
+            d.rectangle([s2(x - lw), yy(3380), s2(x + lw), yy(3770)], fill=pants, outline=INK, width=10)
+            d.rounded_rectangle([s2(x - lw - 6 + sx * 10), yy(3762), s2(x + lw + 26 * sx if sx > 0 else x + lw + 6),
+                                 yy(3812)], radius=22, fill=shoe, outline=INK, width=10)
+            if sx < 0:
+                d.rounded_rectangle([s2(x - lw - 32), yy(3762), s2(x + lw + 6), yy(3812)], radius=22, fill=shoe, outline=INK, width=10)
+        if nm == "sabine":   # Teddyjacke reicht bis über die Hüfte
+            d.rectangle([s2(hx - 140), yy(3380), s2(hx + 140), yy(3440)], fill=(250, 170, 200), outline=INK, width=10)
+    return lay.resize((WW, WH - y0), Image.LANCZOS), y0
+
+
 def build_tables():
     lay = Image.new("RGBA", (WW * 2, 2 * 900), (0, 0, 0, 0))
     d = ImageDraw.Draw(lay)
@@ -362,6 +385,7 @@ class Scene:
         self.bench, self.bench_y = build_bench()
         self.tables, self.tables_y = build_tables()
         self.rail, self.rail_y = build_rail()
+        self.legs, self.legs_y = build_legs()
 
     def event_at(self, t):
         cur = self.events[0]
@@ -474,6 +498,7 @@ class Scene:
         for nm in ("dennis", "sabine", "klaus"):
             hx, hy = HEADS[nm]
             put(self.char_state(nm, e, t, frame), hx - HX, hy - HY + bob(nm))
+        put(self.legs, 0, self.legs_y)
         put(self.tables, 0, self.tables_y)
 
         img = base.resize((W, H), Image.BILINEAR, reducing_gap=2.0 if cw > 1400 else None)
