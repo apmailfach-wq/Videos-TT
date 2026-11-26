@@ -99,3 +99,10 @@ python3 tts.py       # Voiceover -> build/radfahrer/
 python3 render.py    # rendert ../../radfahrer-video.mp4
 python3 render.py preview 2 20 40   # Standbilder
 ```
+
+## gesetze-video.mp4 (4 absurde deutsche Gesetze)
+
+Ca. 39 s · gleicher Erklär-Look · Stimme `de-AT-JonasNeural` (+18 %). Rasenmähen am Sonntag (32. BImSchV, bis 50.000 €) ·
+leerer Tank auf der Autobahn (§ 18 Abs. 8 StVO, Bußgeld) · nackt Autofahren erlaubt, Aussteigen = Belästigung der
+Allgemeinheit (§ 118 OWiG) · Tanzverbot an Karfreitag (Feiertagsgesetze der Länder) · Frage „Welches ist das dümmste?“.
+Quelle: `src/gesetze/` (`python3 tts.py && python3 render.py`). Ohne Gewähr.
