@@ -223,7 +223,7 @@ def chunks_for(text, f, maxw=900, max_lines=2):
 
 
 def draw_subtitle(img, ev, t_rel, y_center):
-    f = font(F_INTER, 66)
+    f = font(F_INTER, 72)
     text = ev["text"]
     chunks = chunks_for(text, f)
     nwords = [sum(len(l) for l in c) for c in chunks]
@@ -248,7 +248,7 @@ def draw_subtitle(img, ev, t_rel, y_center):
         idx, base = len(chunks) - 1, sum(nwords[:-1])
     lines = chunks[idx]
     d = ImageDraw.Draw(img)
-    lh = 84
+    lh = 90
     y = y_center - (len(lines) * lh) / 2
     wi = base
     for line in lines:
