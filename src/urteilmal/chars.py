@@ -148,19 +148,16 @@ def draw_body(d, spec, name, pose):
         d.line(P([(HX + 20, hem + 30), (HX + 26, hem + 90)]), fill=(240, 240, 240), width=S(4))
         d.polygon(P([(HX - bw / 2 - 26, hem - 20), (HX + bw / 2 + 26, hem - 20), (HX + bw / 2 + 20, hem + 8), (HX - bw / 2 - 20, hem + 8)]),
                   fill=darker(col, 0.85), outline=INK, width=S(5))                                         # Trikot-Saum
-        for sx in (-1, 1):   # kurze Ärmel mit weißem Rand
-            d.polygon(P([(HX + sx * (bw / 2 - 30), top + 40), (HX + sx * (bw / 2 + 60), top + 110), (HX + sx * (bw / 2 + 30), top + 190),
-                         (HX + sx * (bw / 2 - 10), top + 170)]), fill=col, outline=INK, width=S(5))
-            d.line(P([(HX + sx * (bw / 2 + 58), top + 116), (HX + sx * (bw / 2 + 30), top + 184)]), fill=(255, 255, 255), width=S(8))
-        for sx in (-1, 1):   # Unterarme + Hände (rechts nur, wenn er nichts hochhält)
+        for sx in (-1, 1):   # lange Pulli-Ärmel mit Bündchen und Händen (rechts nur, wenn er nichts hochhält)
             if sx == 1 and pose:
                 continue
-            arm = [(HX + sx * (bw / 2 + 44), top + 160), (HX + sx * (bw / 2 + 52), top + 290), (HX + sx * (bw / 2 + 40), top + 400)]
-            d.line(P(arm), fill=INK, width=S(42), joint="curve")
-            d.line(P(arm), fill=spec["skin"], width=S(30), joint="curve")
-            d.ellipse(box(arm[-1][0], arm[-1][1] + 10, 26, 30), fill=spec["skin"], outline=INK, width=S(5))
-            d.line(P([(arm[-1][0] - sx * 6, arm[-1][1] + 18), (arm[-1][0] - sx * 6, arm[-1][1] + 34)]), fill=INK, width=S(3))
-        d.polygon(P([(HX - 60, top + 40), (HX, top + 90), (HX + 60, top + 40)]), fill=(255, 255, 255), outline=INK, width=S(5))
+            arm = [(HX + sx * (bw / 2 - 10), top + 70), (HX + sx * (bw / 2 + 40), top + 220), (HX + sx * (bw / 2 + 36), top + 380)]
+            d.line(P(arm), fill=INK, width=S(66), joint="curve")
+            d.line(P(arm), fill=col, width=S(52), joint="curve")
+            cx_, cy_ = arm[-1]
+            d.rounded_rectangle(box(cx_, cy_, 30, 14), radius=S(6), fill=darker(col, 0.8), outline=INK, width=S(4))
+            d.ellipse(box(cx_, cy_ + 36, 26, 28), fill=spec["skin"], outline=INK, width=S(5))
+        d.chord(box(HX, top + 36, 64, 34), 0, 180, fill=darker(col, 0.8), outline=INK, width=S(5))
         d.text((S(HX + 80), S(top + 200)), "7", font=font(F_BLACK, S(110)), fill=(255, 255, 255),
                stroke_width=S(4), stroke_fill=INK, anchor="mm")
     elif name == "sabine":
@@ -170,14 +167,13 @@ def draw_body(d, spec, name, pose):
 def draw_arm(d, spec, side, pts, hand_open=False):
     col = spec["body"] if spec is not CHARS["sabine"] else spec["body"]
     d.line(P(pts), fill=INK, width=S(64), joint="curve")
-    if spec is CHARS["dennis"]:   # kurzer Trikotärmel, darunter nackter Arm
-        d.line(P(pts), fill=spec["skin"], width=S(50), joint="curve")
-        (x0, y0), (x1, y1) = pts[0], pts[1]
-        mid = (x0 + (x1 - x0) * 0.45, y0 + (y1 - y0) * 0.45)
-        d.line(P([pts[0], mid]), fill=INK, width=S(72))
-        d.line(P([pts[0], mid]), fill=col, width=S(58))
-    else:
-        d.line(P(pts), fill=col, width=S(50), joint="curve")
+    d.line(P(pts), fill=col, width=S(50), joint="curve")
+    if spec is CHARS["dennis"]:   # Pulli-Bündchen am Handgelenk
+        (x1, y1), (x2, y2) = pts[-2], pts[-1]
+        L = math.hypot(x2 - x1, y2 - y1) or 1
+        bx, by = x2 - (x2 - x1) / L * 34, y2 - (y2 - y1) / L * 34
+        d.line(P([(bx, by), (x2 - (x2 - x1) / L * 14, y2 - (y2 - y1) / L * 14)]), fill=INK, width=S(66))
+        d.line(P([(bx, by), (x2 - (x2 - x1) / L * 16, y2 - (y2 - y1) / L * 16)]), fill=darker(col, 0.8), width=S(54))
     hx, hy = pts[-1]
     d.ellipse(box(hx, hy, 34, 34), fill=spec["skin"], outline=INK, width=S(6))
     return hx, hy
@@ -536,8 +532,15 @@ def sprite(name, expr_name="", mouth=0, blink=False, look=(0.0, 0.0), pose="", e
     top = HY + spec["head"][1]
     bw = spec["body_w"]
     if pose == "foil_up":
-        hx, hy = draw_arm(d, spec, 1, [(HX + bw / 2 - 30, top + 90), (HX + bw / 2 + 50, top - 60), (HX + bw / 2 + 40, HY - 200)])
-        prop_foil(d, hx + 10, hy - 70, 1.25)
+        hx, hy = draw_arm(d, spec, 1, [(HX + bw / 2 - 20, top + 70), (HX + bw / 2 + 80, top - 40), (HX + bw / 2 + 60, HY - 160)])
+        prop_foil(d, hx + 6, hy - 66, 1.3)
+        d.ellipse(box(hx, hy, 34, 34), fill=spec["skin"], outline=INK, width=S(6))
+        for k in range(3):   # Finger um die Folie
+            d.arc(box(hx - 16 + k * 16, hy - 26, 10, 12), 180, 360, fill=INK, width=S(4))
+        tx, ty = hx + 6, hy + 86   # Schild "BEWEISSTÜCK A" hängt an der Hand
+        d.line(P([(hx + 6, hy + 20), (tx, ty - 28)]), fill=INK, width=S(3))
+        d.rounded_rectangle(box(tx, ty, 92, 28), radius=S(6), fill=(255, 226, 60), outline=INK, width=S(4))
+        d.text((S(tx), S(ty)), "BEWEISSTÜCK A", font=font(F_BLACK, S(22)), fill=INK, anchor="mm")
     elif pose == "finger":
         hx, hy = draw_arm(d, spec, 1, [(HX + bw / 2 - 30, top + 90), (HX + bw / 2 + 60, top - 20), (HX + bw / 2 + 60, HY - 90)])
         for k, (dx, ln) in enumerate([(-26, 44), (-9, 56), (9, 58), (26, 46)]):   # offene Hand
