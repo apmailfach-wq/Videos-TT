@@ -550,7 +550,7 @@ def main():
         lst = B / "parts.txt"
         lst.write_text("".join(f"file '{B / f'part{k}.mp4'}'\n" for k in range(parts)))
         subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", str(lst), "-i", str(B / "mix.wav"),
-                        "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-shortest", "-movflags", "+faststart",
+                        "-c:v", "copy", "-af", "loudnorm=I=-14:TP=-1.5:LRA=11", "-c:a", "aac", "-b:a", "192k", "-shortest", "-movflags", "+faststart",
                         str(OUT_FILE)], check=True)
         print("fertig:", OUT_FILE)
         return
