@@ -47,7 +47,7 @@ CHARS = {
                     body=(28, 28, 34), body_w=360, hair=(206, 206, 212), brow=(70, 66, 66)),
     "klaus": dict(skin=(226, 168, 124), head=(126, 160), jaw=0.97, eye_dx=50, eye_dy=-10,
                   body=(34, 44, 86), body_w=370, hair=(112, 66, 36), brow=(70, 40, 24)),
-    "horst": dict(skin=(246, 186, 152), head=(158, 150), jaw=1.06, eye_dx=50, eye_dy=-20,
+    "horst": dict(skin=(238, 184, 152), head=(150, 156), jaw=1.02, eye_dx=50, eye_dy=-22,
                   body=(134, 180, 234), body_w=440, hair=(104, 66, 40), brow=(70, 44, 30)),
     "dennis": dict(skin=(240, 204, 178), head=(124, 150), jaw=0.9, eye_dx=50, eye_dy=-6,
                    body=(30, 150, 90), body_w=330, hair=(110, 72, 40)),
@@ -72,9 +72,9 @@ EXPR = {
     "dramatic": dict(lid=0.0, brow=(12, 18), mouth="grin"),
     "outraged": dict(lid=0.0, brow=(-16, 10), mouth="frown"),
     "proud": dict(lid=0.3, brow=(8, 8), mouth="smile"),
-    "longing": dict(lid=0.1, brow=(16, 4), mouth="o", pupil=1.15),
+    "longing": dict(lid=0.2, brow=(14, 4), mouth="o", pupil=1.1),
     "innocent": dict(lid=0.2, brow=(14, 8), mouth="smile"),
-    "puzzled": dict(lid=0.0, brow=(18, 14), mouth="o", pupil=0.6),
+    "puzzled": dict(lid=0.25, brow=(10, 6), mouth="flat", pupil=0.95),
 }
 
 DEFAULT_EXPR = {"richard": "deadpan", "klaus": "smug", "horst": "puzzled", "dennis": "upset", "sabine": "bored"}
@@ -267,7 +267,7 @@ def draw_hair_back(d, name, spec):
         d.polygon(P(pts + [(HX + rx + 4, HY + 10), (HX - rx - 4, HY + 10)]), fill=c, outline=INK, width=S(OUT))
     elif name == "horst":   # wilde Büschel an den Seiten
         for sx in (-1, 1):
-            pts = spiky(HX + sx * (rx - 16), HY - 30, 60, 90, 9, 0.5,
+            pts = spiky(HX + sx * (rx - 6), HY - 4, 44, 84, 13, 0.25,
                         math.pi * (0.5 if sx < 0 else -0.5), math.pi * (1.5 if sx < 0 else 0.5), 7 + sx)
             d.polygon(P(pts), fill=c, outline=INK, width=S(6))
     if name == "sabine":
@@ -305,7 +305,7 @@ def draw_hair_front(d, name, spec):
         for k in range(4):
             x = HX - 30 + k * 18
             d.arc(box(x, HY - ry - 6, 14, 26), 180, 320, fill=c, width=S(4))
-        d.ellipse(box(HX - 50, HY - ry + 44, 34, 14), fill=lighter(spec["skin"], 0.55))   # Glanz
+        d.ellipse(box(HX - 46, HY - ry + 46, 26, 9), fill=lighter(spec["skin"], 0.3))   # Glanz
     elif name == "dennis":  # wuschelig
         pts = []
         n = 11
@@ -410,7 +410,8 @@ def sprite(name, expr_name="", mouth=0, blink=False, look=(0.0, 0.0), pose="", e
     draw_hair_front(d, name, spec)
     # Wangenröte
     for sx in (-1, 1):
-        d.ellipse(box(HX + sx * 70, HY + 46, 20, 12), fill=lighter((240, 140, 130), 0.2) if name != "richard" else spec["skin"])
+        if name == "sabine":
+            d.ellipse(box(HX + sx * 70, HY + 46, 18, 10), fill=(244, 176, 170))
     # Falten / Kinn / Nasen im Stil des Referenzbildes
     if name == "richard":
         for sx in (-1, 1):
@@ -428,8 +429,9 @@ def sprite(name, expr_name="", mouth=0, blink=False, look=(0.0, 0.0), pose="", e
             d.arc(box(HX + sx * 50, HY + 4, 24, 10), 20, 160, fill=darker(spec["skin"], 0.72), width=S(3))
     # Nase
     if name == "horst":     # große rote Knollennase
-        d.ellipse(box(HX + 4, HY + 40, 40, 34), fill=(238, 120, 110), outline=INK, width=S(6))
-        d.ellipse(box(HX - 8, HY + 28, 12, 8), fill=(250, 190, 180))
+        d.ellipse(box(HX + 2, HY + 42, 27, 22), fill=(232, 160, 136), outline=INK, width=S(5))
+        for sx in (-1, 1):
+            d.arc(box(HX + 2 + sx * 22, HY + 50, 10, 10), 0, 180, fill=INK, width=S(4))
     elif name == "richard":  # markante, große Nase
         d.polygon(P([(HX - 4, HY - 4), (HX - 24, HY + 54), (HX - 8, HY + 70), (HX + 24, HY + 68), (HX + 30, HY + 50), (HX + 10, HY - 4)]),
                   fill=darker(spec["skin"], 0.95), outline=INK, width=S(5))
@@ -447,11 +449,12 @@ def sprite(name, expr_name="", mouth=0, blink=False, look=(0.0, 0.0), pose="", e
         l2 = lid
         if ex_spec.get("twitch") and sx == 1:
             l2 = 0.75 if twitch_phase else 0.25
-        draw_eye(d, spec, cx, cy, l2, look, ex_spec.get("pupil", 1.0))
+        er = (24, 27) if name == "horst" else (27, 31)
+        draw_eye(d, spec, cx, cy, l2, look, ex_spec.get("pupil", 1.0), rx=er[0], ry=er[1])
         eyes.append((cx, cy))
     # Brauen
     bcol = spec.get("brow", darker(spec["hair"], 0.7))
-    thick = {"richard": 20, "klaus": 13, "horst": 10}.get(name, 11)
+    thick = {"richard": 20, "klaus": 13, "horst": 13}.get(name, 11)
     for (cx, cy), sx in zip(eyes, (-1, 1)):
         inner, outer = ex_spec["brow"]
         if sx == 1 and "brow_r" in ex_spec:
@@ -477,10 +480,12 @@ def sprite(name, expr_name="", mouth=0, blink=False, look=(0.0, 0.0), pose="", e
     if name == "richard" and not mouth and mk == "flat":   # mürrische Mundwinkel
         for sx in (-1, 1):
             d.line(P([(HX + sx * 32, my), (HX + sx * 44, my + 12)]), fill=INK, width=S(6))
-    if name == "horst" and extra == "sauce":   # Knoblauchsoße um den Mund
-        for k, (dx, dy) in enumerate([(-44, 96), (-12, 116), (22, 92), (50, 112), (0, 140)]):
-            d.ellipse(box(HX + dx, HY + dy, 15, 11 + 3 * (k % 2)), fill=(252, 250, 236), outline=INK, width=S(3))
-            d.line(P([(HX + dx, HY + dy + 8), (HX + dx, HY + dy + 24 + 6 * (k % 2))]), fill=(252, 250, 236), width=S(8))
+    if name == "horst" and extra == "sauce":   # Knoblauchsoße um den Mund verschmiert
+        d.chord(box(HX + 4, my + 4, 56, 30), 0, 180, fill=(250, 248, 232), outline=INK, width=S(4))
+        d.ellipse(box(HX - 46, my - 4, 16, 12), fill=(250, 248, 232), outline=INK, width=S(3))
+        d.ellipse(box(HX + 52, my + 2, 13, 10), fill=(250, 248, 232), outline=INK, width=S(3))
+        d.line(P([(HX + 20, my + 30), (HX + 22, my + 52)]), fill=(250, 248, 232), width=S(9))
+        d.line(P([(HX, my - 3), (HX + 30, my - 1)]), fill=INK, width=S(5))
     if name == "sabine" and mouth == 0 and mk == "chew" and twitch_phase:
         d.ellipse(box(HX + 44, HY + 98, 18, 16), fill=(255, 140, 190), outline=INK, width=S(4))   # Kaugummiblase
     if extra == "sweat":
