@@ -106,3 +106,11 @@ Ca. 39 s · gleicher Erklär-Look · Stimme `de-AT-JonasNeural` (+18 %). Rasenm�
 leerer Tank auf der Autobahn (§ 18 Abs. 8 StVO, Bußgeld) · nackt Autofahren erlaubt, Aussteigen = Belästigung der
 Allgemeinheit (§ 118 OWiG) · Tanzverbot an Karfreitag (Feiertagsgesetze der Länder) · Frage „Welches ist das dümmste?“.
 Quelle: `src/gesetze/` (`python3 tts.py && python3 render.py`). Ohne Gewähr.
+
+## haar-video.mp4 (Kevin & das Haar in der Carbonara)
+
+Ca. 44 s · Sketch + Rechts-Auflösung. Erst Dialog: Kevin (`de-DE-ChristophNeural`, höher gepitcht, lila Haare) isst den Teller leer
+und will wegen eines Haars nicht zahlen; der Kellner (`it-IT-DiegoNeural`, spricht Deutsch mit Akzent) merkt: das Haar ist lila wie Kevins.
+Dann Erzähler: Haar = Mangel → sofort reklamieren (neuer Teller); erst aufessen → voller Preis; Haar selbst reinlegen →
+versuchter Betrug (§ 263 StGB, bis 5 Jahre). CTA: „Kennt ihr so einen Kevin? Markiert ihn!“
+Quelle: `src/haar/` (`python3 tts.py && python3 trim.py && python3 render.py`; `trim.py` kürzt die Pausen zwischen den Dialogzeilen).
