@@ -8,13 +8,15 @@
 
 ## Feste Figuren (Charakterbogen – nie verändern)
 
+Referenzbild: das Figuren-Poster „Richter Richard / Anwalt Klaus / Gerichtsdiener Horst“ (Comic-Stil, Gerichtssaal). Tipp: Für Logo, Thumbnails und Requisiten einen **eigenen, stilisierten Adler** statt des echten Bundeswappens verwenden (§ 124 OWiG).
+
 Diese Beschreibung **wortgleich** vor jeden Bildprompt kopieren. Am besten einmal je Figur ein Referenzbild erzeugen und danach immer mit diesem Bild als Referenz arbeiten („character reference“ / „image-to-image“).
 
 | Figur | Aussehen (fix) | Rolle | ElevenLabs-Stimme |
 |---|---|---|---|
-| **Richter Richard** | ca. 65, groß und hager, kurze graue Haare mit Seitenscheitel, buschige graue Augenbrauen, eckige Hornbrille, tiefe Stirnfalten, schwarze Richterrobe mit weißem Beffchen, Holzhammer | Streng, trocken, wird mit jeder Folge nervöser. Catchphrase: „Ich habe in meinem Leben schon viel erlebt. Aber das hier ist wirklich eine Zumutung!“ | **Hans – Rich, Steady & Expressive** · `4Xg9AicinH9mkjyX3jai` (reif, autoritär, dezent dramatisch) |
-| **Anwalt Klaus** | ca. 45, zurückgegelte schwarze Haare, perfekt getrimmter Dreitagebart, zu weißes Lächeln, schmaler bordeauxroter Anzug, goldene Krawattennadel, Einstecktuch | Verteidigt jeden Unsinn mit voller Überzeugung, macht alles schlimmer | **Synchro Sam – Exaggerated Emotional Dub** · `JTpoNHy6INFLV7b5DDwt` (übertrieben, theatralisch, Synchron-Pathos) |
-| **Gerichtsdiener Horst** | ca. 55, klein und rundlich, Glatze mit Haarkranz, roter Walross-Schnurrbart, hellblaues Uniformhemd mit zu kurzer dunkelblauer Krawatte, Hosenträger, Schlüsselbund am Gürtel | Tollpatschig, langsam, mischt sich ein, versteht alles falsch – visuelle Gags | **Horstd – schmierig & aufdringlich** · `YgfD7xnpDbkAqDwKKlOz` (Comedy-Onkel, Stammtisch-Energie) |
+| **Richter Richard** | ca. 65, wilde, nach hinten gekämmte graue Mähne, buschige dunkle Brauen (finster gezogen), schmale rechteckige Metallbrille tief auf der großen Nase, Stirn- und Mundfalten, mürrische Mundwinkel, schwarze Richterrobe mit Samtbesatz, weißes Hemd, dunkle Krawatte, Holzhammer | Streng, sarkastisch, leicht genervt; wird mit jeder Folge nervöser. Catchphrase: „Ich habe in meinem Leben schon viel erlebt. Aber das hier ist wirklich eine Zumutung!“ | **Hans – Rich, Steady & Expressive** · `4Xg9AicinH9mkjyX3jai` |
+| **Anwalt Klaus** | ca. 40, volle, verwuschelte braune Haare, Dreitagebart, Kinngrübchen, breites Haifisch-Grinsen mit vielen Zähnen, eine Augenbraue hochgezogen, dunkelblauer Anzug mit breiten Revers, weißes Hemd, knallblaue Krawatte, oft mit Akte unterm Arm | Selbstbewusst, dramatisch, immer eine Idee zu viel; verteidigt jeden Unsinn und macht alles schlimmer | **Synchro Sam – Exaggerated Emotional Dub** · `JTpoNHy6INFLV7b5DDwt` |
+| **Gerichtsdiener Horst** | ca. 55, rundlich, Glatze mit wilden braunen Haarbüscheln an den Seiten, große rote Knollennase, große runde Glubschaugen, Doppelkinn, **kein Bart**, hellblaues Uniformhemd mit offenem Kragen, Schulterklappen und schwarzem „JUSTIZ“-Patch, Kaffeetasse | Tollpatschig, gutmütig, mischt sich gerne ein, versteht alles falsch – visuelle Gags | **Horstd – schmierig & aufdringlich** · `YgfD7xnpDbkAqDwKKlOz` |
 
 ### Richter Richard – Regeln für seine Figur
 

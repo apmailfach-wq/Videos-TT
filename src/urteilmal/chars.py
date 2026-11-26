@@ -43,12 +43,12 @@ def font(path, size):
 
 # ------------------------------------------------------------------ Figuren-Definitionen
 CHARS = {
-    "richard": dict(skin=(236, 196, 166), head=(122, 162), jaw=0.86, eye_dx=50, eye_dy=-6,
-                    body=(32, 32, 40), body_w=330, hair=(168, 168, 172)),
-    "klaus": dict(skin=(226, 176, 138), head=(128, 154), jaw=0.92, eye_dx=52, eye_dy=-8,
-                  body=(128, 22, 44), body_w=360, hair=(24, 22, 28)),
-    "horst": dict(skin=(244, 190, 160), head=(150, 142), jaw=1.0, eye_dx=54, eye_dy=-10,
-                  body=(150, 196, 236), body_w=420, hair=(150, 120, 96)),
+    "richard": dict(skin=(234, 182, 148), head=(120, 168), jaw=0.9, eye_dx=50, eye_dy=-4,
+                    body=(28, 28, 34), body_w=360, hair=(206, 206, 212), brow=(70, 66, 66)),
+    "klaus": dict(skin=(226, 168, 124), head=(126, 160), jaw=0.97, eye_dx=50, eye_dy=-10,
+                  body=(34, 44, 86), body_w=370, hair=(112, 66, 36), brow=(70, 40, 24)),
+    "horst": dict(skin=(246, 186, 152), head=(158, 150), jaw=1.06, eye_dx=50, eye_dy=-20,
+                  body=(134, 180, 234), body_w=440, hair=(104, 66, 40), brow=(70, 44, 30)),
     "dennis": dict(skin=(240, 204, 178), head=(124, 150), jaw=0.9, eye_dx=50, eye_dy=-6,
                    body=(30, 150, 90), body_w=330, hair=(110, 72, 40)),
     "sabine": dict(skin=(246, 206, 180), head=(120, 146), jaw=0.84, eye_dx=50, eye_dy=-4,
@@ -58,7 +58,7 @@ CHARS = {
 # Augenlid-Höhe (0 offen … 1 zu) und Brauen (innen, außen) in Welt-Pixeln (positiv = höher)
 EXPR = {
     "neutral": dict(lid=0.15, brow=(0, 0), mouth="flat"),
-    "deadpan": dict(lid=0.5, brow=(-2, -2), mouth="flat"),
+    "deadpan": dict(lid=0.45, brow=(-12, 2), mouth="flat"),
     "brow": dict(lid=0.45, brow=(-2, -2), brow_r=(18, 22), mouth="flat"),
     "tired": dict(lid=1.0, brow=(10, -8), mouth="frown"),
     "shock": dict(lid=0.0, brow=(22, 20), mouth="o", pupil=0.6),
@@ -68,15 +68,16 @@ EXPR = {
     "disgust": dict(lid=0.35, brow=(-12, 4), mouth="wavy"),
     "nervous": dict(lid=0.0, brow=(14, -6), mouth="wavy", pupil=0.7),
     "bored": dict(lid=0.55, brow=(0, 0), mouth="chew"),
-    "smug": dict(lid=0.4, brow=(4, 10), mouth="smirk"),
+    "smug": dict(lid=0.35, brow=(4, 10), brow_r=(16, 26), mouth="smirk"),
     "dramatic": dict(lid=0.0, brow=(12, 18), mouth="grin"),
     "outraged": dict(lid=0.0, brow=(-16, 10), mouth="frown"),
     "proud": dict(lid=0.3, brow=(8, 8), mouth="smile"),
     "longing": dict(lid=0.1, brow=(16, 4), mouth="o", pupil=1.15),
     "innocent": dict(lid=0.2, brow=(14, 8), mouth="smile"),
+    "puzzled": dict(lid=0.0, brow=(18, 14), mouth="o", pupil=0.6),
 }
 
-DEFAULT_EXPR = {"richard": "deadpan", "klaus": "smug", "horst": "neutral", "dennis": "upset", "sabine": "bored"}
+DEFAULT_EXPR = {"richard": "deadpan", "klaus": "smug", "horst": "puzzled", "dennis": "upset", "sabine": "bored"}
 
 
 # ------------------------------------------------------------------ Körper
@@ -104,30 +105,39 @@ def draw_body(d, spec, name, pose):
 
     for sx in (-1, 1):
         d.line(P([(HX + sx * (bw / 2 - 30), top + 130), (HX + sx * (bw / 2 - 10), SH)]), fill=darker(col, 0.6), width=S(5))
-    if name == "richard":     # Robe mit Beffchen
-        d.polygon(P([(HX - 70, top + 40), (HX, top + 140), (HX + 70, top + 40)]), fill=(250, 250, 250), outline=INK, width=S(5))
-        d.rectangle([S(HX - 28), S(top + 120), S(HX - 4), S(top + 230)], fill=(255, 255, 255), outline=INK, width=S(4))
-        d.rectangle([S(HX + 4), S(top + 120), S(HX + 28), S(top + 230)], fill=(255, 255, 255), outline=INK, width=S(4))
-        for k in range(4):
-            x = HX - 120 + k * 80
-            d.line(P([(x, top + 260), (x - 10, SH)]), fill=(55, 55, 66), width=S(5))
-    elif name == "klaus":     # Anzug, Hemd, Krawatte, Goldnadel, Einstecktuch
-        d.polygon(P([(HX - 75, top + 40), (HX, top + 230), (HX + 75, top + 40)]), fill=(250, 248, 244), outline=INK, width=S(5))
-        d.polygon(P([(HX - 16, top + 50), (HX + 16, top + 50), (HX + 26, top + 240), (HX, top + 280), (HX - 26, top + 240)]),
-                  fill=(36, 30, 40), outline=INK, width=S(4))
-        d.rectangle([S(HX - 34), S(top + 150), S(HX + 34), S(top + 160)], fill=(240, 196, 60), outline=INK, width=S(2))
-        d.line(P([(HX - 75, top + 40), (HX - 20, top + 260), (HX - 40, SH)]), fill=INK, width=S(5))
-        d.line(P([(HX + 75, top + 40), (HX + 20, top + 260), (HX + 40, SH)]), fill=INK, width=S(5))
-        d.polygon(P([(HX + 95, top + 200), (HX + 145, top + 190), (HX + 140, top + 215), (HX + 100, top + 222)]),
-                  fill=(255, 255, 255), outline=INK, width=S(3))
-    elif name == "horst":     # Hemd, kurze Krawatte, Hosenträger, Schlüssel
-        d.polygon(P([(HX - 50, top + 40), (HX, top + 100), (HX + 50, top + 40)]), fill=lighter(col, 0.5), outline=INK, width=S(4))
-        d.polygon(P([(HX - 14, top + 60), (HX + 14, top + 60), (HX + 20, top + 170), (HX, top + 190), (HX - 20, top + 170)]),
-                  fill=(30, 50, 120), outline=INK, width=S(4))
+    if name == "richard":     # schwarze Robe, weißes Hemd, dunkle Krawatte, Samtbesatz
+        d.polygon(P([(HX - 80, top + 36), (HX, top + 210), (HX + 80, top + 36)]), fill=(250, 250, 250), outline=INK, width=S(5))
+        d.polygon(P([(HX - 40, top + 40), (HX, top + 70), (HX + 40, top + 40), (HX + 30, top + 20), (HX - 30, top + 20)]),
+                  fill=(255, 255, 255), outline=INK, width=S(4))
+        d.polygon(P([(HX - 16, top + 62), (HX + 16, top + 62), (HX + 24, top + 200), (HX, top + 230), (HX - 24, top + 200)]),
+                  fill=(52, 56, 70), outline=INK, width=S(4))
+        for sx in (-1, 1):     # Samtbesatz der Robe
+            d.polygon(P([(HX + sx * 82, top + 36), (HX + sx * 120, top + 40), (HX + sx * 70, top + 330), (HX + sx * 36, top + 330),
+                         (HX + sx * 8, top + 220)]), fill=(14, 14, 18), outline=INK, width=S(5))
+        for k, x in enumerate((HX - 150, HX - 95, HX + 95, HX + 150)):   # Falten
+            d.line(P([(x, top + 200), (x + (-14 if x < HX else 14), SH)]), fill=(66, 66, 78), width=S(5))
+    elif name == "klaus":     # Navy-Anzug, weißes Hemd, knallblaue Krawatte, breite Revers
+        d.polygon(P([(HX - 78, top + 34), (HX, top + 250), (HX + 78, top + 34)]), fill=(250, 250, 252), outline=INK, width=S(5))
+        d.polygon(P([(HX - 18, top + 54), (HX + 18, top + 54), (HX + 28, top + 250), (HX, top + 290), (HX - 28, top + 250)]),
+                  fill=(36, 96, 200), outline=INK, width=S(4))
+        d.polygon(P([(HX - 18, top + 54), (HX + 18, top + 54), (HX + 12, top + 80), (HX - 12, top + 80)]), fill=(28, 74, 160), outline=INK, width=S(3))
+        for sx in (-1, 1):     # Revers
+            d.polygon(P([(HX + sx * 80, top + 34), (HX + sx * 128, top + 50), (HX + sx * 96, top + 150), (HX + sx * 120, top + 170),
+                         (HX + sx * 30, top + 300)]), fill=(44, 56, 104), outline=INK, width=S(5))
+        d.ellipse(box(HX - 60, top + 400, 9, 9), fill=(20, 24, 40), outline=INK, width=S(2))
+        d.ellipse(box(HX - 60, top + 470, 9, 9), fill=(20, 24, 40), outline=INK, width=S(2))
+    elif name == "horst":     # hellblaues Uniformhemd, offener Kragen, Schulterklappen, JUSTIZ-Patch
         for sx in (-1, 1):
-            d.line(P([(HX + sx * 110, top + 50), (HX + sx * 95, SH)]), fill=(60, 60, 70), width=S(18))
-        d.ellipse(box(HX - 150, top + 520, 22, 22), outline=(200, 190, 120), width=S(6))
-        d.rectangle([S(HX + 40), S(top + 70), S(HX + 110), S(top + 100)], fill=(240, 240, 240), outline=INK, width=S(3))
+            d.polygon(P([(HX + sx * 10, top + 40), (HX + sx * 90, top + 20), (HX + sx * 110, top + 90), (HX + sx * 20, top + 120)]),
+                      fill=lighter(col, 0.3), outline=INK, width=S(5))
+            d.polygon(P([(HX + sx * 120, top + 50), (HX + sx * 200, top + 70), (HX + sx * 196, top + 100), (HX + sx * 116, top + 82)]),
+                      fill=darker(col, 0.8), outline=INK, width=S(4))
+        d.line(P([(HX, top + 120), (HX, SH)]), fill=darker(col, 0.65), width=S(5))
+        for k in range(4):
+            d.ellipse(box(HX + 14, top + 170 + k * 120, 8, 8), fill=(240, 240, 240), outline=INK, width=S(2))
+        d.rectangle([S(HX + 40), S(top + 190), S(HX + 190), S(top + 330)], outline=darker(col, 0.6), width=S(5))
+        d.rounded_rectangle([S(HX + 46), S(top + 140), S(HX + 196), S(top + 186)], radius=S(6), fill=(22, 22, 26), outline=INK, width=S(3))
+        d.text((S(HX + 121), S(top + 163)), "JUSTIZ", font=font(F_BLACK, S(30)), fill=(255, 255, 255), anchor="mm")
     elif name == "dennis":    # Trikot mit Kragen und Nummer
         d.polygon(P([(HX - 60, top + 40), (HX, top + 90), (HX + 60, top + 40)]), fill=(255, 255, 255), outline=INK, width=S(5))
         for k in range(3):
@@ -231,9 +241,35 @@ def draw_mouth(d, spec, kind, open_lv, mx, my, teeth=False, w=40):
         d.line(P([(mx - w * 0.6, my), (mx + w * 0.6, my + 4)]), fill=INK, width=S(7))
 
 
+def spiky(cx, cy, rx, ry, n, amp, a0=math.pi, a1=2 * math.pi, seed=1):
+    import random as _r
+    rnd = _r.Random(seed)
+    pts = []
+    for i in range(n + 1):
+        a = a0 + (a1 - a0) * i / n
+        k = 1 + (amp * (0.6 + 0.4 * rnd.random()) if i % 2 else 0)
+        pts.append((cx + rx * k * math.cos(a), cy + ry * k * math.sin(a)))
+    return pts
+
+
 def draw_hair_back(d, name, spec):
     rx, ry = spec["head"]
     c = spec["hair"]
+    if name == "richard":   # wilde, zurückgekämmte graue Mähne
+        pts = spiky(HX, HY - 10, rx + 26, ry + 6, 22, 0.16, math.pi * 0.86, math.pi * 2.14, 3)
+        d.polygon(P(pts + [(HX + rx, HY + 60), (HX - rx, HY + 60)]), fill=c, outline=INK, width=S(OUT))
+        for k in range(7):
+            a = math.pi * (0.95 + k * 0.16)
+            d.line(P([(HX + (rx - 10) * math.cos(a), HY - 10 + (ry - 20) * math.sin(a)),
+                      (HX + (rx + 26) * math.cos(a), HY - 10 + (ry + 20) * math.sin(a))]), fill=darker(c, 0.7), width=S(4))
+    elif name == "klaus":   # volle, wuschelige braune Haare
+        pts = spiky(HX, HY - 34, rx + 30, ry * 0.86, 18, 0.2, math.pi * 0.92, math.pi * 2.08, 5)
+        d.polygon(P(pts + [(HX + rx + 4, HY + 10), (HX - rx - 4, HY + 10)]), fill=c, outline=INK, width=S(OUT))
+    elif name == "horst":   # wilde Büschel an den Seiten
+        for sx in (-1, 1):
+            pts = spiky(HX + sx * (rx - 16), HY - 30, 60, 90, 9, 0.5,
+                        math.pi * (0.5 if sx < 0 else -0.5), math.pi * (1.5 if sx < 0 else 0.5), 7 + sx)
+            d.polygon(P(pts), fill=c, outline=INK, width=S(6))
     if name == "sabine":
         d.ellipse(box(HX, HY - ry - 40, 78, 64), fill=c, outline=INK, width=S(OUT))      # Dutt
         for k in range(5):
@@ -246,23 +282,30 @@ def draw_hair_back(d, name, spec):
 def draw_hair_front(d, name, spec):
     rx, ry = spec["head"]
     c = spec["hair"]
-    if name == "richard":   # graue Haare mit Seitenscheitel
-        d.chord(box(HX, HY - ry * 0.35, rx + 6, ry * 0.75), 180, 360, fill=c, outline=INK, width=S(OUT))
-        d.polygon(P([(HX - rx - 6, HY - ry * 0.35), (HX - rx + 10, HY + 10), (HX - rx + 26, HY - ry * 0.3)]), fill=c, outline=INK, width=S(5))
-        d.polygon(P([(HX + rx + 6, HY - ry * 0.35), (HX + rx - 10, HY + 10), (HX + rx - 26, HY - ry * 0.3)]), fill=c, outline=INK, width=S(5))
-        d.line(P([(HX - 40, HY - ry * 0.98), (HX - 30, HY - ry * 0.45)]), fill=darker(c, 0.6), width=S(5))
+    if name == "richard":   # nach hinten geschwungene Mähne, hohe Stirn
+        d.chord(box(HX, HY - ry * 0.42, rx + 8, ry * 0.62), 180, 360, fill=c, outline=INK, width=S(OUT))
+        d.rectangle([S(HX - rx + 4), S(HY - ry * 0.42 - 6), S(HX + rx - 4), S(HY - ry * 0.42 + 4)], fill=c)
+        d.arc(box(HX, HY - ry * 0.42, rx + 2, 22), 0, 180, fill=INK, width=S(5))
+        for k in range(6):
+            x = HX - 80 + k * 32
+            d.line(P([(x, HY - ry * 0.44), (x + 30, HY - ry * 0.98)]), fill=darker(c, 0.68), width=S(4))
         for k in range(3):     # Stirnfalten
-            yy = HY - ry * 0.32 + k * 14
-            d.arc(box(HX, yy + 20, 44 - k * 6, 14), 200, 340, fill=darker(spec["skin"], 0.7), width=S(4))
-    elif name == "klaus":   # zurückgegelt
-        d.chord(box(HX, HY - ry * 0.3, rx + 4, ry * 0.82), 180, 360, fill=c, outline=INK, width=S(OUT))
+            yy = HY - ry * 0.4 + k * 15
+            d.arc(box(HX, yy + 20, 50 - k * 6, 12), 200, 340, fill=darker(spec["skin"], 0.68), width=S(4))
+    elif name == "klaus":   # verwuschelte Tolle
+        d.chord(box(HX, HY - ry * 0.4, rx + 6, ry * 0.66), 180, 360, fill=c, outline=INK, width=S(OUT))
+        d.rectangle([S(HX - rx + 4), S(HY - ry * 0.4 - 6), S(HX + rx - 4), S(HY - ry * 0.4 + 4)], fill=c)
+        d.polygon(P([(HX - 60, HY - ry * 0.42), (HX - 20, HY - ry * 0.25), (HX - 10, HY - ry * 0.45), (HX + 30, HY - ry * 0.3),
+                     (HX + 20, HY - ry * 0.46)]), fill=c, outline=INK, width=S(5))
+        d.arc(box(HX, HY - ry * 0.42, rx + 2, 18), 0, 60, fill=INK, width=S(5))
+        d.arc(box(HX, HY - ry * 0.42, rx + 2, 18), 120, 180, fill=INK, width=S(5))
         for k in range(4):
-            d.arc(box(HX + 20, HY - ry * 0.32, rx - 10 - k * 18, ry * 0.7 - k * 14), 200, 330, fill=(90, 90, 110), width=S(4))
-    elif name == "horst":   # Glatze mit Haarkranz
-        for sx in (-1, 1):
-            d.polygon(P([(HX + sx * (rx + 8), HY - 40), (HX + sx * (rx - 30), HY - 60), (HX + sx * (rx - 18), HY + 40),
-                         (HX + sx * (rx + 10), HY + 30)]), fill=c, outline=INK, width=S(5))
-        d.ellipse(box(HX - 40, HY - ry + 40, 30, 14), fill=lighter(spec["skin"], 0.5))   # Glanz
+            d.arc(box(HX - 40 + k * 40, HY - ry * 0.66, 40, 22), 200, 330, fill=darker(c, 0.6), width=S(4))
+    elif name == "horst":   # Glatze, ein paar Haare oben, Glanz
+        for k in range(4):
+            x = HX - 30 + k * 18
+            d.arc(box(x, HY - ry - 6, 14, 26), 180, 320, fill=c, width=S(4))
+        d.ellipse(box(HX - 50, HY - ry + 44, 34, 14), fill=lighter(spec["skin"], 0.55))   # Glanz
     elif name == "dennis":  # wuschelig
         pts = []
         n = 11
@@ -281,15 +324,26 @@ def draw_face_extras(d, name, spec, expr_name, mouth_open):
     rx, ry = spec["head"]
     ex = spec["eye_dx"]
     ey = HY + spec["eye_dy"]
-    if name == "richard" and expr_name == "__glasses__":   # eckige Hornbrille
+    if name == "richard" and expr_name == "__glasses__":   # schmale, rechteckige Metallbrille, tief auf der Nase
         for sx in (-1, 1):
-            d.rounded_rectangle([S(HX + sx * ex - 40), S(ey - 32), S(HX + sx * ex + 40), S(ey + 30)], radius=S(8),
-                                outline=(90, 52, 30), width=S(9))
-        d.line(P([(HX - ex + 40, ey - 8), (HX + ex - 40, ey - 8)]), fill=(90, 52, 30), width=S(8))
-    if name in ("klaus", "dennis"):   # Bartschatten
+            d.rounded_rectangle([S(HX + sx * ex - 42), S(ey + 4), S(HX + sx * ex + 42), S(ey + 40)], radius=S(6),
+                                outline=(40, 40, 46), width=S(6))
+            d.line(P([(HX + sx * (ex + 42), ey + 12), (HX + sx * (rx - 2), ey + 4)]), fill=(40, 40, 46), width=S(5))
+        d.arc(box(HX, ey + 20, 10, 8), 180, 360, fill=(40, 40, 46), width=S(5))
+    if name in ("klaus", "dennis", "horst"):   # Bartschatten / Stoppeln
         layer = Image.new("RGBA", (S(SW), S(SH)), (0, 0, 0, 0))
         ld = ImageDraw.Draw(layer)
-        ld.chord(box(HX, HY + ry * 0.3, rx * spec["jaw"] - 6, ry * 0.62), 0, 180, fill=(70, 60, 60, 70))
+        a = {"klaus": 60, "dennis": 70, "horst": 0}[name]
+        ld.chord(box(HX, HY + ry * 0.3, rx * spec["jaw"] - 6, ry * 0.62), 0, 180, fill=(70, 50, 44, a))
+        if name == "klaus":
+            import random as _r
+            rnd = _r.Random(4)
+            for _ in range(160):
+                ang = rnd.uniform(0.1, math.pi - 0.1)
+                rr = rnd.uniform(0.55, 0.98)
+                x = HX + (rx * spec["jaw"] - 14) * rr * math.cos(ang)
+                y = HY + ry * 0.3 + ry * 0.6 * rr * math.sin(ang)
+                ld.ellipse(box(x, y, 2.2, 2.2), fill=(60, 36, 24, 150))
         return layer
     return None
 
@@ -357,9 +411,31 @@ def sprite(name, expr_name="", mouth=0, blink=False, look=(0.0, 0.0), pose="", e
     # Wangenröte
     for sx in (-1, 1):
         d.ellipse(box(HX + sx * 70, HY + 46, 20, 12), fill=lighter((240, 140, 130), 0.2) if name != "richard" else spec["skin"])
-    # Nase
+    # Falten / Kinn / Nasen im Stil des Referenzbildes
+    if name == "richard":
+        for sx in (-1, 1):
+            d.arc(box(HX + sx * 54, HY + 70, 26, 50), 90 - sx * 60, 90 + sx * 60 if sx < 0 else 150, fill=darker(spec["skin"], 0.66), width=S(4))
+            d.arc(box(HX + sx * 50, HY + 18, 26, 10), 20, 160, fill=darker(spec["skin"], 0.72), width=S(3))   # Tränensäcke
+        d.line(P([(HX - 8, HY - 64), (HX - 4, HY - 40)]), fill=darker(spec["skin"], 0.66), width=S(4))
+        d.line(P([(HX + 8, HY - 64), (HX + 4, HY - 40)]), fill=darker(spec["skin"], 0.66), width=S(4))
+    if name == "klaus":
+        d.line(P([(HX, HY + ry * 0.9), (HX, HY + ry * 0.78)]), fill=darker(spec["skin"], 0.6), width=S(4))   # Kinngrübchen
+        for sx in (-1, 1):
+            d.arc(box(HX + sx * 62, HY + 74, 18, 36), 60, 300 if sx > 0 else 120, fill=darker(spec["skin"], 0.7), width=S(4))
     if name == "horst":
-        d.ellipse(box(HX, HY + 38, 30, 26), fill=(240, 150, 130), outline=INK, width=S(6))
+        d.arc(box(HX, HY + ry * 0.98, rx * 0.62, 26), 20, 160, fill=darker(spec["skin"], 0.7), width=S(5))   # Doppelkinn
+        for sx in (-1, 1):
+            d.arc(box(HX + sx * 50, HY + 4, 24, 10), 20, 160, fill=darker(spec["skin"], 0.72), width=S(3))
+    # Nase
+    if name == "horst":     # große rote Knollennase
+        d.ellipse(box(HX + 4, HY + 40, 40, 34), fill=(238, 120, 110), outline=INK, width=S(6))
+        d.ellipse(box(HX - 8, HY + 28, 12, 8), fill=(250, 190, 180))
+    elif name == "richard":  # markante, große Nase
+        d.polygon(P([(HX - 4, HY - 4), (HX - 24, HY + 54), (HX - 8, HY + 70), (HX + 24, HY + 68), (HX + 30, HY + 50), (HX + 10, HY - 4)]),
+                  fill=darker(spec["skin"], 0.95), outline=INK, width=S(5))
+        d.ellipse(box(HX + 12, HY + 62, 7, 4), fill=INK)
+    elif name == "klaus":
+        d.line(P([(HX + 6, HY - 6), (HX - 14, HY + 54), (HX + 4, HY + 64), (HX + 22, HY + 58)]), fill=INK, width=S(6), joint="curve")
     else:
         d.line(P([(HX + 4, HY + 4), (HX - 12, HY + 50), (HX + 10, HY + 56)]), fill=INK, width=S(6), joint="curve")
     # Augen
@@ -374,8 +450,8 @@ def sprite(name, expr_name="", mouth=0, blink=False, look=(0.0, 0.0), pose="", e
         draw_eye(d, spec, cx, cy, l2, look, ex_spec.get("pupil", 1.0))
         eyes.append((cx, cy))
     # Brauen
-    bcol = darker(spec["hair"], 0.7) if name != "horst" else (200, 80, 40)
-    thick = 16 if name == "richard" else 11
+    bcol = spec.get("brow", darker(spec["hair"], 0.7))
+    thick = {"richard": 20, "klaus": 13, "horst": 10}.get(name, 11)
     for (cx, cy), sx in zip(eyes, (-1, 1)):
         inner, outer = ex_spec["brow"]
         if sx == 1 and "brow_r" in ex_spec:
@@ -389,14 +465,22 @@ def sprite(name, expr_name="", mouth=0, blink=False, look=(0.0, 0.0), pose="", e
     mk = ex_spec["mouth"]
     my = HY + 96
     if name == "horst":
-        my = HY + 118
-    draw_mouth(d, spec, mk, mouth / 2.0 if mouth else 0, HX, my, teeth=(name == "klaus"))
-    if name == "horst":
-        draw_mustache(d, spec)
-        if extra == "sauce":
-            for k, (dx, dy) in enumerate([(-50, 106), (-10, 112), (30, 104), (64, 110)]):
-                d.ellipse(box(HX + dx, HY + dy, 14, 10 + 4 * (k % 2)), fill=(252, 250, 236), outline=INK, width=S(3))
-                d.line(P([(HX + dx, HY + dy + 8), (HX + dx, HY + dy + 26 + 6 * (k % 2))]), fill=(252, 250, 236), width=S(8))
+        my = HY + 104
+    if name == "klaus" and mk in ("smirk", "grin") and not mouth:
+        # breites Haifisch-Grinsen mit vielen Zähnen
+        d.chord(box(HX + 6, my - 10, 62, 40), 0, 180, fill=(255, 255, 255), outline=INK, width=S(6))
+        d.line(P([(HX - 54, my - 8), (HX + 66, my - 8)]), fill=INK, width=S(4))
+        for k in range(-4, 5):
+            d.line(P([(HX + 6 + k * 13, my - 8), (HX + 6 + k * 12, my + 12)]), fill=(200, 200, 205), width=S(2))
+    else:
+        draw_mouth(d, spec, mk, mouth / 2.0 if mouth else 0, HX, my, teeth=(name == "klaus"))
+    if name == "richard" and not mouth and mk == "flat":   # mürrische Mundwinkel
+        for sx in (-1, 1):
+            d.line(P([(HX + sx * 32, my), (HX + sx * 44, my + 12)]), fill=INK, width=S(6))
+    if name == "horst" and extra == "sauce":   # Knoblauchsoße um den Mund
+        for k, (dx, dy) in enumerate([(-44, 96), (-12, 116), (22, 92), (50, 112), (0, 140)]):
+            d.ellipse(box(HX + dx, HY + dy, 15, 11 + 3 * (k % 2)), fill=(252, 250, 236), outline=INK, width=S(3))
+            d.line(P([(HX + dx, HY + dy + 8), (HX + dx, HY + dy + 24 + 6 * (k % 2))]), fill=(252, 250, 236), width=S(8))
     if name == "sabine" and mouth == 0 and mk == "chew" and twitch_phase:
         d.ellipse(box(HX + 44, HY + 98, 18, 16), fill=(255, 140, 190), outline=INK, width=S(4))   # Kaugummiblase
     if extra == "sweat":

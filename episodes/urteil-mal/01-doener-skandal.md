@@ -71,7 +71,7 @@ Feste Figuren, Stimmen und Stil: siehe `00-serienbibel.md`
 
 ### SZENE 6 – Der Knaller · 54–60 s · *Richterpult nah*
 *Richard greift zufrieden nach seinem Feierabend-Döner. Nur noch leere Folie. Das Post-it „FINGER WEG – R.“ klebt noch dran. Er dreht sich langsam um.*
-*Horst steht da – Knoblauchsoße im Walross-Schnurrbart, eine Gabel in der Hand.*
+*Horst steht da – Knoblauchsoße rund um den Mund, eine Gabel in der Hand.*
 **HORST:** „Da stand nur ‚Finger weg‘.“
 *Richards Auge zuckt. Freeze-Frame.*
 **TEXT (groß):** TEAM DENNIS oder TEAM SABINE? 🌯
@@ -92,7 +92,7 @@ Feste Figuren, Stimmen und Stil: siehe `00-serienbibel.md`
 | 3 | Klaus leaping up dramatically, blazer flying, fist on the table; Dennis in the background holding the licked-clean foil in disgust; Sabine shrugging | Kamera-Shake bei der Faust; Zoom raus auf Richards Stirnrunzeln |
 | 4 | Close-up: Sabine slowly pulling a long receipt from her sleeve like a magician; then everyone (Klaus, Horst, Richard) turning their heads toward a sweating Dennis | Langsamer Zoom auf den Kassenzettel; Schweißtropfen ploppen bei Dennis ins Bild |
 | 5 | Frontal close-up of Richard at the bench, glasses in hand, deadpan stare directly into camera, golden paragraph symbols floating around him | Statisch → bei jedem Paragrafen ploppt ein Text-Insert; Hammerschlag mit Kamera-Shake |
-| 6 | Close-up: Richard holding an empty kebab foil with a yellow sticky note, turning around slowly; Horst behind him with white garlic sauce in his red walrus mustache, holding a fork, innocent smile | Langsamer Dreh/Zoom auf Horst; Freeze-Frame + 2 Bilder Augenzucken im Wechsel |
+| 6 | Close-up: Richard holding an empty kebab foil with a yellow sticky note, turning around slowly; Horst behind him with white garlic sauce smeared around his mouth, holding a fork, innocent smile | Langsamer Dreh/Zoom auf Horst; Freeze-Frame + 2 Bilder Augenzucken im Wechsel |
 
 ---
 
@@ -110,7 +110,7 @@ Feste Figuren, Stimmen und Stil: siehe `00-serienbibel.md`
 **Kurzfassung fürs Video:** Getrennte Vermögen ja (§ 1363), Scheidung wegen Döner nein (§ 1565), Döner gegen Döner = Aufrechnung (§ 387). Einen „Döner-Paragrafen“ gibt es nicht.
 
 ## 10. Schlusswitz des Richters
-> „Urteil: Zwei Döner. Zwei Kühlschränke. Und ich habe Feierabend.“ → Knaller: Richards eigener Döner ist weg. Horst: „Da stand nur ‚Finger weg‘.“
+> „Urteil: Zwei Döner. Zwei Kühlschränke. Und ich habe Feierabend.“ → Knaller: Richards eigener Döner ist weg. Horst (Soße am Mund): „Da stand nur ‚Finger weg‘.“
 
 ## 11. Kommentarfrage
 > **„TEAM DENNIS oder TEAM SABINE? Und ganz ehrlich: Zählt ‚Finger weg‘ auch für Gabeln? 🌯🍴“**
