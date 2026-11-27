@@ -112,3 +112,28 @@ LANG_VIDEO=de python3 render.py seed 314      # deutsche Texte/€ -> ../../zarp
 - `src/zarplata/render.py` – Cairo-Grafik (Kantenglättung), Kamera-Follow, Partikel, Münzen, Konfetti, Screen-Shake, HUD
 - `src/zarplata/sfx.py` – synthetisierte Sounds passend zu den Physik-Events
 - `src/zarplata/texts.py` – alle Texte (ru/de) – hier eigene Ausgaben/Pointen eintragen
+
+## gehalt-video.mp4 – „Schafft es mein Gehalt bis zum Urlaub?“ (deutsches Leben)
+
+Physik-Video (Pymunk), 1080×1920, 60 fps, ca. 43 s, nur Soundeffekte (Trend-Sound in TikTok drüberlegen).
+Ein Monat mit **3.350 € brutto** (StKl. I, keine Kinder, ohne Kirchensteuer, Werte 2026 gerundet, ohne Gewähr):
+
+| Kapitel | Was passiert |
+|---|---|
+| 1 · Lohnabzüge | Schacht mit 5 Schranken: Lohnsteuer −392,00 · Rente 9,3 % −311,55 · Kranken 8,75 % −293,13 · Pflege 2,4 % −80,40 · Arbeitslosen 1,3 % −43,55 → Stempel **NETTO 2.229,37 €** |
+| 2 · Fixkosten | Rotoren: Warmmiete −1.150 · Strom −89 · Handy + WLAN −64,98 (danach „BEZAHLT“) |
+| 3 · Alltag | Plinko mit Emoji-Pins: Kaffee to go, Butterbrezel, Döner, Pizza, Feierabendbier, Online-Bestellung; grüner Pfand-Bumper +3,25 |
+| 4 · Überraschungen | Kugeln mit Gesicht: Wocheneinkauf, Zahnreinigung, Rundfunkbeitrag 18,36, Fitnessstudio, Streaming, Lieferdienst |
+| 5 · Monatsende | Kolben Kfz-Versicherung, Deutschlandticket 63 €, Knöllchen; Steuererstattung-Bumper; Rotor NK-Nachzahlung −240; Taschen Dispo / **Urlaub (Mallorca)** / Nudeln bis zum 1. |
+| Ende | „GESCHAFFT!“ → Monatsabrechnung (Brutto, Abgaben, Fixkosten, Alltag, Überraschungen, Rückflüsse, Rest) → „Mallorca? Eher Balkonien.“ → „Wie viel bleibt dir am Monatsende?“ |
+
+HUD: Kontostand (Brutto → Netto, mit Cent), live **Kontoauszug** der letzten 3 Buchungen, Monatsfortschritt „1.–31. Mai“.
+
+```bash
+cd src/gehalt
+python3 render.py                         # besten Seed suchen + ../../gehalt-video.mp4 (~2 min)
+python3 render.py seed 451                # diesen Lauf rendern (218,27 € übrig)
+SEED=451 python3 render.py preview 3 15 L4 end   # Standbilder (L4 = 4 s nach Landung)
+python3 sim.py 200                        # Seeds testen
+```
+Beträge/Texte: `src/gehalt/daten.py` · Level: `src/gehalt/sim.py` · Grafik: `src/gehalt/render.py`.
