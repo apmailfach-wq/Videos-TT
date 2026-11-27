@@ -77,3 +77,26 @@ python3 render.py              # rendert ../../fuehrerschein-video-neon.mp4
 python3 render.py shots        # Schnittliste
 python3 render.py preview 5 30 # Standbilder
 ```
+
+## schlaf-5-phasen.mp4 – „Die 5 Phasen von ‚Ich geh heute früh schlafen‘“
+
+30 s · 1080×1920 · 30 fps · kein Voiceover, nur Text-Overlays + synthetisierter Sound (Musik/SFX komplett per numpy).
+Alles bewegt sich per echter Physik-Simulation (Gravitation, Abprall, Kollisionen, Feder-Squash).
+
+| Zeit | Phase | Was passiert |
+|---|---|---|
+| 0–4,6 s | 1 · Der Plan | Kissen-Wort „SCHLAF“ (mit Schlafmütze) atmet & schnarcht, zZz, Spieluhr |
+| 1,6 s | – | „Nur 1 Video“ (Gummi, Wackelaugen) ploppt oben rein und zappelt hyperaktiv |
+| 4,6–8,9 s | 2 · Die Ausnahme | Wort springt, hüpft 3× immer höher auf das Kissen (Boing) |
+| 8,9–16 s | 3 · Die Explosion | zerplatzt in 50 bunte „TikTok“-Flummis, 150-bpm-Beat, Handy-Glow, Uhr rast |
+| 16–25 s | 4 · Das Begräbnis | Bälle verlieren Energie und begraben das Kissen, Uhr → „??:??“ |
+| 25–25,4 s | 5 · Die Erkenntnis | Eisenblock „03:47 UHR“ fällt (Pfeifen), THUD, Screenshake, alles platt – dann **Stille** |
+| 27,8 s | CTA | „Welche Phase bist du gerade? 1–5 – Schreib die Zahl in die Kommentare“ |
+
+```bash
+cd src/schlaf
+python3 sim.py      # Physik -> build/schlaf/sim.npz + events.json (Sound-Events)
+python3 audio.py    # Soundtrack -> build/schlaf/audio.wav
+python3 render.py   # rendert ../../schlaf-5-phasen.mp4
+python3 render.py preview 3 9 20 26   # Standbilder
+```
