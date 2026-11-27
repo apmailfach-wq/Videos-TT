@@ -681,7 +681,7 @@ def overlays(img, run, f):
     fr = run.frames[min(f, run.n - 1)]
     if fr["slow"] and f < run.land:
         k = 0.5 + 0.5 * math.sin(t * 9)
-        sp = text_sprite(T["comeon"], 54, color=(255, 255, 255), stroke=5, stroke_color=(0, 0, 0))
+        sp = fit_sprite(T["comeon"], W - 160, 54, color=(255, 255, 255), stroke=5, stroke_color=(0, 0, 0))
         paste_c(img, sp, W / 2, 420, scale=1 + 0.06 * k)
         img.alpha_composite(vignette((0, 0, 0), 120))
     # ending
