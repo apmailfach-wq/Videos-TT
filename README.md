@@ -77,3 +77,38 @@ python3 render.py              # rendert ../../fuehrerschein-video-neon.mp4
 python3 render.py shots        # Schnittliste
 python3 render.py preview 5 30 # Standbilder
 ```
+
+## zarplata-video.mp4 – Physik-Simulator „Доживёт ли зарплата до отпуска?“
+
+**Format:** 2D-Physik (Pymunk) zum Zuschauen und Mitfiebern, 1080×1920, **60 fps**, ca. 34 s, keine Stimme –
+nur Sound-Effekte (Aufprall, „Geld weg“-Bonk, Ka-Ching, Trommelwirbel, Fanfare). Trend-Sound in TikTok drüberlegen.
+Deutsche Version: `zarplata-video-de.mp4` („Schafft es mein Gehalt bis zum Urlaub?“).
+
+Der grüne Ball **ЗАРПЛАТА** (mit Gesicht, wird mit sinkendem Kontostand kleiner und roter) fällt durch das Level:
+
+| Abschnitt | Hindernisse (Kosten) |
+|---|---|
+| Hook | „ДОЖИВЁТ ЛИ МОЯ ЗАРПЛАТА ДО ОТПУСКА?“, Kontostand 85 000 ₽ + Fortschrittsbalken zum 🏖 |
+| Rotoren | АРЕНДА −30 000, 2× КОММУНАЛКА −7 500 (danach „ОПЛАЧЕНО“) |
+| Plinko | НАЛОГИ-Pins je −1 300, grüner КЭШБЭК +47 ₽ |
+| Kammer | wütende Bälle: ДОСТАВКА ЕДЫ, ВНЕЗАПНЫЙ ЗУБНОЙ (−18 000), ПОДПИСКИ, ДР ДРУГА |
+| Kolben | КРЕДИТ, ШТРАФ, Bonus-Bumper ПРЕМИЯ +15 000 |
+| Finale | Zeitlupe „НУ ЖЕ… НУ ЖЕ…“, Schieber ЦЕНЫ ВЫРОСЛИ, Taschen МИКРОЗАЙМ / **ОТПУСК** / ДОШИРАК ДО ЗП |
+| Ende | „ДОЛЕТЕЛА!“ → „Осталось на отпуск: 1 651 ₽“ → „Отпуск: шашлык на балконе“ → Kommentar-Frage 👇 |
+
+Die Simulation ist deterministisch: `render.py` testet hunderte Seeds und nimmt den dramatischsten Lauf
+(landet im Urlaub, fast pleite, viele verschiedene Treffer, ~30 s). Andere Seeds = neue Videos mit gleichem Level.
+
+```bash
+cd src/zarplata
+python3 render.py                    # besten Seed suchen + ../../zarplata-video.mp4 rendern (~1 min)
+python3 render.py seed 314           # bestimmten Seed rendern
+python3 sim.py 300                   # Seeds durchprobieren: Ergebnis, Restgeld, Dauer, Treffer
+SEED=314 python3 render.py preview 2 15 end   # Standbilder -> build/zarplata/stills/
+LANG_VIDEO=de python3 render.py seed 314      # deutsche Texte/€ -> ../../zarplata-video-de.mp4
+```
+
+- `src/zarplata/sim.py` – Level, Hindernisse, Kosten, Kollisionen, Zeitlupe, Anti-Hängenbleiben
+- `src/zarplata/render.py` – Cairo-Grafik (Kantenglättung), Kamera-Follow, Partikel, Münzen, Konfetti, Screen-Shake, HUD
+- `src/zarplata/sfx.py` – synthetisierte Sounds passend zu den Physik-Events
+- `src/zarplata/texts.py` – alle Texte (ru/de) – hier eigene Ausgaben/Pointen eintragen
