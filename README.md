@@ -77,3 +77,25 @@ python3 render.py              # rendert ../../fuehrerschein-video-neon.mp4
 python3 render.py shots        # Schnittliste
 python3 render.py preview 5 30 # Standbilder
 ```
+
+## toast_physik.mp4 (Three.js + Remotion, 1080×1920, 60 fps, 45 s)
+
+**Konzept:** Apple-Keynote-/Windkanal-Analyse eines völlig banalen Problems – warum Toast auf der Butterseite landet.
+Dunkles Studio (#0F1115), technisches Raster, glänzende 3D-Butter, leuchtende Strömungslinien, Rotationsachse,
+Winkelmesser, „180° Kritischer Punkt“, Bullet-Time-Massenanalyse, 3-Meter-Hologrammtisch als „Lösung“.
+
+Quelle: `src/toast/`
+
+```bash
+cd src/toast && npm install
+node audio/render-audio.cjs              # Tonspur per Web Audio API (OfflineAudioContext in Chromium) -> public/audio.wav
+BE=$(ls -d /opt/pw-browsers/chromium_headless_shell-*/*/chrome-headless-shell | head -1)
+npx remotion render src/index.ts Toast ../../preview_toast.mp4 --frames=0-899 --gl=swangle --browser-executable=$BE   # 15-s-Vorschau
+npx remotion render src/index.ts Toast ../../toast_physik.mp4 --gl=swangle --browser-executable=$BE                  # komplett
+```
+
+- `src/physics.ts` – deterministische Kipp-/Fallphysik (75 cm, landet exakt bei 180°), Zeitlupen-Mapping, Kamerafahrt, 3D→2D-Projektion für HUD-Labels
+- `src/Scene3D.tsx` – Studio, Tisch, Strömungslinien-Shader, Winkelmesser, 3-m-Hologramm
+- `src/Toast.tsx` – prozedurales Toast (Krume/Kruste-Texturen) + Butter (MeshPhysicalMaterial mit Clearcoat)
+- `src/Hud.tsx` – Untertitel (Wort-für-Wort-Blur-In), Datenleiste (Zeit/Winkel/Höhe/Zeitlupe), Labels
+- `audio/synth.js` – UI-Klicks, Zeitlupen-Rauschen, Ambient-Pad, weicher Aufprall
