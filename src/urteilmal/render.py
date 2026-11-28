@@ -22,6 +22,7 @@ ROOT = Path(__file__).resolve().parents[2]
 B = ROOT / "build" / "doener"
 OUT_FILE = ROOT / "urteil-mal-01-doener-skandal.mp4"
 W, H, FPS = 1080, 1920, 30
+CX = 500   # Mitte der TikTok-Safe-Zone (rechts liegen die Buttons)
 WW, WH = 2160, 3840
 
 F_UNB = str(ROOT / "fonts" / "Unbounded_900Black.ttf")
@@ -232,7 +233,7 @@ def wrap(words, f, maxw):
     return lines
 
 
-def chunks_for(text, f, maxw=900, max_lines=2):
+def chunks_for(text, f, maxw=780, max_lines=2):
     words = text.split()
     lines = wrap(words, f, maxw)
     out = []
@@ -272,7 +273,7 @@ def draw_subtitle(img, ev, t_rel, y_center):
     wi = base
     for line in lines:
         widths = [text_wh(w_ + " ", f)[0] for w_ in line]
-        x = W / 2 - sum(widths) / 2
+        x = CX - sum(widths) / 2
         for w_, ww in zip(line, widths):
             col = (255, 230, 60) if wi == k else (255, 255, 255)
             d.text((x, y), w_, font=f, fill=col, stroke_width=9, stroke_fill=(15, 12, 20))
@@ -285,9 +286,9 @@ def draw_subtitle(img, ev, t_rel, y_center):
         fl = font(F_UNB7, 30)
         tw, th = text_wh(name, fl)
         yl = y_center - (len(lines) * lh) / 2 - 62
-        d.rounded_rectangle([W / 2 - tw / 2 - 22, yl - 6, W / 2 + tw / 2 + 22, yl + th + 18], radius=26, fill=col,
+        d.rounded_rectangle([CX - tw / 2 - 22, yl - 6, CX + tw / 2 + 22, yl + th + 18], radius=26, fill=col,
                             outline=(15, 12, 20), width=5)
-        d.text((W / 2, yl + th / 2 + 6), name, font=fl, fill=(15, 12, 20), anchor="mm")
+        d.text((CX, yl + th / 2 + 6), name, font=fl, fill=(15, 12, 20), anchor="mm")
 
 
 def draw_logo(img):
@@ -317,26 +318,26 @@ def big_text(img, lines, y, t_in, size=96, rot=-3):
     lay = lay.rotate(rot, expand=True, resample=Image.BICUBIC)
     nw, nh = max(1, int(lay.width * s)), max(1, int(lay.height * s))
     lay = lay.resize((nw, nh), Image.BILINEAR)
-    img.paste(lay, (int(W / 2 - nw / 2), int(y - nh / 2)), lay)
+    img.paste(lay, (int(CX - nw / 2), int(y - nh / 2)), lay)
 
 
 def law_card(img, y, t_in, title, sub):
     s = ease_back(t_in / 0.3)
     if s <= 0.01:
         return
-    cw, ch = 940, 176
+    cw, ch = 860, 166
     lay = Image.new("RGBA", (cw + 20, ch + 20), (0, 0, 0, 0))
     d = ImageDraw.Draw(lay)
     d.rounded_rectangle([14, 14, cw + 14, ch + 14], radius=30, fill=(15, 12, 20))
     d.rounded_rectangle([4, 4, cw, ch], radius=30, fill=(255, 252, 240), outline=(15, 12, 20), width=6)
     d.rounded_rectangle([4, 4, 40, ch], radius=18, fill=(210, 30, 50))
-    d.text((70, 62), title, font=font(F_UNB, 54), fill=(210, 30, 50), anchor="lm")
-    d.text((70, 132), sub, font=font(F_INTER_B, 40), fill=(30, 26, 36), anchor="lm")
+    d.text((66, 58), title, font=font(F_UNB, 48), fill=(210, 30, 50), anchor="lm")
+    d.text((66, 124), sub, font=font(F_INTER_B, 34), fill=(30, 26, 36), anchor="lm")
     nw, nh = int(lay.width * s), int(lay.height * s)
     if nw < 2 or nh < 2:
         return
     lay = lay.resize((nw, nh), Image.BILINEAR)
-    img.paste(lay, (int(W / 2 - nw / 2), int(y - nh / 2)), lay)
+    img.paste(lay, (int(CX - nw / 2), int(y - nh / 2)), lay)
 
 
 @lru_cache(maxsize=4)
@@ -402,9 +403,10 @@ class Scene:
         else:
             cw = cw0 + (cw1 - cw0) * ease_io(tr)
         if target in HEADS or target == "richard_horst":
-            cw *= 0.86
+            cw *= 0.74
         ch = cw * 16 / 9
         if target == "wide":
+            cw, ch = cw * 0.88, ch * 0.88
             cx, cy = WW / 2, WH / 2
         elif target == "doener":
             cx, cy = DOENER_POS[0] - 20, DOENER_POS[1] - 60
@@ -412,7 +414,7 @@ class Scene:
             cx, cy = 1360, 960 + 0.16 * ch
         else:
             hx, hy = HEADS[target]
-            cx, cy = hx, hy + (0.0 if e.get("law") else 0.17) * ch
+            cx, cy = hx, hy + (-0.02 if e.get("law") else 0.17) * ch
         # Shake
         sx = sy = 0
         shake_t = None
@@ -521,23 +523,23 @@ class Scene:
         if e.get("law"):
             shown = [(i, c) for i, c in enumerate(LAW_CARDS) if tr >= c[0] * e["dur"]]
             for slot, (i, c) in enumerate(shown[-3:]):
-                law_card(img, 360 + slot * 200, tr - c[0] * e["dur"], c[1], c[2])
+                law_card(img, 350 + slot * 168, tr - c[0] * e["dur"], c[1], c[2])
             fsm = font(F_INTER_B, 30)
-            d.text((W / 2, 1760), "Satire · Recht echt · keine Rechtsberatung", font=fsm, fill=(255, 255, 255),
+            d.text((CX, 1480), "Satire · Recht echt · keine Rechtsberatung", font=fsm, fill=(255, 255, 255),
                    stroke_width=4, stroke_fill=(15, 12, 20), anchor="mm")
         if e["id"] in ("23",):
             big_text(img, [("TEAM DENNIS", (120, 200, 255)), ("oder", (255, 255, 255)), ("TEAM SABINE?", (255, 140, 200))],
-                     1150, tr, 80, -2)
+                     1040, tr, 74, -2)
             if tr > 0.6:
-                fsm = font(F_UNB, 44)
-                d.rounded_rectangle([150, 1655, 930, 1745], radius=40, fill=(210, 30, 50), outline=(15, 12, 20), width=6)
-                d.text((W / 2, 1700), "FOLGT UNS FÜR NEUE FÄLLE!", font=fsm, fill=(255, 255, 255), anchor="mm")
+                fsm = font(F_UNB, 36)
+                d.rounded_rectangle([CX - 380, 1400, CX + 380, 1480], radius=40, fill=(210, 30, 50), outline=(15, 12, 20), width=6)
+                d.text((CX, 1440), "FOLGT UNS FÜR NEUE FÄLLE!", font=fsm, fill=(255, 255, 255), anchor="mm")
         if e["id"] == "p4":
-            big_text(img, [("FEIERABEND.", (255, 255, 255))], 1150, tr - 0.3, 84, 0)
+            big_text(img, [("FEIERABEND.", (255, 255, 255))], 1060, tr - 0.3, 84, 0)
         if e["id"] == "p5":
-            big_text(img, [("AUCH RICHTER", (255, 255, 255)), ("HABEN HUNGER.", (255, 220, 40))], 1150, tr, 76, 0)
+            big_text(img, [("AUCH RICHTER", (255, 255, 255)), ("HABEN HUNGER.", (255, 220, 40))], 1060, tr, 76, 0)
         if "text" in e and tr <= e["dur"] - (e.get("post", 0)):
-            y_sub = 1500 if (e.get("law") or e["id"] == "23") else 1330
+            y_sub = 1330 if (e.get("law") or e["id"] == "23") else 1230
             draw_subtitle(img, e, tr, y_sub)
         return img
 

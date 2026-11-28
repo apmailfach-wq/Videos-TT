@@ -75,7 +75,7 @@ EVENTS = [
     dict(id="p5", pause=1.0, cam=("richard", 900, 820), doener="held", pose={"richard": "eat"}, chew=["richard"],
          expr={"richard": "brow"}, look={"richard": (-0.8, 0.6)}),
     dict(id="23", who="sprecher", text="Und jetzt seid ihr dran: Wer hat hier eigentlich Recht?",
-         cam=("richard", 1050, 900), pre=0.2, post=1.6, doener="held", pose={"richard": "eat"}, chew=["richard"],
+         cam=("richard", 1450, 1300), pre=0.2, post=1.6, doener="held", pose={"richard": "eat"}, chew=["richard"],
          expr={"richard": "deadpan"}, end=True),
 ]
 
