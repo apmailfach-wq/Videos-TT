@@ -566,7 +566,8 @@ class Scene:
             big_text(img, [("*zirp* … *zirp*", (255, 255, 255))], 560, tr, 54, 0)
         if "big" in e:
             bg = e["big"]
-            big_text(img, bg["lines"], bg.get("y", 420), tr - bg.get("at", 0) * e["dur"], bg.get("size", 74))
+            big_text(img, bg["lines"], bg.get("y", 420), tr - bg.get("at", 0) * e["dur"] + (0.4 if bg.get("instant") else 0),
+                     bg.get("size", 74))
         if e.get("hook") and EP == "01":
             big_text(img, [("SCHEIDUNG", (255, 255, 255)), ("WEGEN DÖNER?!", (255, 220, 40))], 400, tr, 74)
         if e.get("law"):

@@ -26,8 +26,9 @@ def load(path):
     return a
 
 
-def tempo(src, dst, t):
-    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(src), "-af", f"atempo={t}",
+def tempo(src, dst, t, clip=None):
+    cut = ["-ss", str(clip[0])] if clip else []
+    subprocess.run(["ffmpeg", "-v", "error", "-y", *cut, "-i", str(src), "-af", f"atempo={t}",
                     "-ar", str(SR), "-ac", "1", str(dst)], check=True)
 
 
@@ -168,9 +169,9 @@ def main():
             tl.append(dict(ev, start=t, dur=ev["pause"]))
             t += ev["pause"]
             continue
-        src = B / "trim" / f"{ev['id']}.wav"
+        src = B / "trim" / f"{ev.get('src', ev['id'])}.wav"
         dst = B / "tempo" / f"{ev['id']}.wav"
-        tempo(src, dst, TEMPO_LAW if ev.get("law") else TEMPO)
+        tempo(src, dst, TEMPO_LAW if ev.get("law") else TEMPO, ev.get("clip"))
         a = load(dst)
         d = len(a) / SR
         voice_clips.append((t, a))

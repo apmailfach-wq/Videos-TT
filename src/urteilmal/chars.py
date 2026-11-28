@@ -58,26 +58,24 @@ CHARS = {
 # Augenlid-Höhe (0 offen … 1 zu) und Brauen (innen, außen) in Welt-Pixeln (positiv = höher)
 EXPR = {
     "neutral": dict(lid=0.15, brow=(0, 0), mouth="flat"),
-    "deadpan": dict(lid=0.45, brow=(-12, 2), mouth="flat"),
-    "brow": dict(lid=0.45, brow=(-2, -2), brow_r=(18, 22), mouth="flat"),
-    "tired": dict(lid=1.0, brow=(10, -8), mouth="frown"),
-    "shock": dict(lid=0.0, brow=(22, 20), mouth="o", pupil=0.6),
-    "twitch": dict(lid=0.5, brow=(-6, 6), mouth="flat", twitch=True),
-    "shout": dict(lid=0.0, brow=(-14, 12), mouth="frown"),
-    "upset": dict(lid=0.05, brow=(-10, 8), mouth="frown"),
-    "disgust": dict(lid=0.35, brow=(-12, 4), mouth="wavy"),
-    "nervous": dict(lid=0.0, brow=(14, -6), mouth="wavy", pupil=0.7),
+    "deadpan": dict(lid=0.5, brow=(-14, 0), mouth="flat"),
+    "brow": dict(lid=0.45, brow=(-6, -4), brow_r=(28, 34), mouth="flat"),
+    "tired": dict(lid=1.0, brow=(16, -12), mouth="frown"),
+    "shock": dict(lid=0.0, brow=(32, 30), mouth="o", pupil=0.5),
+    "twitch": dict(lid=0.5, brow=(-10, 8), mouth="flat", twitch=True),
+    "shout": dict(lid=0.0, brow=(-24, 18), mouth="frown", pupil=0.7),
+    "upset": dict(lid=0.05, brow=(-18, 12), mouth="frown", pupil=0.85),
+    "disgust": dict(lid=0.35, brow=(-16, 6), mouth="wavy"),
+    "nervous": dict(lid=0.0, brow=(22, -10), mouth="wavy", pupil=0.6),
     "bored": dict(lid=0.55, brow=(0, 0), mouth="chew"),
-    "smug": dict(lid=0.35, brow=(4, 10), brow_r=(16, 26), mouth="smirk"),
-    "dramatic": dict(lid=0.0, brow=(12, 18), mouth="grin"),
-    "outraged": dict(lid=0.0, brow=(-16, 10), mouth="frown"),
-    "proud": dict(lid=0.3, brow=(8, 8), mouth="smile"),
-    "longing": dict(lid=0.2, brow=(14, 4), mouth="o", pupil=1.1),
-    "innocent": dict(lid=0.2, brow=(14, 8), mouth="smile"),
-    "guilty": dict(lid=0.35, brow=(20, -4), mouth="wavy", pupil=0.9),
-    "puzzled": dict(lid=0.25, brow=(10, 6), mouth="flat", pupil=0.95),
-    "sad": dict(lid=0.4, brow=(24, -10), mouth="frown", pupil=1.1),
-    "happy": dict(lid=0.0, brow=(16, 14), mouth="grin"),
+    "smug": dict(lid=0.4, brow=(4, 12), brow_r=(24, 36), mouth="smirk"),
+    "dramatic": dict(lid=0.0, brow=(20, 28), mouth="grin", pupil=0.8),
+    "outraged": dict(lid=0.0, brow=(-26, 14), mouth="frown", pupil=0.65),
+    "proud": dict(lid=0.25, brow=(14, 14), mouth="smile"),
+    "longing": dict(lid=0.2, brow=(18, 4), mouth="o", pupil=1.1),
+    "innocent": dict(lid=0.2, brow=(18, 10), mouth="smile"),
+    "guilty": dict(lid=0.35, brow=(24, -6), mouth="wavy", pupil=0.9),
+    "puzzled": dict(lid=0.25, brow=(12, 6), brow_r=(26, 30), mouth="flat", pupil=0.95),
 }
 
 SCARF = set()                      # Figuren mit Fanschal (Folge 02)
@@ -110,7 +108,7 @@ def draw_body(d, spec, name, pose):
     if name != "dennis":
         d.polygon(P(sh), fill=darker(col, 0.82))
 
-    if name != "dennis":
+    if name not in ("dennis", "horst"):
         for sx in (-1, 1):
             d.line(P([(HX + sx * (bw / 2 - 30), top + 130), (HX + sx * (bw / 2 - 10), SH)]), fill=darker(col, 0.6), width=S(5))
     if name == "richard":     # schwarze Robe, weißes Hemd, dunkle Krawatte, Samtbesatz
@@ -565,17 +563,22 @@ def sprite(name, expr_name="", mouth=0, blink=False, look=(0.0, 0.0), pose="", e
         d.line(P([(HX, my - 3), (HX + 30, my - 1)]), fill=INK, width=S(5))
     if name == "sabine" and mouth == 0 and mk == "chew" and twitch_phase:
         d.ellipse(box(HX + 44, HY + 98, 18, 16), fill=(255, 140, 190), outline=INK, width=S(4))   # Kaugummiblase
-    if extra == "sweat":
+    if "sweat" in extra:
         for dx, dy, s in [(-rx - 6, -40, 1.0), (rx + 10, -10, 0.8), (rx - 20, -ry + 20, 0.7)]:
             x, y = HX + dx, HY + dy
             d.polygon(P([(x, y - 30 * s), (x + 16 * s, y), (x, y + 14 * s), (x - 16 * s, y)]), fill=(150, 210, 255), outline=INK, width=S(4))
+    if "anger" in extra:   # Comic-Zornesader auf der Stirn
+        ax, ay = HX + rx * 0.5, HY - ry * 0.62
+        for ang in (45, 135, 225, 315):
+            a = math.radians(ang)
+            d.arc(box(ax + 20 * math.cos(a), ay + 20 * math.sin(a), 16, 16), ang + 90, ang + 270, fill=(220, 30, 40), width=S(7))
     if extra == "tears":
         for sx in (-1, 1):
             x = HX + sx * spec["eye_dx"]
             y = HY + spec["eye_dy"] + 34
             d.line(P([(x, y), (x + sx * 4, y + 70)]), fill=(120, 190, 255), width=S(12))
             d.ellipse(box(x + sx * 4, y + 78, 10, 12), fill=(120, 190, 255), outline=INK, width=S(3))
-    if name == "dennis" and extra == "sweat":
+    if name == "dennis" and "sweat" in extra:
         for k in range(3):
             d.line(P([(HX - rx + 20 + k * 20, HY - ry * 0.25), (HX - rx + 26 + k * 20, HY - ry * 0.05)]),
                    fill=(90, 90, 140), width=S(4))
