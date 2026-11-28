@@ -144,6 +144,15 @@ def draw_body(d, spec, name, pose):
         d.rectangle([S(HX + 40), S(top + 190), S(HX + 190), S(top + 330)], outline=darker(col, 0.6), width=S(5))
         d.rounded_rectangle([S(HX + 46), S(top + 140), S(HX + 196), S(top + 186)], radius=S(6), fill=(22, 22, 26), outline=INK, width=S(3))
         d.text((S(HX + 121), S(top + 163)), "JUSTIZ", font=font(F_BLACK, S(30)), fill=(255, 255, 255), anchor="mm")
+        for sx in (-1, 1):   # Arme mit Ärmeln und Händen wie bei Dennis (nur wenn die Hand gerade nichts hält)
+            if pose and sx == (-1 if pose == "card" else 1):
+                continue
+            arm = [(HX + sx * (bw / 2 - 30), top + 70), (HX + sx * (bw / 2 + 50), top + 190), (HX + sx * (bw / 2 + 30), top + 320)]
+            d.line(P(arm), fill=INK, width=S(72), joint="curve")
+            d.line(P(arm), fill=darker(col, 0.9), width=S(58), joint="curve")
+            cx_, cy_ = arm[-1]
+            d.rounded_rectangle(box(cx_, cy_, 32, 14), radius=S(6), fill=darker(col, 0.8), outline=INK, width=S(4))
+            d.ellipse(box(cx_, cy_ + 36, 28, 30), fill=spec["skin"], outline=INK, width=S(5))
     elif name == "dennis":    # Fußballtrikot (kurze Ärmel, Saum) + graue Jogginghose
         hem = top + 360
         d.rectangle([S(HX - bw / 2 - 40), S(hem), S(HX + bw / 2 + 40), S(SH)], fill=(0, 0, 0, 0))
