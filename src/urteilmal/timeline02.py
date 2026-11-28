@@ -18,7 +18,7 @@ EVENTS = [
          big=dict(lines=[("EHEPAAR VERKLAGT", WH_), ("FUSSBALLVEREIN!", Y)], y=405, size=56, instant=True)),
     dict(id="d01", who="richard", text="Herr Dennis, Frau Sabine, warum verklagen Sie Ihren Fußballverein?",
          cam=("wide", 2160, 1800), fx=["whoosh"], expr={"richard": "brow", "dennis": "upset", "sabine": "upset"},
-         big=dict(lines=[("5 JAHRE DAUERKARTE", WH_), ("0 TITEL", Y)], y=420, size=64)),
+         big=dict(lines=[("5 JAHRE DAUERKARTE", WH_), ("0 TITEL", Y)], y=780, size=54)),
     dict(id="d02", who="dennis", text="Herr Richter, wir haben seit fünf Jahren Dauerkarten! FÜNF JAHRE!",
          cam=("dennis", 1200, 950), expr={"dennis": "shout", "sabine": "upset"}, extra={"dennis": "anger"}, pose={"dennis": "scarf_up"}, fx=["lines", "whoosh"]),
     dict(id="e01", who="sabine", text="Und was haben wir bekommen? Nichts! Die schaffen es ja nicht mal, ein Freundschaftsspiel zu gewinnen!",
