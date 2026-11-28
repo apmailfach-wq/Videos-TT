@@ -120,7 +120,7 @@ d22 HORST:   [stolz, glücklich] Ich hab schon verlängert. Bis 2040.
 
 ---
 
-## Version 3 (aktuell im Video, ca. 101 s)
+## Version 3 (aktuell im Video, ca. 91 s)
 
 Änderungen nach Drehbuch-Update des Autors:
 - **Hook (0–4 s):** Sabine: „Das ist kein Fußballverein. Das ist eine organisierte Enttäuschungsanstalt!“ (Ausschnitt aus d13) + „EHEPAAR VERKLAGT FUSSBALLVEREIN!“
@@ -131,3 +131,4 @@ d22 HORST:   [stolz, glücklich] Ich hab schon verlängert. Bis 2040.
 - Horst „Bis 2040!“ mit Lacher-Pause, dann Augenzucken
 - Schlussfrage (e08, Richter): „Und jetzt mal ehrlich: Würdet ihr euren Fußballverein auch verklagen, wenn er fünf Jahre lang nur verliert? Und was würdet ihr als Schadensersatz verlangen?“
 - Einblendung: URTEIL MAL! WER HAT RECHT?! · SCHREIBT EURE MEINUNG IN DIE KOMMENTARE!
+- Gekürzt auf ~91 s: Dennis „Gespielt?! Ja! Verloren!“ (d05) gestrichen, in Szene 3 nur noch „Das ist kein Fußballverein …“ (ohne „Fünf Jahre lang nur Enttäuschung!“), Tempo 1,46

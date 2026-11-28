@@ -2,7 +2,7 @@
 
 from timeline import SPEAKERS  # noqa: F401  (gleiche Figuren/Farben)
 
-TEMPO = 1.4
+TEMPO = 1.46
 TEMPO_LAW = 1.55
 
 Y = (255, 220, 40)
@@ -24,8 +24,6 @@ EVENTS = [
     dict(id="e01", who="sabine", text="Und was haben wir bekommen? Nichts! Die schaffen es ja nicht mal, ein Freundschaftsspiel zu gewinnen!",
          cam=("sabine", 1100, 950), expr={"sabine": "outraged", "dennis": "upset"}),
     dict(id="d04", who="richard", text="Aber der Verein hat doch jedes Jahr gespielt?", cam=("richard", 1000, 930)),
-    dict(id="d05", who="dennis", text="Gespielt?! Ja! Verloren! Das können die hervorragend!",
-         cam=("dennis", 900, 820), expr={"dennis": "shout"}, extra={"dennis": "anger"}, fx=["shake"]),
     dict(id="d07", who="dennis", text="Letzten Samstag hat sie mich sogar aus dem Schlafzimmer geworfen, weil ich nach dem 0:4 noch gesagt habe: Nächste Saison wird alles besser!",
          cam=("dennis", 1150, 950), expr={"dennis": "upset", "sabine": "smug"}, extra={"dennis": "sweat"}),
     dict(id="d08", who="sabine", text="Das war die fünfte nächste Saison!", cam=("sabine", 950, 820),
@@ -40,9 +38,9 @@ EVENTS = [
     dict(id="d12", who="klaus", text="Einspruch! Mein Mandant hat nie Siege versprochen. Nur Emotionen. Und die haben Sie bekommen!",
          cam=("klaus", 1100, 880), expr={"klaus": "dramatic", "dennis": "outraged", "sabine": "outraged"}, expr2={"klaus": "smug"}, pose={"klaus": "finger"},
          fx=["lines", "whoosh"]),
-    dict(id="d13", who="sabine", text="Fünf Jahre lang nur Enttäuschung! Das ist kein Fußballverein. Das ist eine organisierte Enttäuschungsanstalt!",
+    dict(id="d13", src="d13", clip=(3.8,), who="sabine", text="Das ist kein Fußballverein. Das ist eine organisierte Enttäuschungsanstalt!",
          cam=("sabine", 1150, 820), expr={"sabine": "outraged", "klaus": "shock"}, extra={"sabine": "anger"}, fx=["sting_late"],
-         big=dict(lines=[("ORGANISIERTE", WH_), ("ENTTÄUSCHUNGS-", Y), ("ANSTALT", Y)], y=470, size=66, at=0.55)),
+         big=dict(lines=[("ORGANISIERTE", WH_), ("ENTTÄUSCHUNGS-", Y), ("ANSTALT", Y)], y=470, size=66, at=0.4)),
     dict(id="d14", who="richard", text="Ich verstehe. Und was fordern Sie als Schadensersatz?", cam=("richard", 1050, 950), expr={"richard": "brow"}),
     dict(id="e02", who="dennis", text="Alle Eintrittsgelder zurück! Und zwar zusammen mit Sabine!", cam=("dennis", 1000, 880),
          expr={"dennis": "shout", "sabine": "proud"}, fx=["lines"]),
@@ -76,7 +74,7 @@ EVENTS = [
     dict(id="p2", pause=0.6, cam=("richard", 900, 820), expr={"richard": "twitch"}, look={"richard": (0.9, 0.5)}),
     dict(id="e08", who="richard",
          text="Und jetzt mal ehrlich: Würdet ihr euren Fußballverein auch verklagen, wenn er fünf Jahre lang nur verliert? Und was würdet ihr als Schadensersatz verlangen?",
-         cam=("richard", 1450, 1250), pre=0.1, post=2.2, expr={"richard": "deadpan"}, look={"richard": (0, 0.2)},
+         cam=("richard", 1450, 1250), pre=0.1, post=1.8, expr={"richard": "deadpan"}, look={"richard": (0, 0.2)},
          end=True),
 ]
 
