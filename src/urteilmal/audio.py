@@ -1,15 +1,20 @@
 """Baut die Tonspur: Tempo, Zeitplan, Soundeffekte, Musik -> build/doener/mix.wav + timeline.json"""
 import json
+import os
 import subprocess
 import wave
 from pathlib import Path
 
 import numpy as np
 
-from timeline import EVENTS, TEMPO, TEMPO_LAW
+EP = os.environ.get("EP", "01")
+if EP == "02":
+    from timeline02 import EVENTS, TEMPO, TEMPO_LAW
+else:
+    from timeline import EVENTS, TEMPO, TEMPO_LAW
 
 ROOT = Path(__file__).resolve().parents[2]
-B = ROOT / "build" / "doener"
+B = ROOT / "build" / ("dauerkarte" if EP == "02" else "doener")
 SR = 44100
 FPS = 30
 GAP = 0.08
@@ -201,7 +206,11 @@ def main():
                 put(fx, st, sfx_sting(), 0.9)
             elif f == "cricket":
                 put(fx, st + 0.1, sfx_cricket(e["dur"]), 1.0)
-            elif f == "sparkle_doener":
+            elif f == "sting_late":
+                put(fx, st + e["dur"] * 0.55, sfx_sting(), 0.9)
+            elif f == "folder":
+                put(fx, st + 0.05, sfx_gavel(), 0.7)
+            elif f in ("sparkle_doener", "sparkle"):
                 put(fx, st + 0.1, sfx_sparkle(), 1.0)
         if e.get("music") is False:
             i0, i1 = int(st * SR), int((st + e["dur"]) * SR)

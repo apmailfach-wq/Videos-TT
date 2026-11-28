@@ -76,7 +76,12 @@ EXPR = {
     "innocent": dict(lid=0.2, brow=(14, 8), mouth="smile"),
     "guilty": dict(lid=0.35, brow=(20, -4), mouth="wavy", pupil=0.9),
     "puzzled": dict(lid=0.25, brow=(10, 6), mouth="flat", pupil=0.95),
+    "sad": dict(lid=0.4, brow=(24, -10), mouth="frown", pupil=1.1),
+    "happy": dict(lid=0.0, brow=(16, 14), mouth="grin"),
 }
+
+SCARF = set()                      # Figuren mit Fanschal (Folge 02)
+SCARF_COLS = ((120, 54, 160), (250, 210, 60))
 
 DEFAULT_EXPR = {"richard": "deadpan", "klaus": "smug", "horst": "puzzled", "dennis": "upset", "sabine": "bored"}
 
@@ -418,6 +423,42 @@ def prop_receipt(d, x, y):
     d.text((S(x), S(y - 8)), "EC-KARTE S.K.", font=font(F_BLACK, S(14)), fill=(200, 40, 40), anchor="mm")
 
 
+def draw_scarf(d, spec):
+    top = HY + spec["head"][1] - 8
+    a, b = SCARF_COLS
+    d.rounded_rectangle(box(HX, top + 34, 112, 30), radius=S(22), fill=a, outline=INK, width=S(6))
+    for k in range(-3, 4, 2):
+        d.rectangle([S(HX + k * 28 - 10), S(top + 8), S(HX + k * 28 + 10), S(top + 60)], fill=b)
+    d.rounded_rectangle(box(HX, top + 34, 112, 30), radius=S(22), outline=INK, width=S(6))
+    # herabhängendes Ende
+    x0, y0 = HX + 50, top + 50
+    d.rectangle([S(x0 - 30), S(y0), S(x0 + 30), S(y0 + 230)], fill=a, outline=INK, width=S(6))
+    for k in range(3):
+        d.rectangle([S(x0 - 27), S(y0 + 30 + k * 66), S(x0 + 27), S(y0 + 58 + k * 66)], fill=b)
+    for k in range(5):
+        d.line(P([(x0 - 24 + k * 12, y0 + 230), (x0 - 24 + k * 12, y0 + 256)]), fill=a, width=S(6))
+
+
+def prop_scarf_banner(d, x, y):
+    """Fanschal mit beiden Händen hochgehalten (Dennis' rechte Hand bei x, y)."""
+    a, b = SCARF_COLS
+    pts = [(x - 330, y - 10), (x, y - 40), (x, y + 30), (x - 330, y + 60)]
+    d.polygon(P(pts), fill=a, outline=INK, width=S(6))
+    for k in range(1, 6):
+        xx = x - k * 55
+        d.line(P([(xx, y - 38 + k * 5), (xx, y + 32 + k * 5)]), fill=b, width=S(14))
+    d.text((S(x - 165), S(y + 10)), "TREU BIS IN DEN TOD", font=font(F_BLACK, S(26)), fill=(255, 255, 255),
+           stroke_width=S(3), stroke_fill=INK, anchor="mm")
+
+
+def prop_card(d, x, y):
+    d.rounded_rectangle([S(x - 120), S(y - 170), S(x + 120), S(y - 10)], radius=S(14), fill=SCARF_COLS[0], outline=INK, width=S(6))
+    d.rectangle([S(x - 120), S(y - 140), S(x + 120), S(y - 110)], fill=SCARF_COLS[1])
+    d.text((S(x), S(y - 125)), "DAUERKARTE", font=font(F_BLACK, S(26)), fill=INK, anchor="mm")
+    d.text((S(x), S(y - 72)), "GÜLTIG BIS", font=font(F_BLACK, S(22)), fill=(255, 255, 255), anchor="mm")
+    d.text((S(x), S(y - 38)), "2040", font=font(F_BLACK, S(36)), fill=SCARF_COLS[1], stroke_width=S(2), stroke_fill=INK, anchor="mm")
+
+
 # ------------------------------------------------------------------ Figur zusammensetzen
 @lru_cache(maxsize=90)
 def sprite(name, expr_name="", mouth=0, blink=False, look=(0.0, 0.0), pose="", extra="", twitch_phase=0):
@@ -427,6 +468,8 @@ def sprite(name, expr_name="", mouth=0, blink=False, look=(0.0, 0.0), pose="", e
     d = ImageDraw.Draw(img)
     draw_hair_back(d, name, spec)
     draw_body(d, spec, name, pose)
+    if name in SCARF:
+        draw_scarf(d, spec)
     # Kopf mit Cel-Shading + Kontur
     m = head_mask(spec)
     rx, ry = spec["head"]
@@ -526,6 +569,12 @@ def sprite(name, expr_name="", mouth=0, blink=False, look=(0.0, 0.0), pose="", e
         for dx, dy, s in [(-rx - 6, -40, 1.0), (rx + 10, -10, 0.8), (rx - 20, -ry + 20, 0.7)]:
             x, y = HX + dx, HY + dy
             d.polygon(P([(x, y - 30 * s), (x + 16 * s, y), (x, y + 14 * s), (x - 16 * s, y)]), fill=(150, 210, 255), outline=INK, width=S(4))
+    if extra == "tears":
+        for sx in (-1, 1):
+            x = HX + sx * spec["eye_dx"]
+            y = HY + spec["eye_dy"] + 34
+            d.line(P([(x, y), (x + sx * 4, y + 70)]), fill=(120, 190, 255), width=S(12))
+            d.ellipse(box(x + sx * 4, y + 78, 10, 12), fill=(120, 190, 255), outline=INK, width=S(3))
     if name == "dennis" and extra == "sweat":
         for k in range(3):
             d.line(P([(HX - rx + 20 + k * 20, HY - ry * 0.25), (HX - rx + 26 + k * 20, HY - ry * 0.05)]),
@@ -607,6 +656,17 @@ def sprite(name, expr_name="", mouth=0, blink=False, look=(0.0, 0.0), pose="", e
         d.text((S(px_), S(py_ - 8 * g)), "Finger weg", font=font(F_HAND, S(15 * g)), fill=(30, 30, 120), anchor="mm")
         d.text((S(px_), S(py_ + 10 * g)), "R.", font=font(F_HAND, S(17 * g)), fill=(30, 30, 120), anchor="mm")
         d.ellipse(box(hx, hy, 34, 34), fill=spec["skin"], outline=INK, width=S(6))
+    elif pose == "scarf_up":
+        hx, hy = draw_arm(d, spec, 1, [(HX + bw / 2 - 20, top + 70), (HX + bw / 2 + 80, top - 40), (HX + bw / 2 + 60, HY - 170)])
+        prop_scarf_banner(d, hx, hy - 30)
+        d.ellipse(box(hx, hy, 34, 34), fill=spec["skin"], outline=INK, width=S(6))
+    elif pose == "cheer":
+        hx, hy = draw_arm(d, spec, 1, [(HX + bw / 2 - 20, top + 70), (HX + bw / 2 + 70, top - 60), (HX + bw / 2 + 40, HY - 220)])
+        d.ellipse(box(hx, hy, 40, 38), fill=spec["skin"], outline=INK, width=S(6))
+    elif pose == "card":
+        hx, hy = draw_arm(d, spec, -1, [(HX - bw / 2 + 30, top + 90), (HX - bw / 2 - 30, top - 20), (HX - 170, HY - 60)])
+        prop_card(d, hx, hy - 20)
+        d.ellipse(box(hx, hy, 36, 34), fill=spec["skin"], outline=INK, width=S(6))
     elif pose == "fork_horst":
         hx, hy = draw_arm(d, spec, 1, [(HX + bw / 2 - 30, top + 100), (HX + bw / 2 + 40, top + 200), (HX + 150, top + 120)])
         prop_fork_doener(d, hx, hy - 20)

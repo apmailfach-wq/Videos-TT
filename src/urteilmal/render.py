@@ -6,6 +6,7 @@ python3 render.py preview 1 20 40 # Standbilder -> build/doener/stills/
 """
 import json
 import math
+import os
 import random
 import subprocess
 import sys
@@ -16,11 +17,16 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 import chars
 from chars import HX, HY, INK, P, S, box
-from timeline import LAW_CARDS, SPEAKERS
+EP = os.environ.get("EP", "01")
+if EP == "02":
+    from timeline02 import END_LINES, LAW_CARDS, SPEAKERS
+else:
+    from timeline import LAW_CARDS, SPEAKERS
+    END_LINES = None
 
 ROOT = Path(__file__).resolve().parents[2]
-B = ROOT / "build" / "doener"
-OUT_FILE = ROOT / "urteil-mal-01-doener-skandal.mp4"
+B = ROOT / "build" / ("dauerkarte" if EP == "02" else "doener")
+OUT_FILE = ROOT / ("urteil-mal-02-dauerkarten-klage.mp4" if EP == "02" else "urteil-mal-01-doener-skandal.mp4")
 W, H, FPS = 1080, 1920, 30
 CX = 520   # Mitte der TikTok-Safe-Zone (rechts liegen die Buttons)
 WW, WH = 2160, 3840
@@ -33,6 +39,10 @@ F_INTER_B = "/usr/share/fonts/opentype/inter/Inter-Bold.otf"
 
 HEADS = {"richard": (1080, 900), "horst": (2000, 1600), "dennis": (560, 2480),
          "sabine": (1300, 2610), "klaus": (1760, 2440)}
+if EP == "02":   # Dennis & Sabine sitzen beide auf der Klägerseite
+    HEADS["dennis"] = (380, 2480)
+    HEADS["sabine"] = (800, 2610)
+    chars.SCARF.update({"dennis", "sabine", "horst"})
 HORST_FINAL = (1500, 930)
 DOENER_POS = (1470, 1196)
 
@@ -195,7 +205,7 @@ def props_layer(doener_state, gavel_up, sparkle):
     d.ellipse(box(gx - 20, gy + 26, 60, 12), fill=(90, 56, 36), outline=INK, width=S(4))
     # Döner
     dx, dy = L(*DOENER_POS)
-    if doener_state == "held":
+    if doener_state in ("held", "none"):
         pass
     elif doener_state == "full":
         d.polygon(P([(dx - 70, dy - 40), (dx + 70, dy - 40), (dx + 20, dy + 40), (dx - 20, dy + 40)]),
@@ -211,6 +221,35 @@ def props_layer(doener_state, gavel_up, sparkle):
                          (sx, sy + r), (sx - r * 0.25, sy + r * 0.25), (sx - r, sy), (sx - r * 0.25, sy - r * 0.25)]),
                       fill=(255, 240, 120), outline=INK, width=S(3))
     return img.resize((w, h), Image.LANCZOS), (x0, y0)
+
+
+def build_ball():
+    """Schlapper Fußball mit Fanschal: der 'Vertreter' des Vereins auf dem Beklagtentisch."""
+    w, h = 300, 200
+    lay = Image.new("RGBA", (w * 2, h * 2), (0, 0, 0, 0))
+    d = ImageDraw.Draw(lay)
+    d.ellipse([60, 120, 540, 390], fill=(250, 250, 250), outline=INK, width=12)
+    for (x, y) in [(300, 250), (170, 210), (430, 210), (200, 330), (400, 330)]:
+        d.regular_polygon((x, y, 46), 5, fill=(40, 36, 44))
+    a, b = chars.SCARF_COLS
+    d.rounded_rectangle([40, 300, 560, 360], radius=28, fill=a, outline=INK, width=10)
+    for k in range(5):
+        d.rectangle([90 + k * 100, 300, 130 + k * 100, 360], fill=b)
+    d.rounded_rectangle([40, 300, 560, 360], radius=28, outline=INK, width=10)
+    return lay.resize((w, h), Image.LANCZOS)
+
+
+def build_folder():
+    """Dicker Ordner 'BEWEISE' auf dem Klägertisch."""
+    w, h = 250, 150
+    lay = Image.new("RGBA", (660, 400), (0, 0, 0, 0))
+    d = ImageDraw.Draw(lay)
+    for k in range(3):
+        d.rectangle([20 + k * 8, 60 - k * 22, 640 - k * 8, 390 - k * 22], fill=(250, 250, 240), outline=INK, width=8)
+    d.rectangle([10, 120, 650, 396], fill=(200, 40, 50), outline=INK, width=12)
+    d.rounded_rectangle([170, 190, 490, 320], radius=16, fill=(255, 255, 255), outline=INK, width=8)
+    d.text((330, 255), "BEWEISE", font=font(F_UNB7, 52), fill=INK, anchor="mm")
+    return lay.resize((w, h), Image.LANCZOS)
 
 
 # ------------------------------------------------------------------ Overlays (Ausgaberaum)
@@ -313,7 +352,7 @@ def big_text(img, lines, y, t_in, size=96, rot=-3):
     d = ImageDraw.Draw(lay)
     yy = 10
     for (txt, col), (w_, h_) in zip(lines, hs):
-        d.text((wmax / 2, yy + h_ / 2 + 6), txt, font=f, fill=col, stroke_width=10, stroke_fill=(15, 12, 20), anchor="mm")
+        d.text((wmax / 2, yy + h_ / 2 + 6), txt, font=f, fill=tuple(col), stroke_width=10, stroke_fill=(15, 12, 20), anchor="mm")
         yy += h_ + 24
     lay = lay.rotate(rot, expand=True, resample=Image.BICUBIC)
     nw, nh = max(1, int(lay.width * s)), max(1, int(lay.height * s))
@@ -387,6 +426,10 @@ class Scene:
         self.tables, self.tables_y = build_tables()
         self.rail, self.rail_y = build_rail()
         self.legs, self.legs_y = build_legs()
+        if EP == "02":
+            self.ball = build_ball()
+            self.folder = build_folder()
+            self.folder_idx = next((i for i, ev in enumerate(self.events) if "folder" in ev.get("fx", [])), 10 ** 6)
 
     def event_at(self, t):
         cur = self.events[0]
@@ -491,7 +534,7 @@ class Scene:
         if "gavel" in e.get("fx", []) and tr > 1.0:
             gavel_up = False
         sparkle = "sparkle_doener" in e.get("fx", []) and int(t * 6) % 2 == 0
-        pl, (px, py) = props_layer(e.get("doener", "full"), gavel_up, sparkle)
+        pl, (px, py) = props_layer(e.get("doener", "none" if EP == "02" else "full"), gavel_up, sparkle)
         put(pl, px, py)
         if "horst" not in hide and not e.get("horst_final"):
             put(self.char_state("horst", e, t, frame), horst_pos[0] - HX, horst_pos[1] - HY + bob("h"))
@@ -501,6 +544,10 @@ class Scene:
             put(self.char_state(nm, e, t, frame), hx - HX, hy - HY + bob(nm))
         put(self.legs, 0, self.legs_y)
         put(self.tables, 0, self.tables_y)
+        if EP == "02":
+            put(self.ball, 1290, 2800)
+            if self.events.index(e) >= self.folder_idx:
+                put(self.folder, 95, 2830)
 
         img = base.resize((W, H), Image.BILINEAR, reducing_gap=2.0 if cw > 1400 else None)
 
@@ -515,9 +562,12 @@ class Scene:
             bam(img, tr - 0.05, "WUMMS!")
         d = ImageDraw.Draw(img)
         draw_logo(img)
-        if e["id"] == "p3":
+        if e["id"] == "p3" or e.get("cricket_text"):
             big_text(img, [("*zirp* … *zirp*", (255, 255, 255))], 560, tr, 54, 0)
-        if e.get("hook"):
+        if "big" in e:
+            bg = e["big"]
+            big_text(img, bg["lines"], bg.get("y", 420), tr - bg.get("at", 0) * e["dur"], bg.get("size", 74))
+        if e.get("hook") and EP == "01":
             big_text(img, [("SCHEIDUNG", (255, 255, 255)), ("WEGEN DÖNER?!", (255, 220, 40))], 400, tr, 74)
         if e.get("law"):
             shown = [(i, c) for i, c in enumerate(LAW_CARDS) if tr >= c[0] * e["dur"]]
@@ -526,8 +576,13 @@ class Scene:
             fsm = font(F_INTER_B, 30)
             d.text((CX, 1480), "Satire · Recht echt · keine Rechtsberatung", font=fsm, fill=(255, 255, 255),
                    stroke_width=4, stroke_fill=(15, 12, 20), anchor="mm")
-        if e["id"] in ("23",):
-            big_text(img, [("TEAM DENNIS", (120, 200, 255)), ("oder", (255, 255, 255)), ("TEAM SABINE?", (255, 140, 200))],
+        if e["id"] == "23" and END_LINES:
+            big_text(img, END_LINES, 1000, tr, 84, -2)
+        if e["id"] == "23":
+            if END_LINES:
+                pass
+            else:
+                big_text(img, [("TEAM DENNIS", (120, 200, 255)), ("oder", (255, 255, 255)), ("TEAM SABINE?", (255, 140, 200))],
                      1040, tr, 74, -2)
             if tr > 0.6:
                 fsm = font(F_UNB, 36)
