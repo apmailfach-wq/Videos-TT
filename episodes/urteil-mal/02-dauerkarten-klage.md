@@ -1,7 +1,7 @@
 # URTEIL MAL! – Folge 02: DIE DAUERKARTEN-KLAGE
 
 **Untertitel:** Fünf Jahre Dauerkarte. Null Titel. Jetzt wird geklagt.
-**Länge:** ca. 50 s · 9:16 · gleicher Look wie Folge 1 · 5 Szenen · keine langen Pausen
+**Länge:** ca. 60 s · 9:16 · gleicher Look wie Folge 1 · 4 Szenen · keine langen Pausen
 Figuren & Stimmen: siehe `00-serienbibel.md` und Folge 01 (Dennis & Sabine).
 
 ## Besetzung (alle aus Folge 1)
@@ -24,49 +24,51 @@ Kein Vereinsname im Video. Jeder Fan soll seinen eigenen Verein wiedererkennen.
 2. Dauerkarte seit 5 Jahren. Wir wollen unser Geld zurück. Mit Zinsen. ⚽⚖️
 3. Ehepaar verklagt Verein wegen chronischer Erfolglosigkeit
 
-**Hook (0–3 s):** DENNIS: „Herr Richter, wir haben seit fünf Jahren Dauerkarten! FÜNF JAHRE!“
+**Hook (0–3 s):** RICHARD: „Herr Dennis, Frau Sabine, warum verklagen Sie Ihren Fußballverein?“
 
 ---
 
-## Drehbuch
+## Drehbuch (Original vom Autor + Ergänzungen)
 
-### SZENE 1 – Der Vorwurf · 0–7 s
-**DENNIS** *(Schal hoch, verzweifelt)*: „Herr Richter, wir haben seit fünf Jahren Dauerkarten! FÜNF JAHRE!“
-**RICHARD** *(tonlos)*: „Und deshalb verklagen Sie Ihren Verein.“
-**SABINE** *(trocken)*: „Was haben wir dafür bekommen? Nichts. Nicht mal einen lausigen Pokal.“
 
-### SZENE 2 – Die Anklage · 7–21 s
-**RICHARD:** „Der Verein hat gespielt.“
+### SZENE 1 – Der Vorwurf · 0–8 s
+**RICHARD:** „Herr Dennis, Frau Sabine, warum verklagen Sie Ihren Fußballverein?“
+**DENNIS:** „Herr Richter, wir haben seit fünf Jahren Dauerkarten! FÜNF JAHRE!“
+**SABINE:** „Und was haben wir bekommen? Nichts! Nicht mal einen lausigen Pokal!“
+
+### SZENE 2 – Die Anklage · 8–24 s
+**RICHARD:** „Aber der Verein hat doch jedes Jahr gespielt?“
 **DENNIS:** „Gespielt?! Ja! Verloren! Das können die hervorragend!“
-**SABINE:** „Eintritt. Auswärtsfahrten. Trikots. Wir haben unsere Ehe aufs Spiel gesetzt.“
-**DENNIS:** „Nach dem 0:4 hat sie mich rausgeworfen! Nur weil ich gesagt hab: Nächste Saison wird alles besser!“
-**SABINE:** „Das war die fünfte nächste Saison.“
-**HORST** *(schnieft in seinen Schal)*: „Bei mir ist es die dreiundzwanzigste.“
-**RICHARD:** „Horst.“ *(Aufnahme aus Folge 1)*
+**SABINE:** „Wir haben Eintritt bezahlt, Auswärtsfahrten gemacht, Trikots gekauft und unsere Ehe aufs Spiel gesetzt!“
+**DENNIS:** „Letzten Samstag hat sie mich sogar aus dem Schlafzimmer geworfen, weil ich nach dem 0:4 noch gesagt habe: Nächste Saison wird alles besser!“
+**SABINE:** „Das war die fünfte nächste Saison!“
+**HORST:** „Bei mir ist es die dreiundzwanzigste.“
+**RICHARD:** „Horst.“ *(alte Aufnahme)*
 
-### SZENE 3 – Der Vertrag · 21–31 s
+### SZENE 3 – Der Vertrag · 24–36 s
+**RICHARD:** „Was genau wurde Ihnen denn zugesichert?“
 *Dennis knallt einen dicken Ordner auf den Tisch. Kamera-Shake.*
-**DENNIS:** „Meisterschaft! Pokalsieg! Wenigstens Vizemeister! IRGENDWAS!“
-**KLAUS** *(springt auf)*: „Einspruch! Mein Mandant hat nie Siege versprochen. Nur Emotionen. Und die haben Sie bekommen!“
-**SABINE** *(eiskalt)*: „Das ist kein Fußballverein. Das ist eine organisierte Enttäuschungsanstalt.“
-*Crash-Zoom, Text-Einblendung: ORGANISIERTE ENTTÄUSCHUNGSANSTALT*
+**DENNIS:** „Meisterschaft! Pokalsieg! Wenigstens Vizemeister! Irgendwas!“
+**KLAUS:** „Einspruch! Mein Mandant hat nie Siege versprochen. Nur Emotionen. Und die haben Sie bekommen!“
+**SABINE:** „Fünf Jahre lang nur Enttäuschung! Das ist kein Fußballverein. Das ist eine organisierte Enttäuschungsanstalt!“
+*Crash-Zoom, Einblendung: ORGANISIERTE ENTTÄUSCHUNGSANSTALT*
 
-### SZENE 4 – Forderung & Recht · 31–44 s
-**DENNIS:** „Wir wollen alle Eintrittsgelder zurück! Mit Zinsen!“
-**SABINE:** „Und fünf Jahre Lebenszeit.“
-**RICHARD** *(Brille ab)*: „Ich habe in meinem Leben schon viel erlebt. Aber das hier ist wirklich eine Zumutung!“ *(Aufnahme aus Folge 1)*
-**RICHARD** *(direkt in die Kamera, zügig)*: „Mit der Dauerkarte kauft man einen Platz im Stadion. Keinen Sieg. Verlieren ist keine Pflichtverletzung, also gibt es keinen Schadensersatz nach Paragraf 280 BGB. Und ohne Anspruch keine Zinsen nach Paragraf 288.“
-
-### SZENE 5 – Das Urteil · 44–55 s
-**RICHARD:** „Rückerstattung abgelehnt. Aber ich verurteile den Verein zur sofortigen Meisterschaft!“
-**DENNIS** *(springt jubelnd auf)*: „JAAA!“
-**RICHARD:** „Sobald er sportlich dazu in der Lage ist.“
-*Kurze Stille (0,5 s), Grille.*
-**SABINE:** „Na super. Dann sehen wir uns hier in fünf Jahren wieder.“
-**HORST** *(hält strahlend seine Dauerkarte hoch)*: „Ich hab schon verlängert. Bis 2040.“
+### SZENE 4 – Die Pointe · 36–60 s
+**RICHARD:** „Ich verstehe. Und was fordern Sie als Schadensersatz?“
+**DENNIS:** „Alle Eintrittsgelder zurück!“
+**SABINE:** „Und fünf Jahre Lebenszeit!“
+**RICHARD:** „Ich habe in meinem Leben schon viel erlebt. Aber das hier ist wirklich eine Zumutung!“ *(alte Aufnahme)*
+**RICHARD:** „Mit der Dauerkarte kauft man einen Platz im Stadion. Keinen Sieg. Verlieren ist keine Pflichtverletzung, also kein Schadensersatz nach Paragraf 280 BGB.“
+**RICHARD:** „Den Antrag auf Rückerstattung lehne ich ab. Aber ich verurteile den Verein zu einer sofortigen Meisterschaft!“
+*Dennis springt jubelnd auf.*
+**DENNIS:** „JAAA!“
+**RICHARD:** „Allerdings erst, wenn er sportlich dazu in der Lage ist.“
+*Stille (0,5 s). Sabine schaut Dennis an.*
+**SABINE:** „Na super. Dann sehen wir uns hier in weiteren fünf Jahren.“
+**HORST:** „Ich hab schon verlängert. Bis 2040.“
 *Richards Auge zuckt. Freeze-Frame.*
-**SPRECHER:** „Und jetzt seid ihr dran: Wer hat hier eigentlich Recht?“ *(Aufnahme aus Folge 1)*
-**TEXT:** URTEIL MAL! – Wer hat Recht?! ⚖️
+**SPRECHER:** „Und jetzt seid ihr dran: Wer hat hier eigentlich Recht?“ *(alte Aufnahme)*
+**EINBLENDUNG:** URTEIL MAL – Wer hat Recht?! ⚖️
 
 ---
 
@@ -89,27 +91,29 @@ Kein Vereinsname im Video. Jeder Fan soll seinen eigenen Verein wiedererkennen.
 
 ## Vertonung (eleven_v3) – nur neue Zeilen, je 1 Aufnahme
 
-Wiederverwendet: `08` („Horst.“), `19` (Catchphrase), `23` (Schlussfrage).
+Wiederverwendet: `08`, `19`, `23`.
 
 ```
-d01 DENNIS:  [verzweifelt, laut] Herr Richter, wir haben seit fünf Jahren Dauerkarten! FÜNF JAHRE!
-d02 RICHARD: [tonlos, sehr trocken] Und deshalb verklagen Sie Ihren Verein.
-d03 SABINE:  [trocken, genervt] Was haben wir dafür bekommen? Nichts. Nicht mal einen lausigen Pokal.
-d04 RICHARD: [tonlos] Der Verein hat gespielt.
+d01 RICHARD: [ernst, tonlos] Herr Dennis, Frau Sabine, warum verklagen Sie Ihren Fußballverein?
+d02 DENNIS:  [verzweifelt, laut] Herr Richter, wir haben seit fünf Jahren Dauerkarten! FÜNF JAHRE!
+d03 SABINE:  [trocken, frustriert] Und was haben wir bekommen? Nichts! Nicht mal einen lausigen Pokal!
+d04 RICHARD: [tonlos, sehr trocken] Aber der Verein hat doch jedes Jahr gespielt?
 d05 DENNIS:  [außer sich] Gespielt?! Ja! Verloren! Das können die hervorragend!
-d06 SABINE:  [bitter] Eintritt. Auswärtsfahrten. Trikots. Wir haben unsere Ehe aufs Spiel gesetzt.
-d07 DENNIS:  [empört, hektisch] Nach dem 0:4 hat sie mich rausgeworfen! Nur weil ich gesagt hab: Nächste Saison wird alles besser!
-d08 SABINE:  [eiskalt] Das war die fünfte nächste Saison.
+d06 SABINE:  [bitter, schnell] Wir haben Eintritt bezahlt, Auswärtsfahrten gemacht, Trikots gekauft und unsere Ehe aufs Spiel gesetzt!
+d07 DENNIS:  [empört, hektisch] Letzten Samstag hat sie mich sogar aus dem Schlafzimmer geworfen, weil ich nach dem 0:4 noch gesagt habe: Nächste Saison wird alles besser!
+d08 SABINE:  [eiskalt] Das war die fünfte nächste Saison!
 d09 HORST:   [schnieft, weinerlich] Bei mir ist es die dreiundzwanzigste.
-d10 DENNIS:  [schreit verzweifelt] Meisterschaft! Pokalsieg! Wenigstens Vizemeister! IRGENDWAS!
-d11 KLAUS:   [theatralisch, laut] Einspruch! Mein Mandant hat nie Siege versprochen. Nur Emotionen. Und die haben Sie bekommen!
-d12 SABINE:  [eiskalt, langsam] Das ist kein Fußballverein. Das ist eine organisierte Enttäuschungsanstalt.
-d13 DENNIS:  [fordernd] Wir wollen alle Eintrittsgelder zurück! Mit Zinsen!
-d14 SABINE:  [trocken] Und fünf Jahre Lebenszeit.
-d15 RICHARD: [sachlich, zügig] Mit der Dauerkarte kauft man einen Platz im Stadion. Keinen Sieg. Verlieren ist keine Pflichtverletzung, also gibt es keinen Schadensersatz nach Paragraf 280 BGB. Und ohne Anspruch keine Zinsen nach Paragraf 288.
-d16 RICHARD: [bestimmt, feierlich] Rückerstattung abgelehnt. Aber ich verurteile den Verein zur sofortigen Meisterschaft!
-d17 DENNIS:  [jubelt] JAAA!
-d18 RICHARD: [trocken] Sobald er sportlich dazu in der Lage ist.
-d19 SABINE:  [resigniert, trocken] Na super. Dann sehen wir uns hier in fünf Jahren wieder.
-d20 HORST:   [stolz, glücklich] Ich hab schon verlängert. Bis 2040.
+d10 RICHARD: [tonlos] Was genau wurde Ihnen denn zugesichert?
+d11 DENNIS:  [schreit verzweifelt] Meisterschaft! Pokalsieg! Wenigstens Vizemeister! Irgendwas!
+d12 KLAUS:   [theatralisch, laut] Einspruch! Mein Mandant hat nie Siege versprochen. Nur Emotionen. Und die haben Sie bekommen!
+d13 SABINE:  [eiskalt, langsam] Fünf Jahre lang nur Enttäuschung! Das ist kein Fußballverein. Das ist eine organisierte Enttäuschungsanstalt!
+d14 RICHARD: [ernst, sachlich] Ich verstehe. Und was fordern Sie als Schadensersatz?
+d15 DENNIS:  [fordernd] Alle Eintrittsgelder zurück!
+d16 SABINE:  [trocken] Und fünf Jahre Lebenszeit!
+d17 RICHARD: [sachlich, zügig] Mit der Dauerkarte kauft man einen Platz im Stadion. Keinen Sieg. Verlieren ist keine Pflichtverletzung, also kein Schadensersatz nach Paragraf 280 BGB.
+d18 RICHARD: [bestimmt, feierlich] Den Antrag auf Rückerstattung lehne ich ab. Aber ich verurteile den Verein zu einer sofortigen Meisterschaft!
+d19 DENNIS:  [jubelt laut] JAAA!
+d20 RICHARD: [trocken] Allerdings erst, wenn er sportlich dazu in der Lage ist.
+d21 SABINE:  [resigniert, trocken] Na super. Dann sehen wir uns hier in weiteren fünf Jahren.
+d22 HORST:   [stolz, glücklich] Ich hab schon verlängert. Bis 2040.
 ```
