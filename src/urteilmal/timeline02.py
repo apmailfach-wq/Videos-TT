@@ -83,5 +83,5 @@ LAW_CARDS = [
     (0.38, "VERLIEREN", "ist keine Pflichtverletzung"),
     (0.62, "§ 280 BGB", "Kein Anspruch auf Schadensersatz"),
 ]
-END_LINES = [("URTEIL MAL!", (255, 90, 90)), ("WER HAT", (255, 255, 255)), ("RECHT?!", (255, 220, 40))]
-END_BANNER = "SCHREIBT EURE MEINUNG IN DIE KOMMENTARE!"
+END_LINES = [("URTEIL MAL!", (255, 90, 90)), ("WAS WÜRDEST", (255, 255, 255)), ("DU TUN?", (255, 220, 40))]
+END_BANNER = "SCHREIB'S IN DIE KOMMENTARE!"
