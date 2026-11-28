@@ -117,3 +117,17 @@ d20 RICHARD: [trocken] Allerdings erst, wenn er sportlich dazu in der Lage ist.
 d21 SABINE:  [resigniert, trocken] Na super. Dann sehen wir uns hier in weiteren fünf Jahren.
 d22 HORST:   [stolz, glücklich] Ich hab schon verlängert. Bis 2040.
 ```
+
+---
+
+## Version 3 (aktuell im Video, ca. 101 s)
+
+Änderungen nach Drehbuch-Update des Autors:
+- **Hook (0–4 s):** Sabine: „Das ist kein Fußballverein. Das ist eine organisierte Enttäuschungsanstalt!“ (Ausschnitt aus d13) + „EHEPAAR VERKLAGT FUSSBALLVEREIN!“
+- Sabine (e01): „Und was haben wir bekommen? Nichts! Die schaffen es ja nicht mal, ein Freundschaftsspiel zu gewinnen!“
+- Gestrichen: Sabines Aufzählung (d06), Catchphrase (19), „Und fünf Jahre Lebenszeit!“ (d16)
+- Neu Szene 4: Dennis (e02) „Alle Eintrittsgelder zurück! Und zwar zusammen mit Sabine!“ · Sabine (e03) „Moment! Ich will das Geld aber MIT ZINSEN zurück!“ · Richter (e04) „Mit Zinsen? Warum denn das?“ · Sabine (e05) Bratwurst/Nulltarif · Dennis (e06) Imbissbude + Lacher-Pause
+- Recht (e07): „Mit einer Dauerkarte kauft man einen Platz im Stadion. Keinen Sieg. Verlieren ist keine Pflichtverletzung. Ein Anspruch auf Schadensersatz nach Paragraf 280 BGB besteht daher nicht.“
+- Horst „Bis 2040!“ mit Lacher-Pause, dann Augenzucken
+- Schlussfrage (e08, Richter): „Und jetzt mal ehrlich: Würdet ihr euren Fußballverein auch verklagen, wenn er fünf Jahre lang nur verliert? Und was würdet ihr als Schadensersatz verlangen?“
+- Einblendung: URTEIL MAL! WER HAT RECHT?! · SCHREIBT EURE MEINUNG IN DIE KOMMENTARE!

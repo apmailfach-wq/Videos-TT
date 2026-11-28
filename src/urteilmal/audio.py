@@ -216,7 +216,7 @@ def main():
         if e.get("music") is False:
             i0, i1 = int(st * SR), int((st + e["dur"]) * SR)
             mus_gate[i0:i1] = 0.0
-        if e["id"] in ("22", "23"):
+        if e["id"] in ("22", "23") or e.get("end"):
             for k in range(int(e["dur"] / 0.4)):
                 put(fx, st + 0.2 + k * 0.4, sfx_tick(), 0.6)
     # Musik aus ab dem Rechts-Teil wieder an, im Finale an

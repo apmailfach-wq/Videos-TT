@@ -19,10 +19,11 @@ import chars
 from chars import HX, HY, INK, P, S, box
 EP = os.environ.get("EP", "01")
 if EP == "02":
-    from timeline02 import END_LINES, LAW_CARDS, SPEAKERS
+    from timeline02 import END_BANNER, END_LINES, LAW_CARDS, SPEAKERS
 else:
     from timeline import LAW_CARDS, SPEAKERS
     END_LINES = None
+    END_BANNER = "FOLGT UNS FÜR NEUE FÄLLE!"
 
 ROOT = Path(__file__).resolve().parents[2]
 B = ROOT / "build" / ("dauerkarte" if EP == "02" else "doener")
@@ -577,24 +578,24 @@ class Scene:
             fsm = font(F_INTER_B, 30)
             d.text((CX, 1480), "Satire · Recht echt · keine Rechtsberatung", font=fsm, fill=(255, 255, 255),
                    stroke_width=4, stroke_fill=(15, 12, 20), anchor="mm")
-        if e["id"] == "23" and END_LINES:
-            big_text(img, END_LINES, 1000, tr, 84, -2)
-        if e["id"] == "23":
+        if e.get("end") and END_LINES:
+            big_text(img, END_LINES, 1000, tr - e["dur"], 84, -2)
+        if e.get("end"):
             if END_LINES:
                 pass
             else:
                 big_text(img, [("TEAM DENNIS", (120, 200, 255)), ("oder", (255, 255, 255)), ("TEAM SABINE?", (255, 140, 200))],
                      1040, tr, 74, -2)
             if tr > 0.6:
-                fsm = font(F_UNB, 36)
-                d.rounded_rectangle([CX - 380, 1400, CX + 380, 1480], radius=40, fill=(210, 30, 50), outline=(15, 12, 20), width=6)
-                d.text((CX, 1440), "FOLGT UNS FÜR NEUE FÄLLE!", font=fsm, fill=(255, 255, 255), anchor="mm")
+                fsm = font(F_UNB, 36 if len(END_BANNER) < 30 else 24)
+                d.rounded_rectangle([CX - 420, 1400, CX + 420, 1480], radius=40, fill=(210, 30, 50), outline=(15, 12, 20), width=6)
+                d.text((CX, 1440), END_BANNER, font=fsm, fill=(255, 255, 255), anchor="mm")
         if e["id"] == "p4":
             big_text(img, [("FEIERABEND.", (255, 255, 255))], 1060, tr - 0.3, 84, 0)
         if e["id"] == "p5":
             big_text(img, [("AUCH RICHTER", (255, 255, 255)), ("HABEN HUNGER.", (255, 220, 40))], 1060, tr, 76, 0)
         if "text" in e and tr <= e["dur"] - (e.get("post", 0)):
-            y_sub = 1330 if (e.get("law") or e["id"] == "23") else 1230
+            y_sub = 1300 if (e.get("law") or e.get("end")) else 1230
             draw_subtitle(img, e, tr, y_sub)
         return img
 
