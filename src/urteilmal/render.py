@@ -575,7 +575,10 @@ def main():
         lst = B / "parts.txt"
         lst.write_text("".join(f"file '{B / f'part{k}.mp4'}'\n" for k in range(parts)))
         subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", str(lst), "-i", str(B / "mix.wav"),
-                        "-c:v", "copy", "-af", "loudnorm=I=-14:TP=-1.5:LRA=11", "-c:a", "aac", "-b:a", "192k", "-shortest", "-movflags", "+faststart",
+                        # ganzes Bild auf 80 % verkleinern, Rand = unscharfe Kopie (TikTok-Buttons/Beschreibung bleiben frei)
+                        "-filter_complex", "[0:v]split[a][b];[a]scale=1080:1920,boxblur=30:5,eq=brightness=-0.25[bg];"
+                        "[b]scale=864:1536[fg];[bg][fg]overlay=108:150[v]", "-map", "[v]", "-map", "1:a",
+                        "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-pix_fmt", "yuv420p", "-af", "loudnorm=I=-14:TP=-1.5:LRA=11", "-c:a", "aac", "-b:a", "192k", "-shortest", "-movflags", "+faststart",
                         str(OUT_FILE)], check=True)
         print("fertig:", OUT_FILE)
         return
