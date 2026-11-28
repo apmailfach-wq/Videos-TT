@@ -105,7 +105,7 @@ def draw_body(d, spec, name, pose):
     # Schattenseite
     sh = [(HX + bw / 2 - 60, top + 60), (HX + bw / 2 - 40, top + 40), (HX + bw / 2 + 20, top + 160),
           (HX + bw / 2 + 30, SH), (HX + bw / 2 - 40, SH)]
-    if name != "dennis":
+    if name not in ("dennis", "horst"):
         d.polygon(P(sh), fill=darker(col, 0.82))
 
     if name not in ("dennis", "horst"):
@@ -138,7 +138,6 @@ def draw_body(d, spec, name, pose):
                       fill=lighter(col, 0.3), outline=INK, width=S(5))
             d.polygon(P([(HX + sx * 120, top + 50), (HX + sx * 200, top + 70), (HX + sx * 196, top + 100), (HX + sx * 116, top + 82)]),
                       fill=darker(col, 0.8), outline=INK, width=S(4))
-        d.line(P([(HX, top + 120), (HX, SH)]), fill=darker(col, 0.65), width=S(5))
         for k in range(4):
             d.ellipse(box(HX + 14, top + 170 + k * 120, 8, 8), fill=(240, 240, 240), outline=INK, width=S(2))
         d.rectangle([S(HX + 40), S(top + 190), S(HX + 190), S(top + 330)], outline=darker(col, 0.6), width=S(5))
@@ -180,10 +179,10 @@ def draw_body(d, spec, name, pose):
 
 
 def draw_arm(d, spec, side, pts, hand_open=False):
-    col = spec["body"] if spec is not CHARS["sabine"] else spec["body"]
+    col = darker(spec["body"], 0.9) if spec is CHARS["horst"] else spec["body"]
     d.line(P(pts), fill=INK, width=S(64), joint="curve")
     d.line(P(pts), fill=col, width=S(50), joint="curve")
-    if spec is CHARS["dennis"]:   # Pulli-Bündchen am Handgelenk
+    if spec is CHARS["dennis"] or spec is CHARS["horst"]:   # Bündchen am Handgelenk
         (x1, y1), (x2, y2) = pts[-2], pts[-1]
         L = math.hypot(x2 - x1, y2 - y1) or 1
         bx, by = x2 - (x2 - x1) / L * 34, y2 - (y2 - y1) / L * 34
