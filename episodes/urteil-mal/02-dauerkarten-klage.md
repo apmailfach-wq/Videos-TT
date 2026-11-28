@@ -34,7 +34,7 @@ Kein Vereinsname im Video. Jeder Fan soll seinen eigenen Verein wiedererkennen.
 ### SZENE 1 – Der Vorwurf · 0–8 s
 **RICHARD:** „Herr Dennis, Frau Sabine, warum verklagen Sie Ihren Fußballverein?“
 **DENNIS:** „Herr Richter, wir haben seit fünf Jahren Dauerkarten! FÜNF JAHRE!“
-**SABINE:** „Und was haben wir bekommen? Nichts! Nicht mal einen lausigen Pokal!“
+**SABINE:** „Und was haben wir bekommen? Nichts! Nicht mal einen beschissenen Pokal!“
 
 ### SZENE 2 – Die Anklage · 8–24 s
 **RICHARD:** „Aber der Verein hat doch jedes Jahr gespielt?“
@@ -96,7 +96,7 @@ Wiederverwendet: `08`, `19`, `23`.
 ```
 d01 RICHARD: [ernst, tonlos] Herr Dennis, Frau Sabine, warum verklagen Sie Ihren Fußballverein?
 d02 DENNIS:  [verzweifelt, laut] Herr Richter, wir haben seit fünf Jahren Dauerkarten! FÜNF JAHRE!
-d03 SABINE:  [trocken, frustriert] Und was haben wir bekommen? Nichts! Nicht mal einen lausigen Pokal!
+d03 SABINE:  [trocken, frustriert] Und was haben wir bekommen? Nichts! Nicht mal einen beschissenen Pokal!
 d04 RICHARD: [tonlos, sehr trocken] Aber der Verein hat doch jedes Jahr gespielt?
 d05 DENNIS:  [außer sich] Gespielt?! Ja! Verloren! Das können die hervorragend!
 d06 SABINE:  [bitter, schnell] Wir haben Eintritt bezahlt, Auswärtsfahrten gemacht, Trikots gekauft und unsere Ehe aufs Spiel gesetzt!
