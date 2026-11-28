@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parents[2]
 B = ROOT / "build" / "doener"
 OUT_FILE = ROOT / "urteil-mal-01-doener-skandal.mp4"
 W, H, FPS = 1080, 1920, 30
-CX = 500   # Mitte der TikTok-Safe-Zone (rechts liegen die Buttons)
+CX = 520   # Mitte der TikTok-Safe-Zone (rechts liegen die Buttons)
 WW, WH = 2160, 3840
 
 F_UNB = str(ROOT / "fonts" / "Unbounded_900Black.ttf")
@@ -403,10 +403,9 @@ class Scene:
         else:
             cw = cw0 + (cw1 - cw0) * ease_io(tr)
         if target in HEADS or target == "richard_horst":
-            cw *= 0.74
+            cw *= 0.95
         ch = cw * 16 / 9
         if target == "wide":
-            cw, ch = cw * 0.88, ch * 0.88
             cx, cy = WW / 2, WH / 2
         elif target == "doener":
             cx, cy = DOENER_POS[0] - 20, DOENER_POS[1] - 60
@@ -519,7 +518,7 @@ class Scene:
         if e["id"] == "p3":
             big_text(img, [("*zirp* … *zirp*", (255, 255, 255))], 560, tr, 54, 0)
         if e.get("hook"):
-            big_text(img, [("SCHEIDUNG", (255, 255, 255)), ("WEGEN DÖNER?!", (255, 220, 40))], 400, tr, 92)
+            big_text(img, [("SCHEIDUNG", (255, 255, 255)), ("WEGEN DÖNER?!", (255, 220, 40))], 400, tr, 74)
         if e.get("law"):
             shown = [(i, c) for i, c in enumerate(LAW_CARDS) if tr >= c[0] * e["dur"]]
             for slot, (i, c) in enumerate(shown[-3:]):
@@ -575,10 +574,7 @@ def main():
         lst = B / "parts.txt"
         lst.write_text("".join(f"file '{B / f'part{k}.mp4'}'\n" for k in range(parts)))
         subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", str(lst), "-i", str(B / "mix.wav"),
-                        # ganzes Bild auf 80 % verkleinern, Rand = unscharfe Kopie (TikTok-Buttons/Beschreibung bleiben frei)
-                        "-filter_complex", "[0:v]split[a][b];[a]scale=1080:1920,boxblur=30:5,eq=brightness=-0.25[bg];"
-                        "[b]scale=864:1536[fg];[bg][fg]overlay=108:150[v]", "-map", "[v]", "-map", "1:a",
-                        "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-pix_fmt", "yuv420p", "-af", "loudnorm=I=-14:TP=-1.5:LRA=11", "-c:a", "aac", "-b:a", "192k", "-shortest", "-movflags", "+faststart",
+                        "-c:v", "copy", "-af", "loudnorm=I=-14:TP=-1.5:LRA=11", "-c:a", "aac", "-b:a", "192k", "-shortest", "-movflags", "+faststart",
                         str(OUT_FILE)], check=True)
         print("fertig:", OUT_FILE)
         return
